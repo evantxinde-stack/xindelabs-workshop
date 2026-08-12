@@ -22,7 +22,7 @@ git push origin main
 
 ### A3. Ganti placeholder di HTML
 - `PIXEL_ID_LO_DISINI` → ID Meta Pixel (Events Manager → Data Sources)
-- `N8N_DOMAIN_LO_DISINI` → domain n8n publik (Part C)
+- `n8n.43-133-131-126.sslip.io` → domain n8n publik (Part C)
 - `[tanggal workshop]`, `[link form inner circle]`, `[TESTIMONI]`, `[Tahun]`, `[Nama Brand]`
 
 ---
@@ -45,7 +45,7 @@ git push origin main
 ### B3. Set Webhook Callback
 1. Dashboard → **Pengaturan → Webhook** (atau Notifikasi)
 2. Payment Callback URL:
-   `https://N8N_DOMAIN_LO_DISINI/webhook/mayar-callback`
+   `https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback`
 3. Simpan
 
 ### B4. Channel Pembayaran

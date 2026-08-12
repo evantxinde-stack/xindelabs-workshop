@@ -42,7 +42,7 @@ Vercel (frontend statis)          VPS (backend)
 
 ### 1. Ganti placeholder
 - **Semua file HTML:** `PIXEL_ID_LO_DISINI` → ID Meta Pixel lo
-- **checkout.html:** `N8N_DOMAIN_LO_DISINI` → domain publik n8n lo
+- **checkout.html:** `n8n.43-133-131-126.sslip.io` → domain publik n8n lo
 - **index.html:** `[tanggal workshop]`, `[link form inner circle]`, `[TESTIMONI]`
 
 ### 2. Mayar (payment gateway)
@@ -51,7 +51,7 @@ Vercel (frontend statis)          VPS (backend)
 3. Copy **Product ID** → tempel di Code node workflow create-payment
 4. Dashboard → **Pengaturan → API** → buat/generate **API Token** → tempel di workflow
 5. Dashboard → **Pengaturan → Webhook** → Payment Callback URL →
-   `https://N8N_DOMAIN_LO_DISINI/webhook/mayar-callback`
+   `https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback`
 
 ### 3. Deploy ke Vercel
 Hubungkan repo GitHub ini ke vercel.com (auto-deploy tiap push).
