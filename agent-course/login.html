@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Build Your Own Personalized Agent</title>
+<!-- META PIXEL -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '921699146613715');
+fbq('track', 'PageView');
+</script>
+<style>
+  :root{
+    --bg:#0a0a0f;--bg-2:#12121a;--border:#23233a;--text:#e4e4ef;
+    --muted:#8b8ba3;--accent:#7c5cff;--accent-2:#00d4a0;--danger:#ff5c7a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    line-height:1.6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .wrap{max-width:420px;width:100%;}
+  .card{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
+    padding:36px 30px;box-shadow:0 8px 40px rgba(0,0,0,.4);
+  }
+  .logo{text-align:center;font-weight:800;font-size:1.2rem;margin-bottom:24px;}
+  .logo span{color:var(--accent);}
+  h1{font-size:1.25rem;text-align:center;margin-bottom:6px;}
+  .sub{font-size:.85rem;color:var(--muted);text-align:center;margin-bottom:26px;}
+  label{display:block;font-weight:600;font-size:.85rem;margin:14px 0 6px;}
+  input{
+    width:100%;padding:13px 14px;background:var(--bg);
+    border:1px solid var(--border);border-radius:10px;color:var(--text);
+    font-size:1rem;outline:none;
+  }
+  input:focus{border-color:var(--accent);}
+  .btn{
+    display:block;width:100%;margin-top:22px;background:var(--accent);color:#fff;
+    font-weight:700;font-size:1rem;padding:14px;border:none;border-radius:12px;
+    cursor:pointer;box-shadow:0 4px 20px rgba(124,92,255,.35);
+  }
+  .btn:hover{filter:brightness(1.1);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .btn.ghost{
+    background:transparent;border:1px solid var(--border);color:var(--muted);
+    box-shadow:none;font-weight:600;
+  }
+  .btn.ghost:hover{background:var(--bg);color:var(--text);}
+  .msg{display:none;border-radius:10px;padding:12px;margin-top:16px;font-size:.85rem;}
+  .msg.error{display:block;background:#2a1218;border:1px solid var(--danger);color:#ff8ba0;}
+  .msg.info{display:block;background:#101f1a;border:1px solid var(--accent-2);color:var(--accent-2);}
+  .switch{text-align:center;margin-top:18px;font-size:.85rem;color:var(--muted);}
+  .switch a{color:var(--accent-2);cursor:pointer;font-weight:600;}
+  .back{display:block;text-align:center;margin-top:16px;font-size:.78rem;color:var(--muted);text-decoration:none;}
+  .back:hover{color:var(--text);}
+  .hint{font-size:.75rem;color:var(--muted);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="logo">xinde<span>.</span>labs</div>
+    <h1 id="title">Login Member</h1>
+    <p class="sub" id="subtitle">Masuk buat akses course & komunitas</p>
+
+    <div id="loginForm">
+      <label for="email">Email</label>
+      <input type="email" id="email" placeholder="nama@email.com" autocomplete="email">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="btn" id="btnLogin">MASUK →</button>
+      <div class="switch">Belum punya akun? <a id="goSignup">Daftar dulu</a></div>
+    </div>
+
+    <div id="signupForm" style="display:none;">
+      <label for="sEmail">Email</label>
+      <input type="email" id="sEmail" placeholder="nama@email.com" autocomplete="email">
+      <label for="sPassword">Password</label>
+      <input type="password" id="sPassword" placeholder="Minimal 8 karakter" autocomplete="new-password">
+      <button class="btn" id="btnSignup">DAFTAR →</button>
+      <div class="switch">Udah punya akun? <a id="goLogin">Login</a></div>
+    </div>
+
+    <div class="msg" id="msg"></div>
+    <div class="hint">⚠️ Daftar pake email yang SAMA dengan email checkout — biar akses course langsung kebuka.</div>
+  </div>
+  <a class="back" href="index.html">← Kembali ke halaman course</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ⚙️ GANTI INI: kredensial Supabase lo
+// (Supabase Dashboard → Project Settings → API)
+var SUPABASE_URL = "https://XXXX.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOi...";  // anon public key (aman dipasang di frontend)
+
+var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+var msg = document.getElementById('msg');
+
+function showMsg(text, type) {
+  msg.className = 'msg ' + type;
+  msg.textContent = text;
+  setTimeout(function(){ msg.className = 'msg'; }, 5000);
+}
+
+// Cek session pas load
+supabase.auth.getSession().then(function(res){
+  if (res.data.session) {
+    window.location.href = 'member.html';
+  }
+});
+
+// ===== LOGIN =====
+document.getElementById('btnLogin').addEventListener('click', async function(){
+  var email = document.getElementById('email').value.trim();
+  var password = document.getElementById('password').value;
+  if (!email || !password) { showMsg('Isi email & password dulu', 'error'); return; }
+
+  this.disabled = true;
+  var btn = this;
+  var res = await supabase.auth.signInWithPassword({ email: email, password: password });
+  btn.disabled = false;
+
+  if (res.error) {
+    showMsg('Login gagal: ' + res.error.message, 'error');
+  } else {
+    window.location.href = 'member.html';
+  }
+});
+
+// ===== SIGNUP =====
+document.getElementById('btnSignup').addEventListener('click', async function(){
+  var email = document.getElementById('sEmail').value.trim();
+  var password = document.getElementById('sPassword').value;
+  if (!email || !password) { showMsg('Isi email & password dulu', 'error'); return; }
+  if (password.length < 8) { showMsg('Password minimal 8 karakter', 'error'); return; }
+
+  this.disabled = true;
+  var btn = this;
+  var res = await supabase.auth.signUp({ email: email, password: password });
+  btn.disabled = false;
+
+  if (res.error) {
+    showMsg('Daftar gagal: ' + res.error.message, 'error');
+  } else {
+    showMsg('✅ Akun dibuat! Cek email lo buat verifikasi, terus login.', 'info');
+    // Pindah ke form login
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('email').value = email;
+    document.getElementById('title').textContent = 'Login Member';
+    document.getElementById('subtitle').textContent = 'Masuk buat akses course & komunitas';
+  }
+});
+
+// ===== SWITCH FORM =====
+document.getElementById('goSignup').addEventListener('click', function(){
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+  document.getElementById('title').textContent = 'Daftar Akun Baru';
+  document.getElementById('subtitle').textContent = 'Buat akun, terus checkout buat aktifin akses';
+});
+document.getElementById('goLogin').addEventListener('click', function(){
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('title').textContent = 'Login Member';
+  document.getElementById('subtitle').textContent = 'Masuk buat akses course & komunitas';
+});
+</script>
+</body>
+</html>
