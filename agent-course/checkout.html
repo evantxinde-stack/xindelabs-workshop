@@ -23,15 +23,15 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
 <style>
   :root{
     --bg:#0a0a0f;--bg-2:#12121a;--border:#23233a;--text:#e4e4ef;
-    --muted:#8b8ba3;--accent:#7c5cff;--accent-2:#00d4a0;
+    --muted:#8b8ba3;--accent:#7c5cff;--accent-2:#00d4a0;--danger:#ff5c7a;
   }
   *{margin:0;padding:0;box-sizing:border-box;}
   body{
     background:var(--bg);color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
-    line-height:1.6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    line-height:1.6;min-height:100vh;padding:24px;
   }
-  .wrap{max-width:520px;width:100%;}
+  .wrap{max-width:540px;margin:0 auto;}
   .card{
     background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
     padding:32px 28px;box-shadow:0 8px 40px rgba(0,0,0,.4);
@@ -53,6 +53,38 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
   }
   input:focus{border-color:var(--accent);}
   .hint{font-size:.75rem;color:var(--muted);margin-top:4px;}
+
+  /* DISCORD TUTORIAL */
+  .discord-box{
+    background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin-top:14px;
+  }
+  .discord-box summary{
+    cursor:pointer;font-weight:700;font-size:.88rem;color:var(--accent-2);
+    list-style:none;display:flex;align-items:center;gap:8px;
+  }
+  .discord-box summary::-webkit-details-marker{display:none;}
+  .discord-box summary .arrow{transition:transform .2s;display:inline-block;}
+  .discord-box[open] summary .arrow{transform:rotate(90deg);}
+  .tabs{display:flex;gap:8px;margin:14px 0 12px;}
+  .tab-btn{
+    flex:1;background:var(--bg-2);border:1px solid var(--border);color:var(--muted);
+    padding:9px;border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600;
+  }
+  .tab-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .tab-panel{display:none;font-size:.85rem;}
+  .tab-panel.active{display:block;}
+  .tab-panel ol{margin-left:18px;}
+  .tab-panel li{margin:7px 0;}
+  .tab-panel code{
+    font-family:Consolas,monospace;background:var(--bg-2);border:1px solid var(--border);
+    padding:2px 7px;border-radius:5px;font-size:.8rem;color:var(--accent-2);
+  }
+  .step-highlight{
+    background:var(--bg-2);border-left:3px solid var(--accent-2);
+    padding:10px 12px;border-radius:0 8px 8px 0;margin-top:12px;font-size:.82rem;
+  }
+
   .btn{
     display:block;width:100%;margin-top:22px;background:var(--accent);color:#fff;
     font-weight:700;font-size:1.05rem;padding:15px;border:none;border-radius:12px;
@@ -66,7 +98,7 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
     background:var(--bg);border:1px solid var(--border);border-radius:8px;
     padding:4px 10px;font-size:.7rem;font-weight:600;color:var(--muted);
   }
-  .error{display:none;background:#2a1218;border:1px solid #ff5c7a;color:#ff8ba0;
+  .error{display:none;background:#2a1218;border:1px solid var(--danger);color:#ff8ba0;
     border-radius:10px;padding:12px;margin-top:14px;font-size:.85rem;}
   .error.show{display:block;}
   #loading{display:none;text-align:center;margin-top:18px;font-weight:600;}
@@ -106,7 +138,48 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
 
       <label for="wa">Nomor WhatsApp *</label>
       <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx" pattern="[0-9+\s-]{9,15}">
-      <span class="hint">Notifikasi & komunitas Discord</span>
+      <span class="hint">Notifikasi penting seputar course</span>
+
+      <label for="discord">Discord User ID *</label>
+      <input type="text" id="discord" name="discord" required placeholder="123456789012345678">
+      <span class="hint">Buat invite ke komunitas Discord eksklusif</span>
+
+      <!-- TUTORIAL CARA DAPET DISCORD USER ID -->
+      <details class="discord-box">
+        <summary><span class="arrow">▶</span> Cara dapetin Discord User ID — Mobile &amp; Desktop</summary>
+        <div class="tabs">
+          <button type="button" class="tab-btn active" data-tab="mobile">📱 Mobile</button>
+          <button type="button" class="tab-btn" data-tab="desktop">💻 Desktop</button>
+        </div>
+
+        <div class="tab-panel active" id="tab-mobile">
+          <ol>
+            <li>Buka aplikasi <strong>Discord</strong> di HP lo</li>
+            <li>Tap avatar lo di <strong>pojok kanan bawah</strong> → <strong>Settings</strong> (ikon ⚙️)</li>
+            <li>Scroll ke bawah → <strong>Advanced</strong> (di bawah "App Settings")</li>
+            <li>Aktifin toggle <strong>Developer Mode</strong></li>
+            <li>Balik ke chat → tap nama lo sendiri (di pesan/daftar member)</li>
+            <li>Tap <strong>Copy User ID</strong> → paste di kolom atas</li>
+          </ol>
+          <div class="step-highlight">
+            💡 User ID itu angka 17-18 digit (contoh: <code>845621095803221222</code>) — <strong>bukan</strong> username lo (misal <code>@xinde</code>).
+          </div>
+        </div>
+
+        <div class="tab-panel" id="tab-desktop">
+          <ol>
+            <li>Buka Discord di <strong>laptop/PC</strong> (app atau browser)</li>
+            <li>Klik ikon <strong>Settings ⚙️</strong> di pojok kiri bawah (deket avatar lo)</li>
+            <li>Klik <strong>Advanced</strong> di menu kiri (di bawah "App Settings")</li>
+            <li>Nyalain toggle <strong>Developer Mode</strong></li>
+            <li>Tutup settings → <strong>klik kanan</strong> nama lo (di chat atau daftar member)</li>
+            <li>Klik <strong>Copy User ID</strong> → paste di kolom atas</li>
+          </ol>
+          <div class="step-highlight">
+            💡 Kalau klik kanan ga muncul "Copy User ID", berarti Developer Mode-nya belum ke-aktifin. Balik ke langkah 3-4.
+          </div>
+        </div>
+      </details>
 
       <button type="submit" class="btn" id="payBtn">💳 BAYAR SEKARANG — Rp 999.000</button>
       <div class="secure">🔒 Pembayaran diproses aman via Mayar</div>
@@ -115,7 +188,7 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
       </div>
     </form>
 
-    <div id="loading"><span class="spinner"></span>Mengarahkan ke halaman pembayaran...</div>
+    <div id="loading"><span class="spinner"></span>Mengarahkan ke halaman pembayaran Mayar...</div>
     <div class="error" id="errorBox"></div>
   </div>
   <a class="back" href="index.html">← Kembali ke halaman course</a>
@@ -131,6 +204,18 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
   // ⚙️ URL webhook n8n (sudah live)
   var N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
 
+  // ===== TAB MOBILE/DESKTOP =====
+  var tabBtns = document.querySelectorAll('.tab-btn');
+  tabBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      tabBtns.forEach(function(b){ b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ===== SUBMIT =====
   form.addEventListener('submit', function(e){
     e.preventDefault();
     errorBox.classList.remove('show');
@@ -141,6 +226,7 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
       nama: document.getElementById('nama').value.trim(),
       email: document.getElementById('email').value.trim(),
       wa: document.getElementById('wa').value.trim(),
+      discord: document.getElementById('discord').value.trim(),
       produk: "build-your-own-personalized-agent",
       harga: 999000
     };
@@ -156,6 +242,7 @@ src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></n
     })
     .then(function(data){
       if (data && data.payment_url) {
+        // 🎯 Mayar Invoice → Mayar Payment
         window.location.href = data.payment_url;
       } else {
         throw new Error('payment_url tidak ditemukan');
