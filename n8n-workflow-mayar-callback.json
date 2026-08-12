@@ -12,18 +12,24 @@
       "name": "Webhook: Mayar Callback",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-520, 0],
+      "position": [
+        -520,
+        0
+      ],
       "webhookId": "mayar-callback-workshop"
     },
     {
       "parameters": {
-        "jsCode": "// Callback dari Mayar — struktur payload bervariasi tergantung versi API.\n// Mayar umumnya kirim data transaksi seperti:\n// { data: { id, reference, payment_ref, amount, status, name, email, mobile, ... } }\n// atau langsung field di root.\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;  // n8n webhook: data ada di .body untuk JSON POST\n\n// Coba baca dari berbagai kemungkinan struktur\nconst data = body.data || body;\nconst reference = data.reference || data.id || data.payment_ref || data.ref || '';\nconst amount = data.amount || 0;\nconst status = (data.status || data.payment_status || '').toString().toUpperCase();\nconst name = data.name || data.customer_name || '';\nconst email = data.email || data.customer_email || '';\nconst mobile = data.mobile || data.phone || '';\n\n// Status PAID di Mayar bisa: 'PAID', 'PAID_BY_USER', 'SUCCESS', 'COMPLETED'\nconst isPaid = ['PAID','PAID_BY_USER','SUCCESS','COMPLETED'].includes(status);\n\nreturn {\n  json: {\n    valid: true,\n    reference: reference,\n    amount: amount,\n    status: status,\n    isPaid: isPaid,\n    name: name,\n    email: email,\n    mobile: mobile,\n    raw: JSON.stringify(raw).slice(0, 2000)  // log mentah buat debug\n  }\n};"
+        "jsCode": "// Callback dari Mayar \u2014 struktur payload bervariasi tergantung versi API.\n// Mayar umumnya kirim data transaksi seperti:\n// { data: { id, reference, payment_ref, amount, status, name, email, mobile, ... } }\n// atau langsung field di root.\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;  // n8n webhook: data ada di .body untuk JSON POST\n\n// Coba baca dari berbagai kemungkinan struktur\nconst data = body.data || body;\nconst reference = data.reference || data.id || data.payment_ref || data.ref || '';\nconst amount = data.amount || 0;\nconst status = (data.status || data.payment_status || '').toString().toUpperCase();\nconst name = data.name || data.customer_name || '';\nconst email = data.email || data.customer_email || '';\nconst mobile = data.mobile || data.phone || '';\n\n// Status PAID di Mayar bisa: 'PAID', 'PAID_BY_USER', 'SUCCESS', 'COMPLETED'\nconst isPaid = ['PAID','PAID_BY_USER','SUCCESS','COMPLETED'].includes(status);\n\nreturn {\n  json: {\n    valid: true,\n    reference: reference,\n    amount: amount,\n    status: status,\n    isPaid: isPaid,\n    name: name,\n    email: email,\n    mobile: mobile,\n    raw: JSON.stringify(raw).slice(0, 2000)  // log mentah buat debug\n  }\n};"
       },
       "id": "code-parse-callback",
       "name": "Code: Parse Mayar Callback",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-280, 0]
+      "position": [
+        -280,
+        0
+      ]
     },
     {
       "parameters": {
@@ -51,7 +57,10 @@
       "name": "IF: Pembayaran Sukses?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [-60, 0]
+      "position": [
+        -60,
+        0
+      ]
     },
     {
       "parameters": {
@@ -61,7 +70,10 @@
       "name": "Code: Siapkan Data untuk Auto Email",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [180, -120]
+      "position": [
+        180,
+        -120
+      ]
     },
     {
       "parameters": {
@@ -85,7 +97,10 @@
       "name": "HTTP: Panggil Apps Script (Auto Email)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [420, -120]
+      "position": [
+        420,
+        -120
+      ]
     },
     {
       "parameters": {
@@ -95,7 +110,21 @@
       "name": "Code: Log Non-Paid",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [180, 120]
+      "position": [
+        180,
+        120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger-2",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
+      ]
     }
   ],
   "connections": {
@@ -149,9 +178,28 @@
           }
         ]
       ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Webhook: Mayar Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
-  }
+  },
+  "id": 2,
+  "active": false,
+  "versionId": "1",
+  "meta": {
+    "instanceId": "xindelabs"
+  },
+  "tags": [],
+  "pinData": {}
 }

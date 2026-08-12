@@ -12,18 +12,24 @@
       "name": "Webhook: Checkout Page",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-420, 0],
+      "position": [
+        -420,
+        0
+      ],
       "webhookId": "create-payment-workshop-mayar"
     },
     {
       "parameters": {
-        "jsCode": "// 🔑 KONFIGURASI MAYAR — ganti dengan data dari dashboard Mayar lo\n// (Dashboard Mayar -> Pengaturan -> API / Token)\nconst MAYAR_API_TOKEN = 'API-TOKEN-LO-DISINI';\n\n// 🏷️ PRODUCT ID — WAJIB:\n// 1. Login dashboard Mayar -> Produk -> Tambah Produk\n// 2. Bikin produk: \"Workshop Closing Naik dengan AI\" (Rp 299.000)\n// 3. Copy ID produk-nya, tempel di sini\nconst PRODUCT_ID = 'PRODUCT-ID-LO-DISINI';\n\n// URL callback (harus HTTPS & bisa diakses publik)\n// = URL webhook yang akan diisi di dashboard Mayar:\n// Dashboard Mayar -> Pengaturan -> Webhook -> Payment Callback URL\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// URL return (ke halaman status di Vercel)\nconst RETURN_URL = 'https://VERCEL_DOMAIN_LO_DISINI/success.html';\n\n// Endpoint Mayar\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/checkout';\n\n// Data dari checkout page\nconst body = $input.first().json.body || {};\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Nomor HP untuk Mayar (format 08..., min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// Payload ke Mayar\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  paymentType: 'QRIS',   // GANTI sesuai channel Mayar: QRIS / VA / dll\n  productId: PRODUCT_ID,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL\n};\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    token: MAYAR_API_TOKEN,\n    payload: payload\n  }\n};"
+        "jsCode": "// \ud83d\udd11 KONFIGURASI MAYAR \u2014 ganti dengan data dari dashboard Mayar lo\n// (Dashboard Mayar -> Pengaturan -> API / Token)\nconst MAYAR_API_TOKEN = 'API-TOKEN-LO-DISINI';\n\n// \ud83c\udff7\ufe0f PRODUCT ID \u2014 WAJIB:\n// 1. Login dashboard Mayar -> Produk -> Tambah Produk\n// 2. Bikin produk: \"Workshop Closing Naik dengan AI\" (Rp 299.000)\n// 3. Copy ID produk-nya, tempel di sini\nconst PRODUCT_ID = 'PRODUCT-ID-LO-DISINI';\n\n// URL callback (harus HTTPS & bisa diakses publik)\n// = URL webhook yang akan diisi di dashboard Mayar:\n// Dashboard Mayar -> Pengaturan -> Webhook -> Payment Callback URL\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// URL return (ke halaman status di Vercel)\nconst RETURN_URL = 'https://VERCEL_DOMAIN_LO_DISINI/success.html';\n\n// Endpoint Mayar\n// ENDPOINT YANG BENAR (hasil probe):\n// POST /payment/create -> { data: { link: 'https://xindelabs.myr.id/invoices/XXX' } }\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// Data dari checkout page\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;  // n8n v2: JSON langsung di \\$json\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Nomor HP untuk Mayar (format 08..., min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// Payload ke Mayar\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  paymentType: 'QRIS',   // GANTI sesuai channel Mayar: QRIS / VA / dll\n  productId: PRODUCT_ID,\n  amount: 299000,           // WAJIB: harga produk\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL\n};\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    token: MAYAR_API_TOKEN,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload\n  }\n};"
       },
       "id": "code-build-payload",
       "name": "Code: Build Mayar Payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-180, 0]
+      "position": [
+        -180,
+        0
+      ]
     },
     {
       "parameters": {
@@ -34,7 +40,7 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer ={{ $json.token }}"
+              "value": "={{ $json.authHeader }}"
             },
             {
               "name": "Content-Type",
@@ -51,17 +57,23 @@
       "name": "HTTP: Mayar Checkout",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [60, 0]
+      "position": [
+        60,
+        0
+      ]
     },
     {
       "parameters": {
-        "jsCode": "// Response dari Mayar — struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response — field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\nconst paymentUrl = data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000\n  }\n};"
+        "jsCode": "// Response dari Mayar \u2014 struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response \u2014 field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\n// Response Mayar /payment/create: data.link = invoice URL\nconst paymentUrl = data.link || data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000\n  }\n};"
       },
       "id": "code-extract-url",
       "name": "Code: Extract payment_url",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [300, 0]
+      "position": [
+        300,
+        0
+      ]
     },
     {
       "parameters": {
@@ -82,7 +94,21 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
-      "position": [540, 0]
+      "position": [
+        540,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
+      ]
     }
   ],
   "connections": {
@@ -129,9 +155,28 @@
           }
         ]
       ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Webhook: Checkout Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
-  }
+  },
+  "id": 1,
+  "active": false,
+  "versionId": "1",
+  "meta": {
+    "instanceId": "xindelabs"
+  },
+  "tags": [],
+  "pinData": {}
 }
