@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembayaran Gagal / Dibatalkan</title>
+<!-- META PIXEL — GANTI PIXEL_ID_LO_DISINI -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', 'PIXEL_ID_LO_DISINI');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=PIXEL_ID_LO_DISINI&ev=PageView&noscript=1"/></noscript>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;background:#fef2f2;color:#334155;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .card{background:#fff;border:1px solid #fecaca;border-radius:20px;padding:44px 36px;max-width:480px;text-align:center;box-shadow:0 10px 40px rgba(220,38,38,.08);}
+  .icon{font-size:56px;margin-bottom:16px;}
+  h1{color:#b91c1c;font-size:1.5rem;margin-bottom:10px;}
+  p{font-size:.98rem;line-height:1.6;margin-bottom:8px;}
+  .btn{display:inline-block;background:#dc2626;color:#fff;font-weight:700;padding:13px 30px;border-radius:10px;text-decoration:none;margin-top:14px;box-shadow:0 4px 14px rgba(220,38,38,.3);}
+  .btn.secondary{background:#64748b;margin-left:8px;box-shadow:none;}
+  .note{font-size:.8rem;color:#64748b;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">😕</div>
+  <h1>Pembayaran Belum Selesai</h1>
+  <p>Kelihatannya pembayaran lo gagal atau dibatalkan. <strong>Ga masalah!</strong></p>
+  <p style="font-size:.92rem;">Pesanan lo belum hangus — lo bisa coba bayar lagi.</p>
+  <a class="btn" href="/checkout.html">🔄 Coba Bayar Lagi</a>
+  <a class="btn secondary" href="/">← Kembali</a>
+  <p class="note">Kalau udah bayar tapi halaman ini muncul, DM kami di <strong>@xindelabs.id</strong> — kami cekin manual.</p>
+</div>
+</body>
+</html>

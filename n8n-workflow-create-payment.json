@@ -1,0 +1,137 @@
+{
+  "name": "Workshop - Create Payment (Tripay)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-payment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-create-payment",
+      "name": "Webhook: Checkout Page",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-420, 0],
+      "webhookId": "create-payment-workshop"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔑 KONFIGURASI TRIPAY — ganti dengan data dari dashboard Tripay lo\n// (https://tripay.co.id -> Settings -> Merchat / Channel)\nconst TRIPAY_MERCHANT_CODE = 'T1234';      // Merchant Code lo\nconst TRIPAY_PRIVATE_KEY = 'PRIVATE-KEY-LO-DISINI';   // Private Key\nconst TRIPAY_API_KEY = 'API-KEY-LO-DISINI';           // API Key\n\n// URL callback (harus HTTPS & bisa diakses publik)\n// Ganti ke domain n8n lo yang sudah di-proxy Caddy\nconst CALLBACK_URL = 'https://N8N_DOMAIN_LO_DISINI/webhook/tripay-callback';\n\n// URL return (ke halaman status di Vercel)\nconst RETURN_URL = 'https://VERCEL_DOMAIN_LO_DISINI/success.html';\nconst PENDING_URL = 'https://VERCEL_DOMAIN_LO_DISINI/pending.html';\nconst FAILED_URL = 'https://VERCEL_DOMAIN_LO_DISINI/failed.html';\n\n// 🔧 JAM OPERASIONAL / PRODUKSI\n// Sandbox:  https://tripay.co.id/api-sandbox/transaction/create\n// Produksi: https://tripay.co.id/api/transaction/create\nconst TRIPAY_ENDPOINT = 'https://tripay.co.id/api/transaction/create';\nconst IS_SANDBOX = false; // true = pakai sandbox, false = produksi\n\n// Data dari checkout page\nconst body = $input.first().json.body || {};\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst produk = (body.produk || 'workshop-closing-naik-ai').toString();\nconst harga = Number(body.harga) || 299000;\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Merchant ref unik (order ID lo)\nconst timestamp = Date.now();\nconst merchantRef = 'WSH-' + timestamp.toString().slice(-10);\n\n// Signature Tripay: HMAC-SHA256(merchantCode + merchantRef + amount, privateKey)\nconst crypto = require('crypto');\nconst signature = crypto\n  .createHmac('sha256', TRIPAY_PRIVATE_KEY)\n  .update(TRIPAY_MERCHANT_CODE + merchantRef + harga)\n  .digest('hex');\n\n// Order items (wajib untuk Tripay)\nconst orderItems = [{\n  sku: produk,\n  name: 'Workshop Closing Naik dengan AI - Live Zoom 2 Jam',\n  price: harga,\n  quantity: 1\n}];\n\n// Payload ke Tripay\nconst payload = {\n  method: 'QRIS',           // GANTI: QRIS / BCAVA / BNI_VA / BRIVA / GOPAY / OVO / DANA / SHOPEEPAY\n  merchant_ref: merchantRef,\n  amount: harga,\n  customer_name: nama,\n  customer_email: email,\n  customer_phone: wa.replace(/[^0-9]/g, ''),\n  order_items: orderItems,\n  callback_url: CALLBACK_URL,\n  return_url: RETURN_URL,\n  expire_time: 120,         // menit expired\n  signature: signature\n};\n\nreturn {\n  json: {\n    endpoint: TRIPAY_ENDPOINT,\n    apiKey: TRIPAY_API_KEY,\n    payload: payload,\n    merchantRef: merchantRef\n  }\n};"
+      },
+      "id": "code-build-payload",
+      "name": "Code: Build Tripay Payload + Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-180, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $json.apiKey }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "id": "http-tripay-create",
+      "name": "HTTP: Tripay Create Transaction",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [60, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Response dari Tripay\nconst tripayResp = $input.first().json;\n\n// Tripay sukses: { success: true, data: { reference, payment_url, ... } }\nif (!tripayResp.success) {\n  throw new Error('Tripay error: ' + JSON.stringify(tripayResp));\n}\n\nconst data = tripayResp.data || {};\nconst paymentUrl = data.payment_url;\nconst reference = data.reference || '';\nconst merchantRef = data.merchant_ref || '';\n\nif (!paymentUrl) {\n  throw new Error('payment_url kosong: ' + JSON.stringify(tripayResp));\n}\n\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: reference,\n    merchant_ref: merchantRef,\n    amount: data.amount || 0\n  }\n};"
+      },
+      "id": "code-extract-url",
+      "name": "Code: Extract payment_url",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ payment_url: $json.payment_url, reference: $json.reference, merchant_ref: $json.merchant_ref }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [540, 0]
+    }
+  ],
+  "connections": {
+    "Webhook: Checkout Page": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Tripay Payload + Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Tripay Payload + Signature": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Tripay Create Transaction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Tripay Create Transaction": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract payment_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract payment_url": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -1,0 +1,165 @@
+{
+  "name": "Workshop - Tripay Callback + Auto Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tripay-callback",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-tripay-callback",
+      "name": "Webhook: Tripay Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "tripay-callback-workshop"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔑 KONFIGURASI TRIPAY — harus SAMA dengan workflow create-payment\nconst TRIPAY_MERCHANT_CODE = 'T1234';\nconst TRIPAY_PRIVATE_KEY = 'PRIVATE-KEY-LO-DISINI';\n\n// Callback dari Tripay\nconst body = $input.first().json.body || {};\n\n// Tripay callback payload:\n// { event: 'payment_status', merchant_code, merchant_ref, reference,\n//   amount, amount_received, status: 'PAID'|'EXPIRED'|'FAILED', ... }\nconst event = body.event || '';\nconst merchantCode = body.merchant_code || '';\nconst merchantRef = body.merchant_ref || '';\nconst amountReceived = String(body.amount_received || '');\nconst status = body.status || '';\n\n// Validasi: ini callback buat merchant kita?\nif (merchantCode !== TRIPAY_MERCHANT_CODE) {\n  return { json: { valid: false, reason: 'merchant_code tidak cocok', status: 'IGNORED' } };\n}\n\n// Signature dari header: X-Signature\nconst incomingSignature = ($input.first().json.headers || {})['x-signature'] || '';\n\n// Signature Tripay callback: HMAC-SHA256(merchantCode + merchantRef + amountReceived, privateKey)\nconst crypto = require('crypto');\nconst expectedSignature = crypto\n  .createHmac('sha256', TRIPAY_PRIVATE_KEY)\n  .update(TRIPAY_MERCHANT_CODE + merchantRef + amountReceived)\n  .digest('hex');\n\n// Cek signature\nif (!incomingSignature || incomingSignature !== expectedSignature) {\n  return { json: { valid: false, reason: 'signature tidak cocok', status: 'REJECTED' } };\n}\n\nreturn {\n  json: {\n    valid: true,\n    event: event,\n    merchant_ref: merchantRef,\n    reference: body.reference || '',\n    amount: body.amount || 0,\n    amount_received: amountReceived,\n    status: status,\n    customer_email: body.customer_email || '',\n    customer_name: body.customer_name || '',\n    paid_at: body.paid_at || ''\n  }\n};"
+      },
+      "id": "code-verify-signature",
+      "name": "Code: Verify Tripay Signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-280, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "PAID",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-paid",
+      "name": "IF: Status PAID?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-60, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Kirim data peserta ke Google Apps Script (auto-email-system.gs)\n// Webhook Apps Script lo: URL dari Deploy > Web app\nconst APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXX/exec';\n\nconst payment = $input.first().json;\n\nreturn {\n  json: {\n    nama: payment.customer_name || '',\n    email: payment.customer_email || '',\n    no_wa: '',  // Opsional: isi kalau Apps Script lo butuh\n    harga: payment.amount || 299000,\n    status: 'paid',\n    tipe: 'umum',\n    merchant_ref: payment.merchant_ref || '',\n    endpoint: APPS_SCRIPT_WEBHOOK\n  }\n};"
+      },
+      "id": "code-prep-email",
+      "name": "Code: Siapkan Data untuk Auto Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, -120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ nama: $json.nama, email: $json.email, no_wa: $json.no_wa, harga: $json.harga, status: $json.status, tipe: $json.tipe, merchant_ref: $json.merchant_ref }) }}",
+        "options": {}
+      },
+      "id": "http-apps-script",
+      "name": "HTTP: Panggil Apps Script (Auto Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log callback yang ditolak (debug)\nconst payment = $input.first().json;\nreturn {\n  json: {\n    log: 'CALLBACK DITOLAK / BUKAN PAID',\n    reason: payment.reason || 'status bukan PAID',\n    status: payment.status,\n    merchant_ref: payment.merchant_ref\n  }\n};"
+      },
+      "id": "code-reject-log",
+      "name": "Code: Log Rejected",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 120]
+    }
+  ],
+  "connections": {
+    "Webhook: Tripay Callback": {
+      "main": [
+        [
+          {
+            "node": "Code: Verify Tripay Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Verify Tripay Signature": {
+      "main": [
+        [
+          {
+            "node": "IF: Status PAID?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Status PAID?": {
+      "main": [
+        [
+          {
+            "node": "Code: Siapkan Data untuk Auto Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Log Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Data untuk Auto Email": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Panggil Apps Script (Auto Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
