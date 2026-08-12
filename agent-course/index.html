@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build Your Own Personalized Agent [For Sales Person] — Xinde Labs</title>
+<!-- META PIXEL — GANTI PIXEL_ID_LO_DISINI -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '921699146613715');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></noscript>
+<style>
+  :root{
+    --bg:#0a0a0f;
+    --bg-2:#12121a;
+    --border:#23233a;
+    --text:#e4e4ef;
+    --muted:#8b8ba3;
+    --accent:#7c5cff;
+    --accent-2:#00d4a0;
+    --danger:#ff5c7a;
+    --mono:'SF Mono','JetBrains Mono','Fira Code',Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+    line-height:1.65;
+  }
+  .container{max-width:760px;margin:0 auto;padding:0 24px;}
+  section{padding:72px 0;border-bottom:1px solid var(--border);}
+  h1,h2,h3{line-height:1.2;}
+  h2{font-size:1.9rem;margin-bottom:14px;}
+  .mono{font-family:var(--mono);}
+  .muted{color:var(--muted);}
+  .accent{color:var(--accent-2);}
+
+  /* NAV */
+  nav{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 24px;position:sticky;top:0;z-index:50;
+    background:rgba(10,10,15,.85);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--border);
+  }
+  nav .logo{font-weight:800;font-size:1.1rem;letter-spacing:-.5px;}
+  nav .logo span{color:var(--accent);}
+  nav .nav-links{display:flex;gap:20px;align-items:center;font-size:.9rem;}
+  nav a{color:var(--muted);text-decoration:none;transition:color .15s;}
+  nav a:hover{color:var(--text);}
+
+  /* HERO */
+  .hero{padding:96px 0 72px;text-align:center;}
+  .hero .tag{
+    display:inline-block;font-family:var(--mono);font-size:.75rem;
+    color:var(--accent-2);border:1px solid var(--border);
+    padding:6px 14px;border-radius:999px;margin-bottom:28px;
+    background:rgba(0,212,160,.06);
+  }
+  .hero h1{
+    font-size:2.6rem;font-weight:800;letter-spacing:-1.5px;
+    max-width:680px;margin:0 auto 20px;
+  }
+  .hero h1 .hl{color:var(--accent);}
+  .hero .sub{
+    font-size:1.15rem;color:var(--muted);max-width:560px;margin:0 auto 36px;
+  }
+  .btn{
+    display:inline-block;background:var(--accent);color:#fff;
+    font-weight:700;font-size:1.05rem;padding:15px 40px;border-radius:12px;
+    text-decoration:none;transition:transform .15s,box-shadow .15s;
+    box-shadow:0 4px 24px rgba(124,92,255,.35);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,92,255,.5);}
+  .btn.secondary{
+    background:transparent;border:1px solid var(--border);color:var(--text);
+    box-shadow:none;margin-left:10px;
+  }
+  .btn.secondary:hover{background:var(--bg-2);}
+  .hero .price-note{margin-top:20px;font-size:.85rem;color:var(--muted);}
+  .hero .price-note strong{color:var(--accent-2);}
+
+  /* TERMINAL / MODULES */
+  .terminal{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+    overflow:hidden;text-align:left;margin-top:48px;
+  }
+  .terminal .bar{
+    display:flex;gap:8px;align-items:center;padding:12px 16px;
+    border-bottom:1px solid var(--border);
+  }
+  .terminal .bar .dot{width:12px;height:12px;border-radius:50%;}
+  .terminal .bar .dot:nth-child(1){background:#ff5f57;}
+  .terminal .bar .dot:nth-child(2){background:#febc2e;}
+  .terminal .bar .dot:nth-child(3){background:#28c840;}
+  .terminal .bar .title{font-family:var(--mono);font-size:.75rem;color:var(--muted);margin-left:8px;}
+  .terminal .body{padding:20px;font-family:var(--mono);font-size:.85rem;line-height:2;}
+  .terminal .cmd{color:var(--accent-2);}
+  .terminal .dir{color:var(--accent);}
+  .terminal .comment{color:var(--muted);}
+  .terminal .dim{color:#5c5c75;}
+
+  /* LIVE PROOF */
+  .proof{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:32px;}
+  .proof-card{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+    padding:22px 18px;text-align:center;
+  }
+  .proof-card .num{font-size:1.7rem;font-weight:800;color:var(--accent-2);font-family:var(--mono);}
+  .proof-card .label{font-size:.8rem;color:var(--muted);margin-top:4px;}
+
+  /* WHAT YOU GET */
+  .feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:32px;}
+  .feature{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+    padding:24px 22px;
+  }
+  .feature .icon{font-size:1.6rem;margin-bottom:10px;}
+  .feature h3{font-size:1.05rem;margin-bottom:8px;}
+  .feature p{font-size:.9rem;color:var(--muted);}
+
+  /* TESTIMONI */
+  .testi{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+    padding:22px;margin-bottom:12px;
+  }
+  .testi .quote{font-size:.98rem;margin-bottom:10px;}
+  .testi .name{font-family:var(--mono);font-size:.8rem;color:var(--muted);}
+
+  /* PRICING */
+  .pricing-card{
+    background:linear-gradient(160deg,var(--bg-2),#14142a);
+    border:1px solid var(--accent);border-radius:16px;
+    padding:36px 30px;max-width:460px;margin:0 auto;text-align:center;
+    box-shadow:0 8px 40px rgba(124,92,255,.15);
+  }
+  .pricing-card .prod{font-weight:700;font-size:1.1rem;}
+  .pricing-card .period{font-size:.85rem;color:var(--muted);margin:4px 0 18px;}
+  .pricing-card .price{font-size:2.6rem;font-weight:800;letter-spacing:-1px;}
+  .pricing-card .per-day{font-family:var(--mono);font-size:.8rem;color:var(--accent-2);margin:6px 0 22px;}
+  .pricing-card ul{list-style:none;text-align:left;margin:0 0 26px;font-size:.92rem;}
+  .pricing-card li{padding:7px 0 7px 26px;position:relative;color:#cfcfe2;}
+  .pricing-card li::before{content:"✓";position:absolute;left:0;color:var(--accent-2);font-weight:800;}
+  .pricing-card .btn{width:100%;}
+  .pricing-note{text-align:center;font-size:.8rem;color:var(--muted);margin-top:14px;}
+
+  /* FAQ */
+  .faq-item{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+  .faq-q{
+    background:var(--bg-2);padding:16px 20px;font-weight:600;cursor:pointer;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .faq-q .arrow{color:var(--accent);transition:transform .2s;}
+  .faq-item.open .arrow{transform:rotate(180deg);}
+  .faq-a{display:none;padding:0 20px 18px;font-size:.92rem;color:var(--muted);}
+  .faq-item.open .faq-a{display:block;}
+
+  /* CLOSING */
+  .closing{text-align:center;padding:96px 0;}
+  .closing h2{font-size:2.2rem;max-width:640px;margin:0 auto 18px;}
+  .closing .sub{color:var(--muted);max-width:480px;margin:0 auto 32px;}
+
+  footer{
+    padding:32px 24px;text-align:center;font-size:.8rem;color:var(--muted);
+    border-top:1px solid var(--border);
+  }
+
+  @media(max-width:600px){
+    .hero h1{font-size:1.8rem;}
+    h2{font-size:1.5rem;}
+    .feature-grid{grid-template-columns:1fr;}
+    .proof{grid-template-columns:1fr 1fr;}
+    .btn.secondary{margin-left:0;margin-top:10px;}
+    .hero .cta-row{display:flex;flex-direction:column;gap:10px;align-items:center;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">xinde<span>.</span>labs</div>
+  <div class="nav-links">
+    <a href="#isi">Course</a>
+    <a href="#dapet">Yang Didapat</a>
+    <a href="#harga">Harga</a>
+    <a href="checkout.html" style="color:var(--accent-2);font-weight:700;" onclick="fbq('track','InitiateCheckout');">Daftar Course →</a>
+  </div>
+</nav>
+
+<!-- ========== HERO ========== -->
+<section class="hero" id="top">
+  <div class="container">
+    <div class="tag">FOR SALES PERSON · AGEN · FREELANCER</div>
+    <h1>Bukan karena lo kurang jualan — <span class="hl">tapi karena lo masih kerjain semuanya sendiri.</span></h1>
+    <p class="sub">Belajar bangun <strong>AI Agent pribadi lo sendiri</strong> — yang follow-up otomatis, riset calon client, bikin konten promosi, dan bales pertanyaan 24 jam. Tanpa coding. Tanpa jago teknologi.</p>
+    <div class="cta-row">
+      <a href="#harga" class="btn" onclick="fbq('track','InitiateCheckout');">DAFTAR COURSE →</a>
+      <a href="#isi" class="btn secondary">Liat isinya ↓</a>
+    </div>
+    <div class="price-note">💰 <strong>Rp 999.000/tahun</strong> — ≈ Rp 2.700/hari · full akses 12 bulan</div>
+
+    <!-- TERMINAL DECOR -->
+    <div class="terminal">
+      <div class="bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="title">agent-workspace — zsh</span>
+      </div>
+      <div class="body">
+        <div><span class="cmd">$</span> <span class="dir">ls agents/</span> --personalized</div>
+        <div>follow-up-agent/        <span class="comment"># auto-follow-up WA + email</span></div>
+        <div>lead-research-agent/    <span class="comment"># riset calon client 30 detik</span></div>
+        <div>content-agent/          <span class="comment"># 10 caption IG dalam 1 menit</span></div>
+        <div>objection-agent/        <span class="comment"># jawab keberatan 24/7</span></div>
+        <div>report-agent/           <span class="comment"># rekap closing mingguan</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmd">$</span> <span class="dir">status</span> --all</div>
+        <div><span class="accent">●</span> follow-up-agent  <span class="dim">[RUNNING]</span>  <span class="comment"># 0 jam downtime</span></div>
+        <div><span class="accent">●</span> lead-research    <span class="dim">[RUNNING]</span>  <span class="comment"># 214 leads diproses</span></div>
+        <div><span class="accent">●</span> content-agent    <span class="dim">[RUNNING]</span>  <span class="comment"># 46 konten diterbitkan</span></div>
+        <div><span class="accent">●</span> objection-agent  <span class="dim">[RUNNING]</span>  <span class="comment"># 312 chat dijawab</span></div>
+        <div>&nbsp;</div>
+        <div class="comment"># agent-agent ini jalan TANPA lo mantau.</div>
+        <div class="comment"># Di course ini, lo bakal bangun persis yang kayak gini.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== LIVE PROOF ========== -->
+<section id="bukti">
+  <div class="container">
+    <h2 style="text-align:center;">Ini bukan teori. <span class="accent">Semuanya jalan sekarang.</span></h2>
+    <p class="muted" style="text-align:center;max-width:520px;margin:0 auto;">Setiap angka di bawah ini live di sistem yang sama yang lo bakal pelajari cara bangunnya. Bukan demo, bukan mockup.</p>
+    <div class="proof">
+      <div class="proof-card">
+        <div class="num">24/7</div>
+        <div class="label">Agent jalan tanpa lo mantau</div>
+      </div>
+      <div class="proof-card">
+        <div class="num">10x</div>
+        <div class="label">Follow-up lebih banyak per hari</div>
+      </div>
+      <div class="proof-card">
+        <div class="num">30dtk</div>
+        <div class="label">Riset calon client per prospek</div>
+      </div>
+    </div>
+    <p class="mono muted" style="text-align:center;font-size:.75rem;margin-top:24px;">[contoh — sesuaikan dengan data riil lo]</p>
+  </div>
+</section>
+
+<!-- ========== ISI COURSE ========== -->
+<section id="isi">
+  <div class="container">
+    <div class="mono muted" style="font-size:.8rem;margin-bottom:10px;">ISI COURSE-NYA</div>
+    <h2>Yang bakal lo <span class="accent">build.</span></h2>
+    <p class="muted" style="margin-bottom:28px;">Video step-by-step, dari nol sampe agent lo beneran jalan. Di-record live, bukan slide.</p>
+
+    <div class="terminal">
+      <div class="bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="title">modules — published</span>
+      </div>
+      <div class="body">
+        <div><span class="cmd">$</span> <span class="dir">ls modules/</span> --published</div>
+        <div>beginner ·Kenalan sama AI Agent: Bukan Cuma ChatGPT</div>
+        <div>beginner ·Setup Agent Pertama Lo dalam 30 Menit</div>
+        <div>beginner ·Bikin Agent Follow-up WA yang Bales Sendiri</div>
+        <div>level-up ·Agent Riset Calon Client: Ketemu Sama Siapa, Udah Tahu Semua</div>
+        <div>level-up ·Agent Konten: 10 Caption Promosi dalam 1 Menit</div>
+        <div>level-up ·Agent Objeksi: Jawab "Mahal", "Nanti Dulu", "Pikir-pikir"</div>
+        <div>level-up ·Hubungin Agent ke WhatsApp &amp; Email Lo</div>
+        <div>pro ·Agent Rekap: Laporan Closing Otomatis Tiap Minggu</div>
+        <div>pro ·Cara Ngatur Banyak Agent Biar Ga Kacau</div>
+        <div>… + modul baru tiap bulan</div>
+        <div>&nbsp;</div>
+        <div class="comment"># list ini di-generate dari sistem yang sama yang ngejalanin course-nya.</div>
+        <div class="comment"># terakhir update: [tanggal] · rilis berikutnya: [judul modul]</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== APA YANG DIDAPAT ========== -->
+<section id="dapet">
+  <div class="container">
+    <div class="mono muted" style="font-size:.8rem;margin-bottom:10px;">APA YANG LO DAPET</div>
+    <h2>Enam hal. <span class="accent">Semuanya kepake.</span></h2>
+
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="icon">🎬</div>
+        <h3>Video Course</h3>
+        <p>Video step-by-step dari nol sampe agent lo jalan. Update modul baru tiap bulan.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🤖</div>
+        <h3>AI Bot Tanya Jawab</h3>
+        <p>Tutor AI pribadi yang bantu lo 24/7 — kapan pun lo stuck, tanya langsung.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📚</div>
+        <h3>Kumpulan Prompt</h3>
+        <p>Prompt library yang gw pake sendiri. Copy, adaptasi, langsung jalan.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">💬</div>
+        <h3>Komunitas Discord</h3>
+        <p>Live Q&amp;A + update konten rutin. Temen seperjuangan yang saling bantu.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">📰</div>
+        <h3>AI News</h3>
+        <p>Ringkasan berita AI yang relevan buat sales — biar ga ketinggalan jaman.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">🔄</div>
+        <h3>Use-case Update</h3>
+        <p>Contoh penerapan baru tiap bulan — agent lo makin canggih seiring waktu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TESTIMONI ========== -->
+<section id="testimoni">
+  <div class="container">
+    <div class="mono muted" style="font-size:.8rem;margin-bottom:10px;">KATA MEMBER</div>
+    <h2>Bukan gw yang ngomong.</h2>
+    <div class="testi">
+      <div class="quote">"Awalnya takut ribet. Ternyata tinggal ikutin video, agent follow-up gw jalan minggu pertama. Sekarang tiap pagi ada rekap siapa yang harus gw follow-up."</div>
+      <div class="name">[TESTIMONI — isi dengan testimoni asli]</div>
+    </div>
+    <div class="testi">
+      <div class="quote">"Yang paling gue suka bot tanya-jawabnya. Jam 2 pagi stuck, langsung tanya, langsung kebantu."</div>
+      <div class="name">[TESTIMONI — isi dengan testimoni asli]</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== PRICING ========== -->
+<section id="harga">
+  <div class="container">
+    <div class="mono muted" style="font-size:.8rem;margin-bottom:10px;text-align:center;">PRICING</div>
+    <h2 style="text-align:center;">Satu harga. Semua kebuka.</h2>
+
+    <div class="pricing-card">
+      <div class="prod">Build Your Own Personalized Agent</div>
+      <div class="period">FOR SALES PERSON · full akses 12 bulan</div>
+      <div class="price">Rp 999.000</div>
+      <div class="per-day">≈ Rp 2.700 / hari</div>
+      <ul>
+        <li>Video course step-by-step (update tiap bulan)</li>
+        <li>AI Bot tanya-jawab 24/7</li>
+        <li>Kumpulan prompt library siap pakai</li>
+        <li>Komunitas Discord eksklusif</li>
+        <li>AI News &amp; use-case update bulanan</li>
+      </ul>
+      <a href="checkout.html" class="btn" onclick="fbq('track','InitiateCheckout');">DAFTAR SEKARANG →</a>
+    </div>
+    <p class="pricing-note">💳 Bayar sekali setahun · akses langsung setelah pembayaran</p>
+  </div>
+</section>
+
+<!-- ========== FAQ ========== -->
+<section id="faq">
+  <div class="container">
+    <h2 style="text-align:center;">Pertanyaan yang sering masuk.</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">Gw bener-bener newbie, bisa ikut ga? <span class="arrow">▾</span></div>
+      <div class="faq-a">Justru ini buat lo. Kalau lo bisa pakai WhatsApp dan Google, lo bisa ikut. Semua langkah ditunjukin pelan-pelan, dan ada bot tanya-jawab + komunitas kalau ada yang bingung.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Harus bisa coding dulu ga? <span class="arrow">▾</span></div>
+      <div class="faq-a">Tidak. Semua pakai tools visual & siap pakai. Lo ga nulis kode dari nol — lo ngatur agent yang udah jadi, kayak setting HP baru.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Ini khusus sales/agen aja? <span class="arrow">▾</span></div>
+      <div class="faq-a">Fokus utama ke sales person (asuransi, properti, freelancer) karena demo & studi kasusnya dari situ. Tapi konsepnya bisa dipake siapa saja yang follow-up ke klien.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Bedanya sama cuma pakai ChatGPT sendiri? <span class="arrow">▾</span></div>
+      <div class="faq-a">ChatGPT jawab pertanyaan. Di sini lo bangun AGENT — sistem yang kerja sendiri: follow-up otomatis, riset calon, konten — jalan tanpa lo mantau tiap detik.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Langganan 1 tahun, abis itu gimana? <span class="arrow">▾</span></div>
+      <div class="faq-a">Selama 12 bulan lo dapet semua update. Setelah habis, lo bisa perpanjang kalau mau lanjut dapet modul & update baru. Agent yang udah lo bangun tetap milik lo.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Cara bayarnya gimana? <span class="arrow">▾</span></div>
+      <div class="faq-a">QRIS, Virtual Account, atau e-wallet — setelah bayar, akses course langsung kebuka dan email konfirmasi masuk otomatis ke inbox lo.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CLOSING ========== -->
+<section class="closing" id="closing">
+  <div class="container">
+    <h2>Berhenti kerjain semuanya sendiri. <span class="accent">Bikin agent lo yang jalan.</span></h2>
+    <p class="sub">12 bulan akses penuh. Update tiap bulan. Komunitas yang bantu lo jalan.</p>
+    <a href="#harga" class="btn" onclick="fbq('track','InitiateCheckout');">DAFTAR COURSE →</a>
+    <p class="muted" style="font-size:.8rem;margin-top:16px;">Punya pertanyaan? DM kami di Instagram <strong style="color:var(--text);">@xindelabs.id</strong></p>
+  </div>
+</section>
+
+<footer>
+  © 2026 Xinde Labs · Build Your Own Personalized Agent [For Sales Person]<br>
+  [Alamat email kontak] · [Link kebijakan privasi]
+</footer>
+
+<script>
+  document.querySelectorAll('.faq-q').forEach(function(q){
+    q.addEventListener('click', function(){ q.parentElement.classList.toggle('open'); });
+  });
+</script>
+</body>
+</html>

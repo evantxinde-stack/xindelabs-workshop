@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pembayaran Berhasil 🎉</title>
+<!-- META PIXEL -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '921699146613715');
+fbq('track', 'PageView');
+fbq('track', 'Purchase', {value: 999000, currency: 'IDR'});
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></noscript>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    background:#0a0a0f;color:#e4e4ef;min-height:100vh;display:flex;
+    align-items:center;justify-content:center;padding:20px;
+  }
+  .card{
+    background:#12121a;border:1px solid #23233a;border-radius:20px;
+    padding:44px 36px;max-width:480px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  .icon{font-size:56px;margin-bottom:16px;}
+  h1{color:#00d4a0;font-size:1.5rem;margin-bottom:10px;}
+  p{font-size:.95rem;line-height:1.6;margin-bottom:8px;color:#8b8ba3;}
+  p strong{color:#e4e4ef;}
+  .steps{text-align:left;background:#0a0a0f;border:1px solid #23233a;border-radius:12px;
+    padding:16px 20px;margin:20px 0;font-size:.88rem;}
+  .steps li{margin:8px 0;list-style:none;padding-left:26px;position:relative;color:#cfcfe2;}
+  .steps li::before{content:"✅";position:absolute;left:0;top:0;}
+  .btn{
+    display:inline-block;background:#7c5cff;color:#fff;font-weight:700;
+    padding:13px 30px;border-radius:10px;text-decoration:none;margin-top:10px;
+    box-shadow:0 4px 20px rgba(124,92,255,.35);
+  }
+  .note{font-size:.78rem;color:#5c5c75;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="icon">🎉</div>
+  <h1>Pembayaran Berhasil!</h1>
+  <p><strong>Selamat, lo resmi jadi member Build Your Own Personalized Agent!</strong></p>
+  <div class="steps">
+    <ul>
+      <li>Email konfirmasi + instruksi akses course sudah dikirim otomatis ke inbox lo</li>
+      <li>Cek folder spam/junk kalau ga ketemu (tandai "bukan spam")</li>
+      <li>Link Discord & akses course ada di email itu</li>
+    </ul>
+  </div>
+  <a class="btn" href="index.html">← Kembali ke Halaman Course</a>
+  <p class="note">Punya pertanyaan? DM kami di Instagram @xindelabs.id</p>
+</div>
+</body>
+</html>

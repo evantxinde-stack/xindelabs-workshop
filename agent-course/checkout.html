@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Build Your Own Personalized Agent [For Sales Person]</title>
+<!-- META PIXEL -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '921699146613715');
+fbq('track', 'PageView');
+fbq('track', 'InitiateCheckout');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></noscript>
+<style>
+  :root{
+    --bg:#0a0a0f;--bg-2:#12121a;--border:#23233a;--text:#e4e4ef;
+    --muted:#8b8ba3;--accent:#7c5cff;--accent-2:#00d4a0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+    line-height:1.6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .wrap{max-width:520px;width:100%;}
+  .card{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:16px;
+    padding:32px 28px;box-shadow:0 8px 40px rgba(0,0,0,.4);
+  }
+  h1{font-size:1.3rem;margin-bottom:6px;}
+  .sub{font-size:.9rem;color:var(--muted);margin-bottom:22px;}
+  .product{
+    background:var(--bg);border:1px solid var(--border);border-radius:12px;
+    padding:16px;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .product .name{font-weight:700;font-size:.95rem;}
+  .product .detail{font-size:.75rem;color:var(--muted);margin-top:3px;}
+  .product .price{font-weight:800;color:var(--accent-2);font-size:1.2rem;white-space:nowrap;}
+  label{display:block;font-weight:600;font-size:.85rem;margin:14px 0 6px;}
+  input{
+    width:100%;padding:13px 14px;background:var(--bg);
+    border:1px solid var(--border);border-radius:10px;color:var(--text);
+    font-size:1rem;outline:none;
+  }
+  input:focus{border-color:var(--accent);}
+  .hint{font-size:.75rem;color:var(--muted);margin-top:4px;}
+  .btn{
+    display:block;width:100%;margin-top:22px;background:var(--accent);color:#fff;
+    font-weight:700;font-size:1.05rem;padding:15px;border:none;border-radius:12px;
+    cursor:pointer;box-shadow:0 4px 20px rgba(124,92,255,.35);
+  }
+  .btn:hover{filter:brightness(1.1);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .secure{margin-top:12px;font-size:.75rem;color:var(--muted);text-align:center;}
+  .pay-methods{display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+  .pay-methods span{
+    background:var(--bg);border:1px solid var(--border);border-radius:8px;
+    padding:4px 10px;font-size:.7rem;font-weight:600;color:var(--muted);
+  }
+  .error{display:none;background:#2a1218;border:1px solid #ff5c7a;color:#ff8ba0;
+    border-radius:10px;padding:12px;margin-top:14px;font-size:.85rem;}
+  .error.show{display:block;}
+  #loading{display:none;text-align:center;margin-top:18px;font-weight:600;}
+  #loading.show{display:block;}
+  .spinner{
+    display:inline-block;width:18px;height:18px;border:3px solid var(--border);
+    border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;
+    vertical-align:-4px;margin-right:8px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .back{display:block;text-align:center;margin-top:16px;font-size:.8rem;color:var(--muted);text-decoration:none;}
+  .back:hover{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🧾 Checkout</h1>
+    <p class="sub">Build Your Own Personalized Agent [For Sales Person] — akses 12 bulan</p>
+
+    <div class="product">
+      <div>
+        <div class="name">Build Your Own Personalized Agent</div>
+        <div class="detail">FOR SALES PERSON · Video Course + Bot + Prompt + Discord + AI News</div>
+      </div>
+      <div class="price">Rp 999.000<span style="font-size:.7rem;color:var(--muted);">/thn</span></div>
+    </div>
+
+    <form id="checkoutForm">
+      <label for="nama">Nama Lengkap *</label>
+      <input type="text" id="nama" name="nama" required placeholder="Nama lo">
+      <span class="hint">Dipakai di email konfirmasi & akses course</span>
+
+      <label for="email">Email Aktif *</label>
+      <input type="email" id="email" name="email" required placeholder="nama@email.com">
+      <span class="hint">Link akses course & login dikirim ke email ini</span>
+
+      <label for="wa">Nomor WhatsApp *</label>
+      <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx" pattern="[0-9+\s-]{9,15}">
+      <span class="hint">Notifikasi & komunitas Discord</span>
+
+      <button type="submit" class="btn" id="payBtn">💳 BAYAR SEKARANG — Rp 999.000</button>
+      <div class="secure">🔒 Pembayaran diproses aman via Mayar</div>
+      <div class="pay-methods">
+        <span>QRIS</span><span>Virtual Account</span><span>GoPay</span><span>OVO</span><span>DANA</span>
+      </div>
+    </form>
+
+    <div id="loading"><span class="spinner"></span>Mengarahkan ke halaman pembayaran...</div>
+    <div class="error" id="errorBox"></div>
+  </div>
+  <a class="back" href="index.html">← Kembali ke halaman course</a>
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('checkoutForm');
+  var btn = document.getElementById('payBtn');
+  var loading = document.getElementById('loading');
+  var errorBox = document.getElementById('errorBox');
+
+  // ⚙️ URL webhook n8n (sudah live)
+  var N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    errorBox.classList.remove('show');
+    loading.classList.add('show');
+    btn.disabled = true;
+
+    var payload = {
+      nama: document.getElementById('nama').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      wa: document.getElementById('wa').value.trim(),
+      produk: "build-your-own-personalized-agent",
+      harga: 999000
+    };
+
+    fetch(N8N_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp){
+      if (!resp.ok) throw new Error('Webhook error ' + resp.status);
+      return resp.json();
+    })
+    .then(function(data){
+      if (data && data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        throw new Error('payment_url tidak ditemukan');
+      }
+    })
+    .catch(function(err){
+      loading.classList.remove('show');
+      btn.disabled = false;
+      errorBox.textContent = 'Terjadi kendala: ' + err.message + '. Coba lagi atau DM @xindelabs.id';
+      errorBox.classList.add('show');
+    });
+  });
+})();
+</script>
+</body>
+</html>
