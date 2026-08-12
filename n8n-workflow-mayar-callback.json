@@ -1,0 +1,157 @@
+{
+  "name": "Workshop - Mayar Callback + Auto Email",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mayar-callback",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-mayar-callback",
+      "name": "Webhook: Mayar Callback",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "mayar-callback-workshop"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Callback dari Mayar — struktur payload bervariasi tergantung versi API.\n// Mayar umumnya kirim data transaksi seperti:\n// { data: { id, reference, payment_ref, amount, status, name, email, mobile, ... } }\n// atau langsung field di root.\n\nconst raw = $input.first().json;\nconst body = raw.body || raw;  // n8n webhook: data ada di .body untuk JSON POST\n\n// Coba baca dari berbagai kemungkinan struktur\nconst data = body.data || body;\nconst reference = data.reference || data.id || data.payment_ref || data.ref || '';\nconst amount = data.amount || 0;\nconst status = (data.status || data.payment_status || '').toString().toUpperCase();\nconst name = data.name || data.customer_name || '';\nconst email = data.email || data.customer_email || '';\nconst mobile = data.mobile || data.phone || '';\n\n// Status PAID di Mayar bisa: 'PAID', 'PAID_BY_USER', 'SUCCESS', 'COMPLETED'\nconst isPaid = ['PAID','PAID_BY_USER','SUCCESS','COMPLETED'].includes(status);\n\nreturn {\n  json: {\n    valid: true,\n    reference: reference,\n    amount: amount,\n    status: status,\n    isPaid: isPaid,\n    name: name,\n    email: email,\n    mobile: mobile,\n    raw: JSON.stringify(raw).slice(0, 2000)  // log mentah buat debug\n  }\n};"
+      },
+      "id": "code-parse-callback",
+      "name": "Code: Parse Mayar Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-280, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.isPaid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-paid",
+      "name": "IF: Pembayaran Sukses?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [-60, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Kirim data peserta ke Google Apps Script (auto-email-system.gs)\n// Webhook Apps Script lo: URL dari Deploy > Web app\nconst APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXX/exec';\n\nconst payment = $input.first().json;\n\nreturn {\n  json: {\n    nama: payment.name || '',\n    email: payment.email || '',\n    no_wa: payment.mobile || '',\n    harga: payment.amount || 299000,\n    status: 'paid',\n    tipe: 'umum',\n    merchant_ref: payment.reference || '',\n    endpoint: APPS_SCRIPT_WEBHOOK\n  }\n};"
+      },
+      "id": "code-prep-email",
+      "name": "Code: Siapkan Data untuk Auto Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, -120]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ nama: $json.nama, email: $json.email, no_wa: $json.no_wa, harga: $json.harga, status: $json.status, tipe: $json.tipe, merchant_ref: $json.merchant_ref }) }}",
+        "options": {}
+      },
+      "id": "http-apps-script",
+      "name": "HTTP: Panggil Apps Script (Auto Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [420, -120]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Log callback yang bukan PAID (debug)\nconst payment = $input.first().json;\nreturn {\n  json: {\n    log: 'CALLBACK BUKAN PAID',\n    status: payment.status,\n    reference: payment.reference,\n    amount: payment.amount\n  }\n};"
+      },
+      "id": "code-reject-log",
+      "name": "Code: Log Non-Paid",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 120]
+    }
+  ],
+  "connections": {
+    "Webhook: Mayar Callback": {
+      "main": [
+        [
+          {
+            "node": "Code: Parse Mayar Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Parse Mayar Callback": {
+      "main": [
+        [
+          {
+            "node": "IF: Pembayaran Sukses?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Pembayaran Sukses?": {
+      "main": [
+        [
+          {
+            "node": "Code: Siapkan Data untuk Auto Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Log Non-Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Data untuk Auto Email": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Panggil Apps Script (Auto Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

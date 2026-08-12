@@ -1,4 +1,4 @@
-# 🚀 SETUP GUIDE — Sistem Otomatis Workshop (Vercel + n8n + Tripay)
+# 🚀 SETUP GUIDE — Sistem Otomatis Workshop (Vercel + n8n + Mayar)
 
 Panduan lengkap menghubungkan semua komponen. Ikuti urut.
 
@@ -11,23 +11,14 @@ Panduan lengkap menghubungkan semua komponen. Ikuti urut.
 ```bash
 cd ~/xindelabs-workshop
 git add .
-git commit -m "Workshop landing page + checkout + n8n workflows"
-# Bikin repo di GitHub (pakai gh CLI yang udah login)
-gh repo create xindelabs-workshop --public --source=. --push
+git commit -m "Update: Mayar workflows"
+git push origin main
 ```
 
-### A2. Deploy ke Vercel (2 cara)
-
-**Cara 1 — Vercel Dashboard (recommended):**
+### A2. Deploy ke Vercel
 1. Buka vercel.com → New Project → import `xindelabs-workshop` dari GitHub
 2. Framework preset: **Other** (static)
 3. Deploy → dapat URL `https://xindelabs-workshop.vercel.app`
-
-**Cara 2 — Vercel CLI:**
-```bash
-npm i -g vercel
-vercel --prod
-```
 
 ### A3. Ganti placeholder di HTML
 - `PIXEL_ID_LO_DISINI` → ID Meta Pixel (Events Manager → Data Sources)
@@ -36,33 +27,40 @@ vercel --prod
 
 ---
 
-## PART B — Tripay (Payment Gateway)
+## PART B — Mayar (Payment Gateway)
 
-### B1. Daftar
-1. Buka **tripay.co.id** → Daftar (butuh KTP, no badan usaha)
-2. Setelah approve: **Settings → Merchant** → catat:
-   - Merchant Code (format `T1234`)
-   - API Key
-   - Private Key
-3. **Settings → Channel** → aktifkan channel yang lo mau:
-   - QRIS (paling laku buat workshop)
-   - BCA VA, BNI VA, BRI VA (buat yang ga pegang e-wallet)
-   - GoPay, OVO, DANA, ShopeePay (kalau mau)
+### B1. Daftar & KYC
+1. Buka **mayar.id** → Daftar (butuh KTP, no badan usaha)
+2. **KYC review** — biasanya 1-3 hari kerja. Sambil nunggu, kerjakan Part C, D, E dulu.
+3. Setelah approve:
+   - **Pengaturan → API** → buat/generate **API Token** (simpan baik-baik)
+   - Catat Merchant ID (kalau ada)
 
-### B2. Mode Sandbox (testing) vs Produksi
-- Sandbox URL: `https://tripay.co.id/api-sandbox/transaction/create`
-- Produksi URL: `https://tripay.co.id/api/transaction/create`
-- Di Code node workflow n8n, ubah `TRIPAY_ENDPOINT` & `IS_SANDBOX`
-- **Test pakai sandbox dulu, abis itu ganti produksi**
+### B2. Bikin Produk di Mayar
+1. Dashboard → **Produk** → **Tambah Produk**
+2. Nama: "Workshop Closing Naik dengan AI"
+3. Harga: Rp 299.000
+4. Simpan → **copy Product ID** (di URL/detail produk)
 
-> ⚠️ Cek fee terbaru di tripay.co.id (sekitar 0.7% VA / 1.5-2% QRIS & e-wallet) — jauh lebih murah dari Midtrans 4-5%.
+### B3. Set Webhook Callback
+1. Dashboard → **Pengaturan → Webhook** (atau Notifikasi)
+2. Payment Callback URL:
+   `https://N8N_DOMAIN_LO_DISINI/webhook/mayar-callback`
+3. Simpan
+
+### B4. Channel Pembayaran
+- Aktifkan QRIS (wajib — paling laku), VA bank, e-wallet sesuai kebutuhan
+- Di Code node workflow create-payment, set `paymentType`: `QRIS` / `VA` / dll
+
+> ⚠️ Cek fee terbaru di mayar.id (estimasi 1.5-2%/transaksi + opsi paket
+> bulanan). Jauh lebih gampang daftarnya daripada Tripay.
 
 ---
 
 ## PART C — Expose n8n ke Publik (Caddy + Domain)
 
 n8n jalan di VPS lo (port 5678), tapi webhook-nya harus bisa diakses publik
-dengan HTTPS (Tripay & browser butuh HTTPS).
+dengan HTTPS (Mayar callback & browser butuh HTTPS).
 
 ### C1. Butuh domain (atau subdomain)
 Contoh: `n8n.xindelabs.id` → A record → `43.133.131.126`
@@ -73,15 +71,9 @@ Contoh: `n8n.xindelabs.id` → A record → `43.133.131.126`
 Edit `/etc/caddy/Caddyfile`:
 
 ```caddy
-# Webhook n8n — WAJIB HTTPS untuk Tripay callback
+# Webhook n8n — WAJIB HTTPS untuk Mayar callback
 n8n.xindelabs.id {
 	reverse_proxy localhost:5678
-}
-
-# Landing page (opsional — kalau mau host di VPS bukan Vercel)
-workshop.xindelabs.id {
-	root * /home/ubuntu/xindelabs-workshop
-	file_server
 }
 ```
 
@@ -94,7 +86,6 @@ Caddy otomatis bikin SSL (Let's Encrypt) — ga perlu config manual.
 ### C3. Test
 ```bash
 curl https://n8n.xindelabs.id/healthz
-# harus balas ok
 ```
 
 ---
@@ -104,47 +95,48 @@ curl https://n8n.xindelabs.id/healthz
 ### D1. Import
 1. Buka `http://43.133.131.126:5678` → login
 2. **Workflows → Import from File**
-3. Import `n8n-workflow-create-payment.json`
-4. Import `n8n-workflow-tripay-callback.json`
+3. Import `n8n-workflow-mayar-create-payment.json`
+4. Import `n8n-workflow-mayar-callback.json`
 
 ### D2. Isi konfigurasi di Code node
 
-**Workflow 1 (create-payment) — Code node "Build Tripay Payload":**
+**Workflow 1 (create-payment) — Code node "Build Mayar Payload":**
 ```
-TRIPAY_MERCHANT_CODE = 'T1234'
-TRIPAY_PRIVATE_KEY  = 'xxxx'
-TRIPAY_API_KEY      = 'xxxx'
-CALLBACK_URL        = 'https://n8n.xindelabs.id/webhook/tripay-callback'
-RETURN_URL          = 'https://xindelabs-workshop.vercel.app/success.html'
-TRIPAY_ENDPOINT     = 'https://tripay.co.id/api/transaction/create'
-method              = 'QRIS'   (atau channel lain)
+MAYAR_API_TOKEN = 'xxxx'        (dari dashboard Mayar → API)
+PRODUCT_ID      = 'xxxx'        (dari produk Mayar)
+CALLBACK_URL    = 'https://n8n.xindelabs.id/webhook/mayar-callback'
+RETURN_URL      = 'https://xindelabs-workshop.vercel.app/success.html'
+paymentType     = 'QRIS'        (atau channel lain)
 ```
 
-**Workflow 2 (callback) — Code node "Verify Tripay Signature":**
+**Workflow 2 (callback) — Code node "Parse Mayar Callback":**
 ```
-TRIPAY_MERCHANT_CODE = 'T1234'   (sama)
-TRIPAY_PRIVATE_KEY  = 'xxxx'     (sama)
+APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXXX/exec'
 ```
 
 ### D3. Aktifkan
 - Kedua workflow: toggle **Active** = ON
 - Catat URL webhook:
   - `https://n8n.xindelabs.id/webhook/create-payment`
-  - `https://n8n.xindelabs.id/webhook/tripay-callback`
+  - `https://n8n.xindelabs.id/webhook/mayar-callback`
 
 ### D4. Test alur
 ```bash
 curl -X POST https://n8n.xindelabs.id/webhook/create-payment \
   -H "Content-Type: application/json" \
-  -d '{"nama":"Test User","email":"test@gmail.com","wa":"081234567890","produk":"workshop","harga":299000}'
-# harus balas: {"payment_url":"https://tripay.co.id/..."}
+  -d '{"nama":"Test User","email":"test@gmail.com","wa":"081234567890"}'
+# harus balas: {"payment_url":"https://mayar.id/..."}
 ```
+
+> ⚠️ Kalau response Mayar belum punya field payment_url yang dikenali,
+> log response mentahnya (Code node sudah otomatis nampilin), samakan
+> nama field di Code node "Extract payment_url".
 
 ---
 
 ## PART E — Google Apps Script (Auto Email)
 
-### E1. Setup (udah pernah kita bikin — `auto-email-system.gs`)
+### E1. Setup (`auto-email-system.gs` — dari sesi sebelumnya)
 1. Buka sheets.new → "Auto Email Workshop"
 2. Extensions → Apps Script → paste `auto-email-system.gs`
 3. Ganti `EMAIL_PENGIRIM`, `LINK_ZOOM`, `JADWAL_WORKSHOP`, `LINK_KOMUNITAS`
@@ -157,13 +149,12 @@ curl -X POST https://n8n.xindelabs.id/webhook/create-payment \
 3. Salin URL: `https://script.google.com/macros/s/XXXX/exec`
 
 ### E3. Sambungkan ke n8n
-- Di workflow callback (D2), set:
-  `APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXXX/exec'`
+- Di workflow callback (D2), set `APPS_SCRIPT_WEBHOOK` dengan URL di atas
 
 ### E4. Test end-to-end
 1. Buat transaksi test via curl (D4)
-2. Bayar manual di halaman Tripay (pakai QRIS test)
-3. Callback masuk → n8n verify → panggil Apps Script
+2. Bayar manual di halaman Mayar (pakai QRIS test)
+3. Callback masuk → n8n parse PAID → panggil Apps Script
 4. Email konfirmasi masuk ke inbox test
 5. Set JADWAL_WORKSHOP = besok → besok cek email H-1 terkirim
 
@@ -198,10 +189,12 @@ access token. (Opsional — bisa belakangan.)
 
 ## Checklist GO-LIVE
 
-- [ ] Tripay approved & channel aktif
+- [ ] Mayar KYC approved + produk dibuat + Product ID dicopy
+- [ ] API Token Mayar diisi di workflow create-payment
+- [ ] Webhook callback Mayar → URL n8n (HTTPS)
 - [ ] Domain n8n → Caddy SSL aktif
 - [ ] Kedua workflow n8n Active + key terisi
-- [ ] Test transaksi sukses end-to-end (sandbox → produksi)
+- [ ] Test transaksi sukses end-to-end
 - [ ] Email konfirmasi masuk (ceklah spam)
 - [ ] Pixel ke-track (Pixel Helper)
 - [ ] Harga & tanggal di landing page benar
@@ -214,7 +207,7 @@ access token. (Opsional — bisa belakangan.)
 |---|---|
 | Vercel (statis) | Rp 0 |
 | n8n (di VPS lo) | Rp 0 |
-| Tripay fee | ~0.7-2% per transaksi |
+| Mayar fee | ~1.5-2% per transaksi [cek ulang] |
 | Domain | ~Rp 10-15rb/bln (dibayar tahunan) |
 | Google Apps Script (Gmail) | Rp 0 (limit 100 email/hari gratis) |
 | **Total** | **~Rp 15rb/bln + fee transaksi** |
