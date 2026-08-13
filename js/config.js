@@ -102,6 +102,36 @@ window.XINDE = (function () {
 
   const PRODUCT_KEY = "build-your-own-personalized-agent";
 
+  // ---------------- Template follow-up WA (admin leads §8) ----------------
+  // {nama} = nama lead, {nama_lo} = nama lo/team (ganti di sini)
+  const FOLLOWUP_TEMPLATES = [
+    {
+      label: "Follow-up 1 · Pertama kenalan",
+      text:
+        "Halo {nama}! 👋 Makasih udah daftar di halaman course Xinde Labs.\n\nSekalian ngenalin: course ini ngajarin lo bikin AI Agent pribadi — yang follow-up calon client otomatis, riset prospek ±30 detik, dan jawab objeksi “mahal / nanti dulu / pikir-pikir”. Tanpa coding.\n\nBoleh gue tanya dulu, bidang sales lo apa ya? Biar gue kasih contoh yang paling nyambung. 😊",
+    },
+    {
+      label: "Follow-up 2 · Ngejual benefit",
+      text:
+        "Halo {nama}, masih gue follow — hari ini lagi apa nih? 😄\n\nSekadar remind, ini yang lo dapet dari course-nya:\n• 9 modul video step-by-step (beginner → pro)\n• Bot tanya-jawab khusus sales\n• Prompt library yang tinggal copy-paste\n• Komunitas Discord + update use-case tiap bulan\n\nRata-rata member mulai bangun agent pertamanya malam pertama. Ada yang mau ditanyain dulu sebelum daftar?",
+    },
+    {
+      label: "Follow-up 3 · Social proof",
+      text:
+        "Halo {nama}, ini update dari Xinde Labs 👀\n\nBeberapa member baru cerita: follow-up 40 calon client yang biasanya makan seharian, sekarang kelar 5 menit karena agent yang handle. Ada juga yang bilang setup pertama selesai 1 malam sambil nonton modul — padahal dia bukan IT.\n\nKalau mereka bisa, lo juga bisa. Mau mulai dari paket mana, Tahunan atau Lifetime?",
+    },
+    {
+      label: "Follow-up 4 · Dorongan terbatas",
+      text:
+        "Halo {nama}, kabar baik! 🎁\n\nBuat yang masih mikir, masih ada garansi uang kembali 7 hari — jadi nggak ada risiko. Coba dulu 7 hari, nggak cocok? Full refund, tanpa drama.\n\nHarga mulai Rp 599.000/tahun (≈ Rp 1.600/hari — lebih murah dari kopi). Lifetime Rp 999.000, sekali bayar, akses selamanya + update use-case gratis. Mau gue bantu proses daftarnya?",
+    },
+    {
+      label: "Follow-up 5 · Closing terakhir",
+      text:
+        "Halo {nama}, ini follow-up terakhir dari gue 🙏\n\nSejujurnya gue nggak mau maksa, tapi kesempatan dapet akses ini nggak bakal buka terus-terusan. Setiap minggu slot keanggotaan di-batasin biar komunitasnya tetap nyaman.\n\nKalau hari ini dirasa belum waktunya, nggak apa-apa. Kapan-kapan butuh bantuan soal AI buat sales, chat gue aja ya. Semoga harinya lancar! 😊",
+    },
+  ];
+
   return {
     PIXEL_ID,
     N8N_WEBHOOK,
@@ -112,6 +142,7 @@ window.XINDE = (function () {
     DEFAULT_CONTENT,
     MODULES,
     PRODUCT_KEY,
+    FOLLOWUP_TEMPLATES,
     supabaseConfigured() {
       return !this.SUPABASE_URL.includes("XXXX") && !this.SUPABASE_ANON_KEY.startsWith("eyJ...");
     },

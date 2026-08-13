@@ -31,12 +31,27 @@ create table if not exists public.site_content (
   updated_by text
 );
 
+-- 4. Tabel leads (pendaftar course dari form landing)
+create table if not exists public.leads (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  email text,
+  whatsapp text,                       -- nomor WA dalam format internasional (62…)
+  discord_id text,
+  status text not null default 'belum', -- 'belum' | 'follow_up' | 'bayar'
+  notes text default '',
+  source text default 'landing-daftar', -- darimana lead masuk
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
 alter table public.members enable row level security;
 alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
+alter table public.leads enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
 drop policy if exists "members read own" on public.members;
@@ -73,6 +88,33 @@ create policy "service insert members" on public.members for insert
 drop policy if exists "service update members" on public.members;
 create policy "service update members" on public.members for update
   using (true);
+
+-- leads: SIAPA PUN boleh daftar (form publik landing page)
+drop policy if exists "leads insert anon" on public.leads;
+create policy "leads insert anon" on public.leads for insert
+  with check (true);
+
+-- leads: cuma ADMIN yang bisa baca / ubah / hapus
+drop policy if exists "leads read admin" on public.leads;
+create policy "leads read admin" on public.leads for select
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "leads update admin" on public.leads;
+create policy "leads update admin" on public.leads for update
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "leads delete admin" on public.leads;
+create policy "leads delete admin" on public.leads for delete
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
 
 -- ============================================================
 -- SEED: konten default + admin pertama
@@ -131,7 +173,13 @@ drop trigger if exists trg_content_updated on public.site_content;
 create trigger trg_content_updated before update on public.site_content
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_leads_updated on public.leads;
+create trigger trg_leads_updated before update on public.leads
+  for each row execute function public.set_updated_at();
+
 -- Index
 create index if not exists idx_members_email on public.members (email);
 create index if not exists idx_admins_email on public.admins (email);
 create index if not exists idx_content_key on public.site_content (key);
+create index if not exists idx_leads_status on public.leads (status);
+create index if not exists idx_leads_created on public.leads (created_at desc);
