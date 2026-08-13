@@ -476,6 +476,27 @@ a.l-wa:hover { text-decoration: underline; }
 .switch input:checked + .switch__slider { background: rgba(0, 255, 136, 0.15); border-color: var(--green); }
 .switch input:checked + .switch__slider::before { transform: translateX(22px); background: var(--green); }
 
+/* ----- Voucher ----- */
+.v-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 18px;
+}
+.voucher-code-row { display: flex; gap: 8px; }
+.voucher-code-row input { flex: 1; }
+.voucher-code-row .btn { flex-shrink: 0; }
+.v-code {
+  font-family: var(--font-mono);
+  color: var(--green);
+  letter-spacing: 0.4px;
+}
+@media (max-width: 900px) {
+  .v-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .v-grid { grid-template-columns: 1fr; }
+}
+
 /* ----- Responsive ----- */
 @media (max-width: 900px) {
   .a-shell { flex-direction: column; }

@@ -57,6 +57,21 @@ create table if not exists public.modules (
   updated_at timestamptz default now()
 );
 
+-- 6. Tabel vouchers (kode diskon untuk checkout)
+create table if not exists public.vouchers (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  type text not null default 'percent', -- 'percent' (persen) | 'nominal' (rupiah)
+  value integer not null default 0,     -- persen 1-100 / nominal rupiah penuh
+  max_uses integer,                    -- null = tak terbatas
+  used_count integer not null default 0,
+  starts_at timestamptz,
+  expires_at timestamptz,              -- null = tak kadaluarsa
+  active boolean not null default true,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -65,6 +80,7 @@ alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
 alter table public.leads enable row level security;
 alter table public.modules enable row level security;
+alter table public.vouchers enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
 drop policy if exists "members read own" on public.members;
@@ -155,6 +171,32 @@ create policy "modules delete admin" on public.modules for delete
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
+-- vouchers: baca semua orang (cek kode di halaman checkout), tulis cuma admin
+drop policy if exists "vouchers read all" on public.vouchers;
+create policy "vouchers read all" on public.vouchers for select
+  using (true);
+
+drop policy if exists "vouchers write admin" on public.vouchers;
+create policy "vouchers write admin" on public.vouchers for insert
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "vouchers update admin" on public.vouchers;
+create policy "vouchers update admin" on public.vouchers for update
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "vouchers delete admin" on public.vouchers;
+create policy "vouchers delete admin" on public.vouchers for delete
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
 -- ============================================================
 -- SEED: konten default + admin pertama
 -- ============================================================
@@ -225,6 +267,10 @@ drop trigger if exists trg_modules_updated on public.modules;
 create trigger trg_modules_updated before update on public.modules
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_vouchers_updated on public.vouchers;
+create trigger trg_vouchers_updated before update on public.vouchers
+  for each row execute function public.set_updated_at();
+
 -- Index
 create index if not exists idx_members_email on public.members (email);
 create index if not exists idx_admins_email on public.admins (email);
@@ -232,3 +278,4 @@ create index if not exists idx_content_key on public.site_content (key);
 create index if not exists idx_leads_status on public.leads (status);
 create index if not exists idx_leads_created on public.leads (created_at desc);
 create index if not exists idx_modules_sort on public.modules (sort);
+create index if not exists idx_vouchers_code on public.vouchers (code);
