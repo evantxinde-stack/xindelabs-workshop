@@ -45,6 +45,18 @@ create table if not exists public.leads (
   updated_at timestamptz default now()
 );
 
+-- 5. Tabel modules (LMS — modul course, dikelola dari panel LMS admin)
+create table if not exists public.modules (
+  id uuid primary key default gen_random_uuid(),
+  sort integer not null default 0,
+  level text not null default 'beginner', -- 'beginner' | 'level-up' | 'pro'
+  title text not null,
+  duration text default '',
+  video_id text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -52,6 +64,7 @@ alter table public.members enable row level security;
 alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
 alter table public.leads enable row level security;
+alter table public.modules enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
 drop policy if exists "members read own" on public.members;
@@ -116,6 +129,32 @@ create policy "leads delete admin" on public.leads for delete
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
+-- modules: baca semua orang, tulis cuma admin
+drop policy if exists "modules read all" on public.modules;
+create policy "modules read all" on public.modules for select
+  using (true);
+
+drop policy if exists "modules write admin" on public.modules;
+create policy "modules write admin" on public.modules for insert
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "modules update admin" on public.modules;
+create policy "modules update admin" on public.modules for update
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "modules delete admin" on public.modules;
+create policy "modules delete admin" on public.modules for delete
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
 -- ============================================================
 -- SEED: konten default + admin pertama
 -- ============================================================
@@ -123,6 +162,11 @@ create policy "leads delete admin" on public.leads for delete
 -- Admin pertama (email lo)
 insert into public.admins (email) values ('evant.xinde@gmail.com')
 on conflict (email) do nothing;
+
+-- Status course (panel LMS admin) — default buka
+insert into public.site_content (key, value) values
+('course_status', '{"open": true}')
+on conflict (key) do update set value = excluded.value, updated_at = now(), updated_by = 'seed';
 
 -- Konten landing page — re-run akan UPDATE ke copy terbaru
 insert into public.site_content (key, value) values
@@ -177,9 +221,14 @@ drop trigger if exists trg_leads_updated on public.leads;
 create trigger trg_leads_updated before update on public.leads
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_modules_updated on public.modules;
+create trigger trg_modules_updated before update on public.modules
+  for each row execute function public.set_updated_at();
+
 -- Index
 create index if not exists idx_members_email on public.members (email);
 create index if not exists idx_admins_email on public.admins (email);
 create index if not exists idx_content_key on public.site_content (key);
 create index if not exists idx_leads_status on public.leads (status);
 create index if not exists idx_leads_created on public.leads (created_at desc);
+create index if not exists idx_modules_sort on public.modules (sort);

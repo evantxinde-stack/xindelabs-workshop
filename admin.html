@@ -78,6 +78,7 @@
           <button type="button" class="a-menu" data-panel="content">Konten Landing</button>
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
+          <button type="button" class="a-menu" data-panel="lms">LMS Management</button>
         </aside>
 
         <main class="a-main">
@@ -315,6 +316,45 @@
             </div>
           </div>
 
+          <!-- ============ PANEL: LMS MANAGEMENT ============ -->
+          <div id="panelLMS" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">LMS Management</h2>
+              <p class="lead">Kelola modul course (tersimpan di tabel <span style="font-family:var(--font-mono)">modules</span>) &amp; status course.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Status Course</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshLms">↻ Refresh</button>
+              </div>
+              <div class="lms-status-row">
+                <div class="field" style="margin:0">
+                  <label for="f_course_open">Course Buka / Tutup</label>
+                  <div class="hint" style="margin:0">Kalau ditutup, member area nampilin banner "course ditutup sementara". Member aktif tetap bisa akses.</div>
+                </div>
+                <label class="switch" title="Buka / tutup course">
+                  <input type="checkbox" id="f_course_open" />
+                  <span class="switch__slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Modul Course</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="addModule">+ Tambah Modul</button>
+              </div>
+              <p class="a-empty" id="modulesHint">Belum ada modul. Klik "+ Tambah Modul" buat mulai.</p>
+              <div id="moduleRows"></div>
+              <div class="admin-tools">
+                <button type="button" class="btn btn--primary" id="saveModulesBtn">Simpan Modul</button>
+                <span class="hint" id="modulesSaveState">Belum ada perubahan.</span>
+              </div>
+            </div>
+          </div>
+
         </main>
       </div>
     </div>
@@ -435,6 +475,7 @@
         document.getElementById('logoutBtn').style.display = 'inline-flex';
         loadDashboard();
         loadContent();
+        loadLms();
         loadLeads('course');
         loadLeads('komunitas');
       });
@@ -587,7 +628,7 @@
     var currentPanel = 'content';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS' };
       return document.getElementById(map[panel]);
     }
 
@@ -596,10 +637,11 @@
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['dashboard', 'content', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
           panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
         });
         if (currentPanel === 'dashboard') loadDashboard();
+        if (currentPanel === 'lms') loadLms();
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
       });
@@ -982,6 +1024,163 @@
         mEl.appendChild(tr);
       });
       if (!members.length) mEl.innerHTML = '<tr><td class="a-empty">Belum ada member.</td></tr>';
+    }
+
+    // ============ LMS Management ============
+    document.getElementById('refreshLms').addEventListener('click', loadLms);
+    document.getElementById('addModule').addEventListener('click', function () {
+      var w = moduleRow(null);
+      bindModuleRow(w);
+      document.getElementById('moduleRows').appendChild(w);
+      updateModulesHint();
+    });
+
+    function loadLms() {
+      if (!client) return;
+      Promise.all([
+        client.from('modules').select('*').order('sort', { ascending: true }),
+        client.from('site_content').select('value').eq('key', 'course_status').maybeSingle()
+      ]).then(function (res) {
+        if (res[0].error) {
+          document.getElementById('modulesHint').style.display = 'block';
+          document.getElementById('modulesHint').textContent = '⚠️ Gagal load modul: ' + esc(res[0].error.message || '') +
+            '. Pastikan tabel <span style="font-family:var(--font-mono)">modules</span> sudah dibuat — jalankan <span style="font-family:var(--font-mono)">supabase-setup.sql</span> di SQL Editor.';
+          return;
+        }
+        renderModuleRows(res[0].data || []);
+        var cs = res[1].data && res[1].data.value;
+        document.getElementById('f_course_open').checked = !cs || cs.open !== false;
+      });
+    }
+
+    function moduleRow(m) {
+      m = m || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row lms-row';
+      if (m.id) wrap.dataset.id = m.id;
+      var lv = function (v, label) {
+        return '<option value="' + v + '"' + (m.level === v ? ' selected' : '') + '>' + label + '</option>';
+      };
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="admin-grid3">' +
+            '<div class="field"><label>Level</label><select class="m-level">' +
+              lv('beginner', 'Beginner') + lv('level-up', 'Level Up') + lv('pro', 'Pro') +
+            '</select></div>' +
+            '<div class="field"><label>Durasi (menit)</label><input class="m-duration" type="number" min="1" placeholder="12" value="' + esc(m.duration || '') + '" /></div>' +
+            '<div class="field"><label>Video ID YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE" value="' + esc(m.video_id || '') + '" /></div>' +
+          '</div>' +
+          '<div class="field" style="margin-bottom:0"><label>Judul Modul</label><input class="m-title" type="text" placeholder="Judul modul…" value="' + esc(m.title || '') + '" /></div>' +
+        '</div>' +
+        '<div class="lms-actions">' +
+          '<button type="button" class="btn btn--ghost btn--sm row-up" title="Naik urutan">↑</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm row-down" title="Turun urutan">↓</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>' +
+        '</div>';
+      return wrap;
+    }
+
+    function bindModuleRow(wrap) {
+      wrap.querySelector('.row-up').addEventListener('click', function () {
+        if (wrap.previousElementSibling) wrap.parentNode.insertBefore(wrap, wrap.previousElementSibling);
+      });
+      wrap.querySelector('.row-down').addEventListener('click', function () {
+        if (wrap.nextElementSibling) wrap.parentNode.insertBefore(wrap.nextElementSibling, wrap);
+      });
+      wrap.querySelector('.row-remove').addEventListener('click', function () {
+        if (!confirm('Hapus modul ini?')) return;
+        wrap.remove();
+        updateModulesHint();
+      });
+    }
+
+    function renderModuleRows(list) {
+      var el = document.getElementById('moduleRows');
+      el.innerHTML = '';
+      list.forEach(function (m) {
+        var w = moduleRow(m);
+        bindModuleRow(w);
+        el.appendChild(w);
+      });
+      updateModulesHint();
+    }
+
+    function updateModulesHint() {
+      var hint = document.getElementById('modulesHint');
+      var rows = document.querySelectorAll('#moduleRows .lms-row').length;
+      hint.style.display = rows ? 'none' : 'block';
+      if (rows) hint.textContent = 'Pakai ↑ / ↓ buat ngatur urutan, lalu klik "Simpan Modul".';
+    }
+
+    document.getElementById('f_course_open').addEventListener('change', function () {
+      var open = this.checked;
+      client.from('site_content').upsert({ key: 'course_status', value: { open: open } }).then(function (r) {
+        if (r.error) alert('Gagal simpan status course: ' + (r.error.message || 'terjadi kesalahan'));
+      });
+    });
+
+    document.getElementById('saveModulesBtn').addEventListener('click', function () {
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#moduleRows .lms-row'));
+      var btn = document.getElementById('saveModulesBtn');
+
+      for (var i = 0; i < rows.length; i++) {
+        var title = rows[i].querySelector('.m-title').value.trim();
+        if (!title) {
+          alert('Judul modul wajib diisi (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-title').focus();
+          return;
+        }
+      }
+
+      var upserts = rows.map(function (w, i) {
+        var payload = {
+          sort: i + 1,
+          level: w.querySelector('.m-level').value,
+          title: w.querySelector('.m-title').value.trim(),
+          duration: String(w.querySelector('.m-duration').value || '').trim(),
+          video_id: w.querySelector('.m-video').value.trim()
+        };
+        if (w.dataset.id) payload.id = w.dataset.id;
+        return payload;
+      });
+
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      document.getElementById('modulesSaveState').textContent = 'Mengirim ke Supabase…';
+
+      function done() {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Modul';
+        document.getElementById('modulesSaveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        loadLms();
+      }
+
+      if (!upserts.length) {
+        client.from('modules').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(function (r) {
+          if (r.error) return saveFail(btn, r.error);
+          done();
+        });
+        return;
+      }
+
+      client.from('modules').upsert(upserts).then(function (r) {
+        if (r.error) return saveFail(btn, r.error);
+        var keepIds = upserts.map(function (u) { return u.id; }).filter(Boolean);
+        var del = keepIds.length
+          ? client.from('modules').delete().not('id', 'in', '(' + keepIds.join(',') + ')')
+          : Promise.resolve({ error: null });
+        del.then(function (dr) {
+          if (dr.error) return saveFail(btn, dr.error);
+          done();
+        });
+      });
+    });
+
+    function saveFail(btn, err) {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Modul';
+      document.getElementById('modulesSaveState').textContent = '';
+      alert('Gagal simpan modul: ' + (err.message || 'terjadi kesalahan'));
     }
   </script>
 </body>
