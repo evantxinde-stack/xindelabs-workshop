@@ -622,41 +622,6 @@ h1, h2, h3, .display {
 .field.invalid .err-msg { display: block; }
 .field.invalid input { border-color: var(--danger); }
 
-/* voucher */
-.voucher-row { display: flex; gap: 10px; }
-.voucher-row input { flex: 1; }
-.voucher-row .btn { flex-shrink: 0; }
-.hint.is-ok { color: var(--green); }
-.hint.is-error { color: var(--danger); }
-.price-summary {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin-bottom: 18px;
-}
-.price-line {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 13.5px;
-  color: var(--muted);
-  padding: 3px 0;
-}
-.price-line.is-total {
-  border-top: 1px solid var(--line);
-  margin-top: 6px;
-  padding-top: 10px;
-}
-.price-line.is-total span { color: var(--text); font-weight: 600; }
-.price-line.is-total b { color: var(--green); font-family: var(--font-display); font-size: 19px; }
-.price-line.is-discount span:last-child { color: var(--green); }
-.price-line.is-discount b { color: var(--text); }
-.price-line #voucherClear { color: var(--danger); text-decoration: none; margin-left: 6px; font-size: 12px; }
-@media (max-width: 560px) {
-  .price-line { font-size: 13px; }
-}
-
 /* tier selector */
 .tier-options { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 26px; }
 .tier-opt { position: relative; }

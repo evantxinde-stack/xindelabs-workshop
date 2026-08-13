@@ -79,7 +79,6 @@
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
           <button type="button" class="a-menu" data-panel="lms">LMS Management</button>
-          <button type="button" class="a-menu" data-panel="vouchers">Voucher</button>
         </aside>
 
         <main class="a-main">
@@ -356,83 +355,6 @@
             </div>
           </div>
 
-          <!-- ============ PANEL: VOUCHER MANAGEMENT ============ -->
-          <div id="panelVouchers" style="display:none">
-            <div class="section-head" style="text-align:left">
-              <p class="eyebrow"><span class="dot"></span>admin</p>
-              <h2 class="h2">Voucher Management</h2>
-              <p class="lead">Buat &amp; kelola kode voucher diskon untuk checkout. Tersimpan di tabel <span style="font-family:var(--font-mono)">vouchers</span>.</p>
-            </div>
-
-            <div class="a-card">
-              <div class="a-card__head">
-                <h3 id="voucherFormTitle">Buat Voucher</h3>
-              </div>
-              <div class="v-grid">
-                <div class="field">
-                  <label for="v_code">Kode Voucher *</label>
-                  <div class="voucher-code-row">
-                    <input type="text" id="v_code" placeholder="cth: XINDE10" spellcheck="false" />
-                    <button type="button" class="btn btn--ghost btn--sm" id="v_gen">🎲 Generate</button>
-                  </div>
-                  <div class="hint">Huruf besar, angka, dan tanda <span style="font-family:var(--font-mono)">-</span>. Maks 30 karakter.</div>
-                </div>
-                <div class="field">
-                  <label for="v_type">Jenis Diskon</label>
-                  <select id="v_type">
-                    <option value="percent">Persen (%)</option>
-                    <option value="nominal">Nominal (Rp)</option>
-                  </select>
-                </div>
-                <div class="field">
-                  <label for="v_value">Nilai Diskon *</label>
-                  <input type="number" id="v_value" min="0" step="1000" placeholder="cth: 10 (persen) / 50000 (Rp)" />
-                  <div class="hint">Persen: 1–100. Nominal: angka rupiah penuh.</div>
-                </div>
-                <div class="field">
-                  <label for="v_max_uses">Maks Pemakaian</label>
-                  <input type="number" id="v_max_uses" min="1" placeholder="cth: 50 (kosongkan = tak terbatas)" />
-                </div>
-                <div class="field">
-                  <label for="v_expires_at">Berlaku Sampai</label>
-                  <input type="date" id="v_expires_at" />
-                  <div class="hint">Kosongkan kalau mau berlaku selamanya.</div>
-                </div>
-                <div class="field">
-                  <label for="v_active">Status</label>
-                  <div class="lms-status-row" style="justify-content:flex-start">
-                    <label class="switch">
-                      <input type="checkbox" id="v_active" checked />
-                      <span class="switch__slider"></span>
-                    </label>
-                    <span class="hint" style="margin:0" id="v_active_label">Aktif</span>
-                  </div>
-                </div>
-              </div>
-              <div class="admin-tools">
-                <button type="button" class="btn btn--primary" id="v_save">Simpan Voucher</button>
-                <button type="button" class="btn btn--ghost" id="v_cancel" style="display:none">Batal Edit</button>
-                <span class="hint" id="v_save_state"></span>
-              </div>
-            </div>
-
-            <div class="a-card">
-              <div class="a-card__head">
-                <h3>Daftar Voucher</h3>
-                <button type="button" class="btn btn--ghost btn--sm" id="refreshVouchers">↻ Refresh</button>
-              </div>
-              <div class="a-table-wrap">
-                <table class="a-table">
-                  <thead>
-                    <tr><th>Kode</th><th>Jenis</th><th>Nilai</th><th>Terpakai</th><th>Berlaku s.d.</th><th>Status</th><th></th></tr>
-                  </thead>
-                  <tbody id="voucherBody"></tbody>
-                </table>
-              </div>
-              <p class="a-empty" id="voucherEmpty" style="display:none">Belum ada voucher. Buat lewat form di atas.</p>
-            </div>
-          </div>
-
         </main>
       </div>
     </div>
@@ -706,7 +628,7 @@
     var currentPanel = 'content';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', vouchers: 'panelVouchers' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS' };
       return document.getElementById(map[panel]);
     }
 
@@ -715,12 +637,11 @@
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['dashboard', 'content', 'lms', 'vouchers', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
           panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
         });
         if (currentPanel === 'dashboard') loadDashboard();
         if (currentPanel === 'lms') loadLms();
-        if (currentPanel === 'vouchers') loadVouchers();
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
       });
@@ -1261,166 +1182,6 @@
       document.getElementById('modulesSaveState').textContent = '';
       alert('Gagal simpan modul: ' + (err.message || 'terjadi kesalahan'));
     }
-
-    // ============ Voucher Management ============
-    var voucherEditId = null;
-
-    function fmtRp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
-    function fmtDate(s) {
-      if (!s) return 'Tak terbatas';
-      var d = new Date(s);
-      return isNaN(d.getTime()) ? '-' : d.toLocaleDateString('id-ID');
-    }
-    function vSaveState(t) { document.getElementById('v_save_state').textContent = t || ''; }
-
-    function genVoucherCode() {
-      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      var s = '';
-      for (var i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
-      return 'XINDE' + s;
-    }
-
-    function voucherRow(v) {
-      var quota = (v.max_uses == null) ? '∞' : ('/ ' + v.max_uses);
-      var nilai = v.type === 'percent' ? v.value + '%' : 'Rp ' + fmtRp(v.value);
-      return '<tr data-id="' + esc(v.id) + '">' +
-        '<td data-label="Kode"><b class="v-code">' + esc(v.code) + '</b></td>' +
-        '<td data-label="Jenis">' + (v.type === 'percent' ? 'Persen' : 'Nominal') + '</td>' +
-        '<td data-label="Nilai">' + esc(nilai) + '</td>' +
-        '<td data-label="Terpakai">' + (v.used_count || 0) + ' ' + quota + '</td>' +
-        '<td data-label="Berlaku s.d.">' + fmtDate(v.expires_at) + '</td>' +
-        '<td data-label="Status"><label class="switch"><input type="checkbox" class="v-toggle"' + (v.active ? ' checked' : '') + ' /><span class="switch__slider"></span></label></td>' +
-        '<td class="l-fu" data-label="">' +
-          '<button type="button" class="btn btn--ghost btn--sm v-edit">Edit</button> ' +
-          '<button type="button" class="btn btn--ghost btn--sm v-del">Hapus</button>' +
-        '</td>' +
-      '</tr>';
-    }
-
-    function bindVoucherRow(tr) {
-      var id = tr.dataset.id;
-      var act = tr.querySelector('.v-toggle');
-      if (act) act.addEventListener('change', function () {
-        client.from('vouchers').update({ active: this.checked }).eq('id', id).then(function (ur) {
-          if (ur.error) { act.checked = !act.checked; alert('Gagal ubah status: ' + (ur.error.message || '')); }
-        });
-      });
-      var ed = tr.querySelector('.v-edit');
-      if (ed) ed.addEventListener('click', function () { editVoucher(id); });
-      var dl = tr.querySelector('.v-del');
-      if (dl) dl.addEventListener('click', function () {
-        if (!confirm('Hapus voucher ini?')) return;
-        client.from('vouchers').delete().eq('id', id).then(function (dr) {
-          if (dr.error) { alert('Gagal hapus: ' + (dr.error.message || '')); return; }
-          if (voucherEditId === id) resetVoucherForm();
-          loadVouchers();
-        });
-      });
-    }
-
-    function renderVouchers(list) {
-      var tbody = document.getElementById('voucherBody');
-      var empty = document.getElementById('voucherEmpty');
-      empty.style.display = list.length ? 'none' : 'block';
-      tbody.innerHTML = '';
-      list.forEach(function (v) {
-        var wrap = document.createElement('tbody');
-        wrap.innerHTML = voucherRow(v);
-        var tr = wrap.firstChild;
-        bindVoucherRow(tr);
-        tbody.appendChild(tr);
-      });
-    }
-
-    function loadVouchers() {
-      if (!client) return;
-      client.from('vouchers').select('*').order('created_at', { ascending: false }).then(function (r) {
-        if (r.error) {
-          document.getElementById('voucherBody').innerHTML =
-            '<tr><td colspan="7" class="l-meta">Gagal load voucher: ' + esc(r.error.message || '') + ' — pastikan tabel vouchers ada (jalankan supabase-setup.sql).</td></tr>';
-          document.getElementById('voucherEmpty').style.display = 'none';
-          return;
-        }
-        renderVouchers(r.data || []);
-      });
-    }
-
-    function resetVoucherForm() {
-      voucherEditId = null;
-      document.getElementById('voucherFormTitle').textContent = 'Buat Voucher';
-      document.getElementById('v_code').value = '';
-      document.getElementById('v_type').value = 'percent';
-      document.getElementById('v_value').value = '';
-      document.getElementById('v_max_uses').value = '';
-      document.getElementById('v_expires_at').value = '';
-      document.getElementById('v_active').checked = true;
-      document.getElementById('v_active_label').textContent = 'Aktif';
-      document.getElementById('v_cancel').style.display = 'none';
-      vSaveState('');
-    }
-
-    function editVoucher(id) {
-      client.from('vouchers').select('*').eq('id', id).single().then(function (r) {
-        if (r.error) { alert('Gagal ambil voucher: ' + (r.error.message || '')); return; }
-        var v = r.data;
-        voucherEditId = v.id;
-        document.getElementById('voucherFormTitle').textContent = 'Edit Voucher — ' + v.code;
-        document.getElementById('v_code').value = v.code || '';
-        document.getElementById('v_type').value = v.type || 'percent';
-        document.getElementById('v_value').value = (v.value != null) ? v.value : '';
-        document.getElementById('v_max_uses').value = (v.max_uses == null) ? '' : v.max_uses;
-        document.getElementById('v_expires_at').value = v.expires_at ? String(v.expires_at).slice(0, 10) : '';
-        document.getElementById('v_active').checked = !!v.active;
-        document.getElementById('v_active_label').textContent = v.active ? 'Aktif' : 'Nonaktif';
-        document.getElementById('v_cancel').style.display = '';
-        vSaveState('');
-      });
-    }
-
-    document.getElementById('v_gen').addEventListener('click', function () {
-      document.getElementById('v_code').value = genVoucherCode();
-    });
-    document.getElementById('v_active').addEventListener('change', function () {
-      document.getElementById('v_active_label').textContent = this.checked ? 'Aktif' : 'Nonaktif';
-    });
-    document.getElementById('v_cancel').addEventListener('click', resetVoucherForm);
-    document.getElementById('refreshVouchers').addEventListener('click', loadVouchers);
-
-    document.getElementById('v_save').addEventListener('click', function () {
-      var code = document.getElementById('v_code').value.trim().toUpperCase();
-      var type = document.getElementById('v_type').value;
-      var value = Math.round(Number(document.getElementById('v_value').value));
-      var maxUses = document.getElementById('v_max_uses').value;
-      var expiresAt = document.getElementById('v_expires_at').value;
-      var btn = document.getElementById('v_save');
-
-      if (!code) { alert('Kode voucher wajib diisi.'); return; }
-      if (code.length > 30 || !/^[A-Z0-9-]+$/.test(code)) { alert('Kode cuma boleh huruf besar, angka, dan tanda "-" (maks 30).'); return; }
-      if (!(value > 0)) { alert('Nilai diskon wajib diisi lebih dari 0.'); return; }
-      if (type === 'percent' && value > 100) { alert('Nilai persen maksimal 100.'); return; }
-      if (maxUses !== '' && !(Math.round(Number(maxUses)) >= 1)) { alert('Maks pemakaian minimal 1.'); return; }
-
-      var payload = {
-        code: code,
-        type: type,
-        value: value,
-        max_uses: maxUses === '' ? null : Math.round(Number(maxUses)),
-        expires_at: expiresAt ? new Date(expiresAt + 'T23:59:59').toISOString() : null,
-        active: document.getElementById('v_active').checked
-      };
-      if (voucherEditId) payload.id = voucherEditId;
-
-      btn.disabled = true;
-      btn.textContent = voucherEditId ? 'Menyimpan…' : 'Membuat…';
-      client.from('vouchers').upsert(payload).then(function (r) {
-        btn.disabled = false;
-        btn.textContent = 'Simpan Voucher';
-        if (r.error) { alert('Gagal simpan voucher: ' + (r.error.message || '')); return; }
-        vSaveState('Tersimpan ' + new Date().toLocaleTimeString('id-ID'));
-        resetVoucherForm();
-        loadVouchers();
-      });
-    });
   </script>
 </body>
 </html>

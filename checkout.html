@@ -12,7 +12,6 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/config.js"></script>
   <script src="js/pixel.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -53,31 +52,6 @@
                   <span class="tier-badge">TERBAIK</span>
                 </label>
               </div>
-            </div>
-          </div>
-
-          <!-- ============ Voucher diskon ============ -->
-          <div class="field" id="voucherField">
-            <label for="voucher">Kode Voucher (opsional)</label>
-            <div class="voucher-row">
-              <input type="text" id="voucher" placeholder="cth: XINDE10" autocomplete="off" spellcheck="false" />
-              <button type="button" class="btn btn--ghost" id="voucherBtn">Pakai</button>
-            </div>
-            <div class="hint" id="voucherMsg" style="display:none"></div>
-          </div>
-
-          <div class="price-summary" id="priceSummary" style="display:none">
-            <div class="price-line">
-              <span>Subtotal</span>
-              <span id="sumSub">Rp 599.000</span>
-            </div>
-            <div class="price-line is-discount" id="sumDiscRow">
-              <span>Voucher <b id="sumVoucherCode"></b> <a href="#" id="voucherClear" title="Batalkan voucher">✕</a></span>
-              <span id="sumDisc">-Rp 0</span>
-            </div>
-            <div class="price-line is-total">
-              <span>Total</span>
-              <b id="sumTotal">Rp 599.000</b>
             </div>
           </div>
 
@@ -166,31 +140,6 @@
     var payAmount = document.getElementById('payAmount');
     var formError = document.getElementById('formError');
 
-    var supabaseClient = null;
-    if (cfg.supabaseConfigured() && window.supabase) {
-      supabaseClient = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-    }
-
-    // ---------- Voucher ----------
-    var appliedVoucher = null;
-
-    function fmtRp(n) {
-      return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    }
-    function basePrice() {
-      return cfg.PRICES[selectedTier().value].harga;
-    }
-    function discountOf(v, base) {
-      var d = v.type === 'percent' ? Math.floor(base * v.value / 100) : v.value;
-      return Math.max(0, Math.min(d, base));
-    }
-    function voucherMsg(text, ok) {
-      var m = document.getElementById('voucherMsg');
-      m.style.display = 'block';
-      m.className = 'hint ' + (ok ? 'is-ok' : 'is-error');
-      m.textContent = text;
-    }
-
     // ---------- Preselect tier dari URL (?tier=yearly|lifetime) ----------
     (function () {
       var t = new URLSearchParams(location.search).get('tier');
@@ -204,52 +153,12 @@
       return document.querySelector('input[name="tier"]:checked');
     }
     function updatePrice() {
-      var base = basePrice();
-      var t = cfg.PRICES[selectedTier().value];
-      var disc = appliedVoucher ? discountOf(appliedVoucher, base) : 0;
-      var sum = document.getElementById('priceSummary');
-      if (disc > 0) {
-        sum.style.display = 'block';
-        document.getElementById('sumSub').textContent = 'Rp ' + fmtRp(base);
-        document.getElementById('sumDiscRow').style.display = 'flex';
-        document.getElementById('sumVoucherCode').textContent = appliedVoucher.code;
-        document.getElementById('sumDisc').textContent = '-Rp ' + fmtRp(disc);
-        document.getElementById('sumTotal').textContent = 'Rp ' + fmtRp(base - disc);
-        payAmount.textContent = 'Rp ' + fmtRp(base - disc);
-      } else {
-        sum.style.display = 'none';
-        payAmount.textContent = t.label;
-      }
+      var tier = selectedTier().value;
+      var p = cfg.PRICES[tier];
+      payAmount.textContent = p.label;
     }
     document.querySelectorAll('input[name="tier"]').forEach(function (r) {
       r.addEventListener('change', updatePrice);
-    });
-
-    // ---------- Pakai voucher ----------
-    document.getElementById('voucherBtn').addEventListener('click', function () {
-      var code = document.getElementById('voucher').value.trim().toUpperCase();
-      if (!code) { voucherMsg('Masukkan kode voucher dulu.'); return; }
-      if (!supabaseClient) { voucherMsg('Gagal cek voucher — Supabase belum dikonfigurasi.'); return; }
-      supabaseClient.from('vouchers').select('*').eq('code', code).maybeSingle().then(function (r) {
-        if (r.error) { voucherMsg('Gagal cek voucher. Coba lagi.'); return; }
-        var v = r.data;
-        var now = new Date();
-        if (!v || v.active !== true) { appliedVoucher = null; updatePrice(); voucherMsg('Kode voucher tidak valid.'); return; }
-        if (v.starts_at && new Date(v.starts_at) > now) { appliedVoucher = null; updatePrice(); voucherMsg('Voucher belum aktif.'); return; }
-        if (v.expires_at && new Date(v.expires_at) < now) { appliedVoucher = null; updatePrice(); voucherMsg('Voucher sudah kadaluarsa.'); return; }
-        if (v.max_uses != null && v.used_count >= v.max_uses) { appliedVoucher = null; updatePrice(); voucherMsg('Kuota pemakaian voucher sudah habis.'); return; }
-        appliedVoucher = v;
-        updatePrice();
-        voucherMsg('Voucher "' + v.code + '" dipakai — diskon ' + (v.type === 'percent' ? v.value + '%' : 'Rp ' + fmtRp(v.value)) + '.', true);
-      });
-    });
-
-    document.getElementById('voucherClear').addEventListener('click', function (e) {
-      e.preventDefault();
-      appliedVoucher = null;
-      document.getElementById('voucher').value = '';
-      document.getElementById('voucherMsg').style.display = 'none';
-      updatePrice();
     });
 
     // ---------- Discord tutorial ----------
@@ -316,18 +225,13 @@
       formError.classList.remove('show');
 
       var tier = selectedTier().value;
-      var base = basePrice();
-      var disc = appliedVoucher ? discountOf(appliedVoucher, base) : 0;
       var payload = {
         nama: document.getElementById('nama').value.trim(),
         email: document.getElementById('email').value.trim(),
         wa: document.getElementById('wa').value.trim(),
         discord: document.getElementById('discord').value.trim(),
         produk: cfg.PRODUCT_KEY,
-        harga: base - disc,
-        harga_original: base,
-        voucher_code: appliedVoucher ? appliedVoucher.code : '',
-        voucher_discount: disc
+        harga: cfg.PRICES[tier].harga
       };
 
       fbq('track', 'AddPaymentInfo');
