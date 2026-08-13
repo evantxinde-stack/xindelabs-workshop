@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — Workshop Closing Naik dengan AI</title>
+<!-- META PIXEL — GANTI 921699146613715 -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '921699146613715');
+fbq('track', 'PageView');
+fbq('track', 'InitiateCheckout');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></noscript>
+<style>
+  :root{--primary:#1a73e8;--dark:#0f172a;--dark-2:#1e293b;--accent:#f59e0b;--text:#334155;--border:#e2e8f0;--light:#f8fafc;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:var(--text);background:var(--light);line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:32px 20px 60px;}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,.06);}
+  h1{font-size:1.35rem;color:var(--dark);margin-bottom:6px;}
+  .sub{font-size:.95rem;color:var(--text);margin-bottom:20px;}
+  .product{background:var(--light);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
+  .product .name{font-weight:700;color:var(--dark);}
+  .product .price{font-weight:800;color:var(--primary);font-size:1.15rem;}
+  label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 6px;color:var(--dark);}
+  input,select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:1rem;background:#fff;color:var(--dark);}
+  input:focus,select:focus{outline:2px solid var(--primary);border-color:transparent;}
+  .hint{font-size:.8rem;color:#64748b;margin-top:4px;}
+  .btn{display:block;width:100%;margin-top:22px;background:var(--accent);color:#111;font-weight:800;font-size:1.05rem;padding:15px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.35);}
+  .btn:hover{filter:brightness(1.05);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .secure{margin-top:12px;font-size:.8rem;color:#64748b;text-align:center;}
+  .secure svg{vertical-align:-3px;margin-right:4px;}
+  .pay-methods{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
+  .pay-methods span{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:600;color:#475569;}
+  .error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;padding:12px;margin-top:14px;font-size:.9rem;}
+  .error.show{display:block;}
+  #loading{display:none;text-align:center;margin-top:18px;font-weight:600;color:var(--dark);}
+  #loading.show{display:block;}
+  .spinner{display:inline-block;width:18px;height:18px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-4px;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>🧾 Checkout</h1>
+    <p class="sub">Workshop "Closing Naik dengan AI" — live Zoom, 2 jam</p>
+
+    <div class="product">
+      <div>
+        <div class="name">Workshop Closing Naik dengan AI</div>
+        <div style="font-size:.8rem;color:#64748b;">Live Zoom • 2 Jam • Rekaman + Template</div>
+      </div>
+      <div class="price">Rp 299.000</div>
+    </div>
+
+    <form id="checkoutForm">
+      <label for="nama">Nama Lengkap *</label>
+      <input type="text" id="nama" name="nama" required placeholder="Nama lo (sesuai bukti bayar)">
+      <span class="hint">Dipakai di sertifikat & email konfirmasi</span>
+
+      <label for="email">Email Aktif *</label>
+      <input type="email" id="email" name="email" required placeholder="nama@email.com">
+      <span class="hint">Link Zoom & materi dikirim ke email ini</span>
+
+      <label for="wa">Nomor WhatsApp *</label>
+      <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx" pattern="[0-9+\s-]{9,15}">
+      <span class="hint">Grup peserta & notifikasi WA</span>
+
+      <button type="submit" class="btn" id="payBtn">💳 BAYAR SEKARANG — Rp 299.000</button>
+      <div class="secure">🔒 Pembayaran diproses aman via Tripay</div>
+      <div class="pay-methods">
+        <span>QRIS</span><span>Virtual Account</span><span>GoPay</span><span>OVO</span><span>DANA</span>
+      </div>
+    </form>
+
+    <div id="loading"><span class="spinner"></span>Mengarahkan ke halaman pembayaran...</div>
+    <div class="error" id="errorBox"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var form = document.getElementById('checkoutForm');
+  var btn = document.getElementById('payBtn');
+  var loading = document.getElementById('loading');
+  var errorBox = document.getElementById('errorBox');
+
+  // ⚙️ GANTI INI: URL webhook n8n lo
+  // Format: https://<domain-n8n>/webhook/create-payment
+  var N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    errorBox.classList.remove('show');
+    loading.classList.add('show');
+    btn.disabled = true;
+
+    var payload = {
+      nama: document.getElementById('nama').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      wa: document.getElementById('wa').value.trim(),
+      produk: "workshop-closing-naik-ai",
+      harga: 299000
+    };
+
+    fetch(N8N_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function(resp){
+      if (!resp.ok) throw new Error('Webhook error ' + resp.status);
+      return resp.json();
+    })
+    .then(function(data){
+      if (data && data.payment_url) {
+        window.location.href = data.payment_url;
+      } else {
+        throw new Error('payment_url tidak ditemukan di response');
+      }
+    })
+    .catch(function(err){
+      loading.classList.remove('show');
+      btn.disabled = false;
+      errorBox.textContent = 'Terjadi kendala: ' + err.message + '. Coba lagi atau DM @xindelabs.id';
+      errorBox.classList.add('show');
+    });
+  });
+})();
+</script>
+</body>
+</html>
