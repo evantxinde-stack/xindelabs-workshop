@@ -1068,8 +1068,13 @@
               lv('beginner', 'Beginner') + lv('level-up', 'Level Up') + lv('pro', 'Pro') +
             '</select></div>' +
             '<div class="field"><label>Durasi (menit)</label><input class="m-duration" type="number" min="1" placeholder="12" value="' + esc(m.duration || '') + '" /></div>' +
-            '<div class="field"><label>Video ID YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE" value="' + esc(m.video_id || '') + '" /></div>' +
+            '<div class="field"><label>Jenis Konten</label><select class="m-type">' +
+              '<option value="video"' + (m.type !== 'text' ? ' selected' : '') + '>Video (YouTube)</option>' +
+              '<option value="text"' + (m.type === 'text' ? ' selected' : '') + '>Teks</option>' +
+            '</select></div>' +
           '</div>' +
+          '<div class="field m-video-field"><label>Video ID YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE" value="' + esc(m.video_id || '') + '" /></div>' +
+          '<div class="field m-text-field" style="display:none"><label>Isi Teks Modul</label><textarea class="m-text" rows="7" placeholder="Tulis konten modul di sini (bisa multi-paragraf)…">' + esc(m.content || '') + '</textarea></div>' +
           '<div class="field" style="margin-bottom:0"><label>Judul Modul</label><input class="m-title" type="text" placeholder="Judul modul…" value="' + esc(m.title || '') + '" /></div>' +
         '</div>' +
         '<div class="lms-actions">' +
@@ -1092,6 +1097,14 @@
         wrap.remove();
         updateModulesHint();
       });
+      var typeSel = wrap.querySelector('.m-type');
+      function syncType() {
+        var isText = typeSel.value === 'text';
+        wrap.querySelector('.m-video-field').style.display = isText ? 'none' : 'block';
+        wrap.querySelector('.m-text-field').style.display = isText ? 'block' : 'none';
+      }
+      typeSel.addEventListener('change', syncType);
+      syncType();
     }
 
     function renderModuleRows(list) {
@@ -1130,15 +1143,29 @@
           rows[i].querySelector('.m-title').focus();
           return;
         }
+        var mtype = rows[i].querySelector('.m-type').value;
+        if (mtype === 'video' && !rows[i].querySelector('.m-video').value.trim()) {
+          alert('Video ID wajib diisi untuk modul video (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-video').focus();
+          return;
+        }
+        if (mtype === 'text' && !rows[i].querySelector('.m-text').value.trim()) {
+          alert('Isi teks wajib diisi untuk modul teks (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-text').focus();
+          return;
+        }
       }
 
       var upserts = rows.map(function (w, i) {
+        var mtype = w.querySelector('.m-type').value;
         var payload = {
           sort: i + 1,
           level: w.querySelector('.m-level').value,
           title: w.querySelector('.m-title').value.trim(),
           duration: String(w.querySelector('.m-duration').value || '').trim(),
-          video_id: w.querySelector('.m-video').value.trim()
+          type: mtype,
+          video_id: mtype === 'video' ? w.querySelector('.m-video').value.trim() : '',
+          content: mtype === 'text' ? w.querySelector('.m-text').value : ''
         };
         if (w.dataset.id) payload.id = w.dataset.id;
         return payload;

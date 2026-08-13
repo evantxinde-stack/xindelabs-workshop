@@ -50,6 +50,9 @@
         <div class="player-frame" id="playerFrame">
           <iframe id="playerIframe" src="" title="Video modul" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
         </div>
+        <div class="player-text" id="playerText" style="display:none">
+          <div class="player-text__inner" id="playerTextContent"></div>
+        </div>
       </div>
     </div>
 
@@ -79,14 +82,6 @@
         <!-- Banner kalau course ditutup admin -->
         <div class="notice notice--warn" id="courseClosedNotice" style="display:none;margin-bottom:20px">
           ⚠️ Course sementara <b style="color:inherit">ditutup</b> oleh admin. Member aktif tetap bisa nonton modul yang sudah ada.
-        </div>
-
-        <!-- Link ekstra -->
-        <div class="member-links" id="extraLinks">
-          <a class="mlink" href="https://chatgpt.com" target="_blank" rel="noopener"><span class="ico">🤖</span>AI Bot Tanya Jawab<small>tanya seputar course</small></a>
-          <a class="mlink" href="https://discord.gg/xindelabs" target="_blank" rel="noopener"><span class="ico">💬</span>Komunitas Discord<small>share &amp; tanya</small></a>
-          <a class="mlink" href="#" id="promptLink"><span class="ico">📚</span>Prompt Library<small>copy-paste siap pakai</small></a>
-          <a class="mlink" href="#" id="newsLink"><span class="ico">📰</span>AI News<small>update tools terbaru</small></a>
         </div>
 
         <div class="section-head" style="margin-bottom:10px">
@@ -120,25 +115,45 @@
 
     var activeModules = [];
 
+    function isTextModule(m) {
+      return (m.type === 'text') || (!m.video_id && (m.content || '').trim());
+    }
+    function renderText(s) {
+      return String(s || '').split(/\n{2,}/).map(function (p) {
+        return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+      }).join('');
+    }
+
     function renderModules() {
       var grid = document.getElementById('moduleGrid');
       grid.innerHTML = activeModules.map(function (m, i) {
+        var txt = isTextModule(m);
         return '<div class="mod-row" data-idx="' + i + '" role="button" tabindex="0">' +
           '<span class="mod-row__no">' + String(i + 1).padStart(2, '0') + '</span>' +
           '<span class="mod-row__lv ' + levelClass(m.level) + '">' + levelLabel(m.level) + '</span>' +
           '<span class="mod-row__title">' + m.title + '</span>' +
           '<span class="mod-row__meta">' + durationLabel(m.duration) + '</span>' +
-          '<span class="mod-row__play">▶ tonton</span>' +
+          '<span class="mod-row__play">' + (txt ? '📖 baca' : '▶ tonton') + '</span>' +
         '</div>';
       }).join('');
 
       var iframe = document.getElementById('playerIframe');
+      var textBox = document.getElementById('playerText');
+      var textContent = document.getElementById('playerTextContent');
       function play(idx) {
         var m = activeModules[idx];
-        if (!m || !m.video_id) return;
-        iframe.src = 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0';
+        if (!m) return;
         grid.querySelectorAll('.mod-row').forEach(function (c) { c.classList.remove('active'); });
         grid.querySelectorAll('.mod-row')[idx].classList.add('active');
+        if (isTextModule(m)) {
+          iframe.style.display = 'none';
+          textBox.style.display = 'block';
+          textContent.innerHTML = renderText(m.content);
+        } else {
+          textBox.style.display = 'none';
+          iframe.style.display = '';
+          iframe.src = m.video_id ? 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0' : '';
+        }
       }
       grid.querySelectorAll('.mod-row').forEach(function (row) {
         row.addEventListener('click', function () { play(Number(row.dataset.idx)); });

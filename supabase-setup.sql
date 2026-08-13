@@ -51,11 +51,17 @@ create table if not exists public.modules (
   sort integer not null default 0,
   level text not null default 'beginner', -- 'beginner' | 'level-up' | 'pro'
   title text not null,
+  type text not null default 'video',     -- 'video' (YouTube) | 'text'
   duration text default '',
   video_id text default '',
+  content text default '',                -- isi modul kalau type = 'text'
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- Migrasi: kolom baru kalau tabel sudah pernah dibuat
+alter table public.modules add column if not exists type text not null default 'video';
+alter table public.modules add column if not exists content text default '';
 
 -- ============================================================
 -- ROW LEVEL SECURITY
