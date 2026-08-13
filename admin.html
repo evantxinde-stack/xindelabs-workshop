@@ -639,25 +639,25 @@
         : '';
 
       tr.innerHTML =
-        '<td>' +
+        '<td data-label="Nama">' +
           '<div class="l-name">' + esc(l.name) + '</div>' +
           '<div class="l-meta">' + esc(created) + '</div>' +
         '</td>' +
-        '<td>' +
+        '<td data-label="Kontak">' +
           '<div class="l-meta">' + esc(l.email || '—') + '</div>' +
           (wa ? '<a class="l-meta l-wa" target="_blank" rel="noopener" href="' + wa + '">' + esc(l.whatsapp) + '</a>'
                : '<div class="l-meta">—</div>') +
         '</td>' +
-        '<td class="l-meta">' + esc(l.discord_id || '—') + '</td>' +
-        '<td><select class="a-select st-' + esc(l.status) + '">' + statusOpts + '</select></td>' +
-        '<td><input class="a-note" type="text" value="' + esc(l.notes || '') + '" placeholder="catatan…" /></td>' +
-        '<td>' +
+        '<td data-label="Discord ID" class="l-meta">' + esc(l.discord_id || '—') + '</td>' +
+        '<td data-label="Status"><select class="a-select st-' + esc(l.status) + '">' + statusOpts + '</select></td>' +
+        '<td data-label="Catatan"><input class="a-note" type="text" value="' + esc(l.notes || '') + '" placeholder="catatan…" /></td>' +
+        '<td data-label="Follow-up">' +
           '<div class="l-fu">' +
             '<select class="a-select">' + tplOpts + '</select>' +
             '<button type="button" class="btn btn--ghost btn--sm lead-wa">WA →</button>' +
           '</div>' +
         '</td>' +
-        '<td><button type="button" class="btn btn--ghost btn--sm lead-del">Hapus</button></td>';
+        '<td data-label=""><button type="button" class="btn btn--ghost btn--sm lead-del">Hapus</button></td>';
 
       tr.querySelector('.a-select.st-' + esc(l.status)).addEventListener('change', function (e) {
         updateLead(l.id, { status: e.target.value }).then(function () {
