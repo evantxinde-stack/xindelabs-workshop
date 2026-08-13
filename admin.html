@@ -74,12 +74,63 @@
     <div id="editorState" style="display:none">
       <div class="a-shell">
         <aside class="a-sidebar">
-          <button type="button" class="a-menu is-active" data-panel="content">Konten Landing</button>
+          <button type="button" class="a-menu is-active" data-panel="dashboard">Dashboard</button>
+          <button type="button" class="a-menu" data-panel="content">Konten Landing</button>
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
         </aside>
 
         <main class="a-main">
+
+          <!-- ============ PANEL: DASHBOARD ============ -->
+          <div id="panelDashboard">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Dashboard</h2>
+              <p class="lead">Pantau lead, member, dan estimasi revenue dalam satu layar.</p>
+            </div>
+
+            <div class="notice notice--warn" id="dashNotice" style="display:none"></div>
+
+            <div class="d-kpis" id="dashKpis"></div>
+
+            <div class="d-cols">
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>14 Hari Terakhir</h3>
+                  <div class="a-topbar__right" style="gap:8px">
+                    <button type="button" class="btn btn--ghost btn--sm" id="refreshDashboard">↻ Refresh</button>
+                  </div>
+                </div>
+                <div class="d-legend">
+                  <span><i style="background:var(--green-dim)"></i>Leads masuk</span>
+                  <span><i style="background:rgba(0,229,255,.6)"></i>Member masuk</span>
+                </div>
+                <div class="d-bars" id="dashBars"></div>
+              </div>
+
+              <div class="a-card">
+                <div class="a-card__head"><h3>Pipeline Leads</h3></div>
+                <div class="d-funnel" id="dashFunnel"></div>
+                <p class="a-empty" id="dashConv"></p>
+              </div>
+            </div>
+
+            <div class="d-cols">
+              <div class="a-card">
+                <div class="a-card__head"><h3>Lead Terbaru</h3></div>
+                <table class="d-recent">
+                  <tbody id="dashRecentLeads"></tbody>
+                </table>
+              </div>
+              <div class="a-card">
+                <div class="a-card__head"><h3>Member Terbaru</h3></div>
+                <table class="d-recent">
+                  <tbody id="dashRecentMembers"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
           <!-- ============ PANEL: KONTEN ============ -->
           <div id="panelContent">
@@ -382,6 +433,7 @@
         }
         show('editorState');
         document.getElementById('logoutBtn').style.display = 'inline-flex';
+        loadDashboard();
         loadContent();
         loadLeads('course');
         loadLeads('komunitas');
@@ -535,7 +587,7 @@
     var currentPanel = 'content';
 
     function panelEl(panel) {
-      var map = { content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas' };
       return document.getElementById(map[panel]);
     }
 
@@ -544,9 +596,10 @@
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['content', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
+        ['dashboard', 'content', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
           panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
         });
+        if (currentPanel === 'dashboard') loadDashboard();
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
       });
@@ -731,6 +784,205 @@
 
     document.getElementById('exportCsvCourse').addEventListener('click', function () { exportCsvFor('leadsCourse'); });
     document.getElementById('exportCsvKomunitas').addEventListener('click', function () { exportCsvFor('leadsKomunitas'); });
+
+    // ============ Dashboard ============
+    document.getElementById('refreshDashboard').addEventListener('click', loadDashboard);
+
+    function loadDashboard() {
+      if (!client) return;
+      var notice = document.getElementById('dashNotice');
+      notice.style.display = 'none';
+      Promise.all([
+        client.from('leads').select('*').order('created_at', { ascending: false }).limit(300),
+        client.from('members').select('*').order('created_at', { ascending: false }).limit(300)
+      ]).then(function (res) {
+        if (res[0].error) {
+          renderDashError(res[0].error);
+          return;
+        }
+        var leads = res[0].data || [];
+        var members = res[1].error ? [] : (res[1].data || []);
+        renderKpis(leads, members);
+        renderBars(leads, members);
+        renderFunnel(leads);
+        renderRecent(leads, members);
+      });
+    }
+
+    function renderDashError(err) {
+      ['dashKpis', 'dashBars', 'dashFunnel', 'dashRecentLeads', 'dashRecentMembers'].forEach(function (id) {
+        document.getElementById(id).innerHTML = '';
+      });
+      var n = document.getElementById('dashNotice');
+      n.style.display = 'block';
+      n.innerHTML = '⚠️ Gagal load data: <b style="color:inherit">' + esc(err.message || '') + '</b>. ' +
+        'Pastikan tabel <span style="font-family:var(--font-mono)">leads</span> &amp; <span style="font-family:var(--font-mono)">members</span> sudah dibuat — ' +
+        'jalankan <span style="font-family:var(--font-mono)">supabase-setup.sql</span> di SQL Editor.';
+    }
+
+    function fmtRp(n) {
+      return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    function statusLabel(s) {
+      var map = { belum: 'Belum', follow_up: 'Follow-up', bayar: 'Bayar', paid: 'Paid', pending: 'Pending', expired: 'Expired' };
+      return map[s] || s;
+    }
+
+    function fmtShort(dt) {
+      if (!dt) return '—';
+      var d = new Date(dt);
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' +
+             d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderKpis(leads, members) {
+      var srcC = 0, srcK = 0, belum = 0, fu = 0, bayar = 0;
+      leads.forEach(function (l) {
+        if (l.source === 'komunitas') srcK++; else srcC++;
+        if (l.status === 'belum') belum++;
+        else if (l.status === 'follow_up') fu++;
+        else if (l.status === 'bayar') bayar++;
+      });
+
+      var paid = 0, pend = 0, rev = 0;
+      members.forEach(function (m) {
+        if (m.status === 'paid') {
+          paid++;
+          var harga = m.tier === 'lifetime' ? (cfg.PRICES.lifetime.harga || 999000) : (cfg.PRICES.yearly.harga || 599000);
+          rev += harga;
+        } else if (m.status === 'pending') {
+          pend++;
+        }
+      });
+
+      var conv = leads.length ? Math.round(bayar / leads.length * 100) : 0;
+      var kpis = [
+        { label: 'Total Leads', val: leads.length, sub: 'course ' + srcC + ' · komunitas ' + srcK },
+        { label: 'Leads Belum', val: belum, sub: 'butuh follow-up' },
+        { label: 'Follow-up', val: fu, sub: 'dalam proses' },
+        { label: 'Bayar', val: bayar, sub: 'konversi ' + conv + '%' },
+        { label: 'Members', val: members.length, sub: 'paid ' + paid + ' · pending ' + pend },
+        { label: 'Member Paid', val: paid, sub: 'dari total member' },
+        { label: 'Estimasi Revenue', val: 'Rp ' + fmtRp(rev), sub: 'dari member paid', big: true }
+      ];
+
+      var el = document.getElementById('dashKpis');
+      el.innerHTML = '';
+      kpis.forEach(function (k) {
+        var d = document.createElement('div');
+        d.className = 'd-kpi' + (k.big ? ' is-big' : '');
+        d.innerHTML = '<span>' + k.label + '</span><b>' + k.val + '</b><div class="sub">' + k.sub + '</div>';
+        el.appendChild(d);
+      });
+    }
+
+    function dayKey(d) {
+      var x = d instanceof Date ? d : new Date(d);
+      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
+    }
+
+    function renderBars(leads, members) {
+      var el = document.getElementById('dashBars');
+      var days = [];
+      var now = new Date();
+      for (var i = 13; i >= 0; i--) {
+        days.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i));
+      }
+      var counts = days.map(function (d) {
+        var k = dayKey(d);
+        return {
+          label: d.getDate(),
+          l: leads.filter(function (x) { return dayKey(x.created_at) === k; }).length,
+          m: members.filter(function (x) { return dayKey(x.created_at) === k; }).length
+        };
+      });
+
+      var hasData = counts.some(function (c) { return c.l + c.m > 0; });
+      el.innerHTML = '';
+      if (!hasData) {
+        el.innerHTML = '<p class="a-empty">Belum ada data 14 hari terakhir.</p>';
+        return;
+      }
+      var max = 1;
+      counts.forEach(function (c) { max = Math.max(max, c.l, c.m); });
+
+      counts.forEach(function (c) {
+        var bar = document.createElement('div');
+        bar.className = 'd-bar';
+        bar.innerHTML =
+          '<div class="d-bar__in">' +
+            '<i class="is-lead" style="height:' + Math.max(2, Math.round(c.l / max * 100)) + '%"></i>' +
+            '<i class="is-member" style="height:' + Math.max(2, Math.round(c.m / max * 100)) + '%"></i>' +
+          '</div>' +
+          '<small>' + c.label + '</small>';
+        el.appendChild(bar);
+      });
+    }
+
+    function renderFunnel(leads) {
+      var belum = 0, fu = 0, bayar = 0;
+      leads.forEach(function (l) {
+        if (l.status === 'belum') belum++;
+        else if (l.status === 'follow_up') fu++;
+        else if (l.status === 'bayar') bayar++;
+      });
+      var steps = [
+        ['Belum', belum, 'belum'],
+        ['Follow-up', fu, 'follow_up'],
+        ['Bayar', bayar, 'bayar']
+      ];
+      var el = document.getElementById('dashFunnel');
+      el.innerHTML = '';
+      steps.forEach(function (s, i) {
+        if (i) {
+          var ar = document.createElement('div');
+          ar.className = 'd-farrow';
+          ar.textContent = '→';
+          el.appendChild(ar);
+        }
+        var d = document.createElement('div');
+        d.className = 'd-fstep st-' + s[2];
+        d.innerHTML = '<b>' + s[1] + '</b><span>' + s[0] + '</span>';
+        el.appendChild(d);
+      });
+      var conv = leads.length ? Math.round(bayar / leads.length * 100) : 0;
+      document.getElementById('dashConv').textContent = leads.length
+        ? 'Konversi lead → bayar: ' + conv + '% (' + bayar + ' dari ' + leads.length + ' lead)'
+        : 'Belum ada lead.';
+    }
+
+    function renderRecent(leads, members) {
+      var lEl = document.getElementById('dashRecentLeads');
+      lEl.innerHTML = '';
+      leads.slice(0, 6).forEach(function (l) {
+        var src = srcOf(l);
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div class="d-name">' + esc(l.name) + ' <span class="d-src is-' + src + '">' + src + '</span></div>' +
+            '<div class="d-sub">' + esc(l.email || '—') + ' · ' + esc(fmtShort(l.created_at)) + '</div>' +
+          '</td>' +
+          '<td><span class="d-badge st-' + esc(l.status) + '">' + esc(statusLabel(l.status)) + '</span></td>';
+        lEl.appendChild(tr);
+      });
+      if (!leads.length) lEl.innerHTML = '<tr><td class="a-empty">Belum ada lead.</td></tr>';
+
+      var mEl = document.getElementById('dashRecentMembers');
+      mEl.innerHTML = '';
+      members.slice(0, 6).forEach(function (m) {
+        var tier = m.tier === 'lifetime' ? 'Lifetime' : 'Tahunan';
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div class="d-name">' + esc(m.email) + '</div>' +
+            '<div class="d-sub">' + tier + ' · ' + esc(fmtShort(m.created_at)) + '</div>' +
+          '</td>' +
+          '<td><span class="d-badge st-' + esc(m.status) + '">' + esc(statusLabel(m.status)) + '</span></td>';
+        mEl.appendChild(tr);
+      });
+      if (!members.length) mEl.innerHTML = '<tr><td class="a-empty">Belum ada member.</td></tr>';
+    }
   </script>
 </body>
 </html>
