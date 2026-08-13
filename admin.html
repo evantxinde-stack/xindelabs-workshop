@@ -10,25 +10,23 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
   <script src="js/config.js"></script>
   <script src="js/pixel.js"></script>
 </head>
-<body>
+<body class="admin">
 
-  <header class="nav">
-    <div class="nav__in">
-      <a href="index.html" class="wordmark">xindelabs<span>.</span></a>
-      <div class="nav__right">
-        <a href="index.html" class="btn btn--ghost btn--sm">← Lihat Site</a>
-        <button class="btn btn--ghost btn--sm" id="logoutBtn" style="display:none">Logout</button>
-      </div>
+  <header class="a-topbar">
+    <a href="index.html" class="a-brand">xindelabs<span>.</span> <em>Admin</em></a>
+    <div class="a-topbar__right">
+      <a href="index.html" class="btn btn--ghost btn--sm">Lihat Site</a>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn" style="display:none">Logout</button>
     </div>
   </header>
 
-  <div class="page">
-    <div class="wrap admin-wrap">
+  <div class="a-center">
 
-      <div class="notice notice--warn" id="configNotice" style="display:none;max-width:760px">
+    <div class="notice notice--warn" id="configNotice" style="display:none;max-width:760px">
         ⚠️ Supabase belum dikonfigurasi. Isi <b style="color:inherit">SUPABASE_URL</b> &amp; <b style="color:inherit">SUPABASE_ANON_KEY</b> di <span style="font-family:var(--font-mono)">js/config.js</span> dulu — CMS butuh tabel <span style="font-family:var(--font-mono)">admins</span> &amp; <span style="font-family:var(--font-mono)">site_content</span>.
       </div>
 
@@ -50,7 +48,7 @@
               <div class="err-msg">Password wajib diisi.</div>
             </div>
             <div class="notice notice--warn form-error" id="loginError"></div>
-            <button type="submit" class="btn btn--primary btn--block" id="loginBtn">Masuk →</button>
+            <button type="submit" class="btn btn--primary btn--block" id="loginBtn">Masuk</button>
             <div id="signupHint" style="display:none">
               <p class="form-sub" style="margin-top:18px;font-size:12px">Email ini sudah terdaftar di tabel <span style="font-family:var(--font-mono)">admins</span>, tapi belum punya akun Supabase Auth.</p>
               <button type="button" class="btn btn--ghost btn--block" id="signupBtn">Buat akun admin ini →</button>
@@ -70,154 +68,205 @@
         </div>
       </div>
 
-      <!-- ============ EDITOR ============ -->
-      <div id="editorState" style="display:none">
-        <div class="section-head" style="text-align:left;margin-bottom:34px">
-          <p class="eyebrow"><span class="dot"></span>admin cms</p>
-          <h2 class="h2">Dashboard Admin</h2>
-          <p class="lead" style="font-size:15px">Edit konten landing, kelola leads &amp; follow-up calon member.</p>
-        </div>
+    </div>
 
-        <div class="admin-tabs">
-          <button type="button" class="admin-tab is-active" data-panel="content">Konten Landing</button>
-          <button type="button" class="admin-tab" data-panel="leads">Leads <span class="badge" id="leadCountBadge"></span></button>
-        </div>
+    <!-- ============ EDITOR ============ -->
+    <div id="editorState" style="display:none">
+      <div class="a-shell">
+        <aside class="a-sidebar">
+          <button type="button" class="a-menu is-active" data-panel="content">Konten Landing</button>
+          <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
+          <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
+        </aside>
 
-        <div id="panelContent">
-        <form id="cmsForm">
-          <div class="admin-block">
-            <div class="admin-block__head"><label>Hero</label></div>
-            <div class="field">
-              <label for="f_hero_title">Hero Title</label>
-              <textarea id="f_hero_title" rows="2"></textarea>
-              <div class="hint">Boleh HTML — pakai &lt;span class='hl'&gt;…&lt;/span&gt; buat frasa hijau.</div>
+        <main class="a-main">
+
+          <!-- ============ PANEL: KONTEN ============ -->
+          <div id="panelContent">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Edit Konten Landing</h2>
             </div>
-            <div class="field">
-              <label for="f_hero_subtitle">Hero Subtitle</label>
-              <textarea id="f_hero_subtitle" rows="3"></textarea>
-            </div>
-          </div>
 
-          <div class="admin-block">
-            <div class="admin-block__head"><label>Video Intro</label></div>
-            <div class="admin-grid2">
-              <div class="field">
-                <label for="f_video_id">YouTube Video ID</label>
-                <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE" />
+            <form id="cmsForm">
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Hero</label></div>
+                <div class="field">
+                  <label for="f_hero_title">Hero Title</label>
+                  <textarea id="f_hero_title" rows="2"></textarea>
+                  <div class="hint">Boleh HTML — pakai &lt;span class='hl'&gt;…&lt;/span&gt; buat frasa hijau.</div>
+                </div>
+                <div class="field">
+                  <label for="f_hero_subtitle">Hero Subtitle</label>
+                  <textarea id="f_hero_subtitle" rows="3"></textarea>
+                </div>
               </div>
-              <div class="field">
-                <label for="f_video_caption">Caption Video</label>
-                <input type="text" id="f_video_caption" placeholder="intro.mp4 — …" />
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Video Intro</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_video_id">YouTube Video ID</label>
+                    <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE" />
+                  </div>
+                  <div class="field">
+                    <label for="f_video_caption">Caption Video</label>
+                    <input type="text" id="f_video_caption" placeholder="intro.mp4 — …" />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div class="admin-block">
-            <div class="admin-block__head"><label>Pricing</label></div>
-            <div class="admin-grid2">
-              <div class="field">
-                <label for="f_price_yearly">Harga Tahunan (Rp)</label>
-                <input type="number" id="f_price_yearly" step="1000" min="0" />
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Pricing</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_price_yearly">Harga Tahunan (Rp)</label>
+                    <input type="number" id="f_price_yearly" step="1000" min="0" />
+                  </div>
+                  <div class="field">
+                    <label for="f_price_lifetime">Harga Lifetime (Rp)</label>
+                    <input type="number" id="f_price_lifetime" step="1000" min="0" />
+                  </div>
+                </div>
               </div>
-              <div class="field">
-                <label for="f_price_lifetime">Harga Lifetime (Rp)</label>
-                <input type="number" id="f_price_lifetime" step="1000" min="0" />
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Link Komunitas</label></div>
+                <div class="admin-grid3">
+                  <div class="field">
+                    <label for="f_discord">Link Discord</label>
+                    <input type="url" id="f_discord" placeholder="https://discord.gg/…" />
+                  </div>
+                  <div class="field">
+                    <label for="f_wa">Link WhatsApp</label>
+                    <input type="url" id="f_wa" placeholder="https://wa.me/62…" />
+                  </div>
+                  <div class="field">
+                    <label for="f_ig">Handle Instagram</label>
+                    <input type="text" id="f_ig" placeholder="@xindelabs.id" />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div class="admin-block">
-            <div class="admin-block__head"><label>Link Komunitas</label></div>
-            <div class="admin-grid3">
-              <div class="field">
-                <label for="f_discord">Link Discord</label>
-                <input type="url" id="f_discord" placeholder="https://discord.gg/…" />
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>Testimoni</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addTestimonial">+ Tambah</button>
+                </div>
+                <div id="testimonialRows"></div>
               </div>
-              <div class="field">
-                <label for="f_wa">Link WhatsApp</label>
-                <input type="url" id="f_wa" placeholder="https://wa.me/62…" />
+
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>FAQ</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addFaq">+ Tambah</button>
+                </div>
+                <div id="faqRows"></div>
               </div>
-              <div class="field">
-                <label for="f_ig">Handle Instagram</label>
-                <input type="text" id="f_ig" placeholder="@xindelabs.id" />
+
+              <div class="notice notice--ok" id="saveMsg" style="display:none"></div>
+              <div class="notice notice--warn" id="saveErr" style="display:none"></div>
+
+              <div class="admin-tools">
+                <button type="submit" class="btn btn--primary" id="saveBtn">Simpan Konten</button>
+                <span class="hint" id="saveState">Belum ada perubahan.</span>
               </div>
+            </form>
+          </div>
+
+          <!-- ============ PANEL: LEADS COURSE ============ -->
+          <div id="panelLeadsCourse" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Leads — Course</h2>
+              <p class="lead">Pendaftar course dari halaman checkout.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Pipeline leads course</h3>
+                <div class="a-topbar__right" style="gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshCourse">↻ Refresh</button>
+                  <button type="button" class="btn btn--ghost btn--sm" id="exportCsvCourse">Export CSV</button>
+                </div>
+              </div>
+
+              <div class="a-filters" id="filtersCourse">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntCourseAll">0</span></button>
+                <button type="button" class="a-filter" data-status="belum">Belum <span class="cnt" id="cntCourseBelum">0</span></button>
+                <button type="button" class="a-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntCourseFollowUp">0</span></button>
+                <button type="button" class="a-filter" data-status="bayar">Bayar <span class="cnt" id="cntCourseBayar">0</span></button>
+              </div>
+
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Kontak</th>
+                      <th>Discord ID</th>
+                      <th>Status</th>
+                      <th>Catatan</th>
+                      <th>Follow-up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="courseLeadsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="courseEmpty" style="display:none">Belum ada lead di filter ini.</p>
+              <p class="a-empty">Klik WA → buka chat follow-up ke lead dengan template yang dipilih (template di <span style="font-family:var(--font-mono)">js/config.js</span>).</p>
             </div>
           </div>
 
-          <div class="admin-block">
-            <div class="admin-block__head">
-              <label>Testimoni</label>
-              <button type="button" class="btn btn--ghost btn--sm" id="addTestimonial">+ Tambah</button>
+          <!-- ============ PANEL: LEADS KOMUNITAS ============ -->
+          <div id="panelLeadsKomunitas" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Leads — Komunitas</h2>
+              <p class="lead">Pendaftar komunitas gratis dari landing page.</p>
             </div>
-            <div id="testimonialRows"></div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Pipeline leads komunitas</h3>
+                <div class="a-topbar__right" style="gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshKomunitas">↻ Refresh</button>
+                  <button type="button" class="btn btn--ghost btn--sm" id="exportCsvKomunitas">Export CSV</button>
+                </div>
+              </div>
+
+              <div class="a-filters" id="filtersKomunitas">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntKomAll">0</span></button>
+                <button type="button" class="a-filter" data-status="belum">Belum <span class="cnt" id="cntKomBelum">0</span></button>
+                <button type="button" class="a-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntKomFollowUp">0</span></button>
+                <button type="button" class="a-filter" data-status="bayar">Bayar <span class="cnt" id="cntKomBayar">0</span></button>
+              </div>
+
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Kontak</th>
+                      <th>Discord ID</th>
+                      <th>Status</th>
+                      <th>Catatan</th>
+                      <th>Follow-up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="komunitasLeadsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="komunitasEmpty" style="display:none">Belum ada lead di filter ini.</p>
+              <p class="a-empty">Klik WA → buka chat follow-up ke lead dengan template yang dipilih (template di <span style="font-family:var(--font-mono)">js/config.js</span>).</p>
+            </div>
           </div>
 
-          <div class="admin-block">
-            <div class="admin-block__head">
-              <label>FAQ</label>
-              <button type="button" class="btn btn--ghost btn--sm" id="addFaq">+ Tambah</button>
-            </div>
-            <div id="faqRows"></div>
-          </div>
-
-          <div class="notice notice--ok" id="saveMsg" style="display:none"></div>
-          <div class="notice notice--warn" id="saveErr" style="display:none"></div>
-
-          <div class="admin-tools">
-            <button type="submit" class="btn btn--primary" id="saveBtn">Simpan Konten →</button>
-            <span class="hint" id="saveState">Belum ada perubahan.</span>
-          </div>
-        </form>
-        </div>
-
-        <!-- ============ PANEL LEADS ============ -->
-        <div id="panelLeads" style="display:none">
-          <div class="admin-block">
-            <div class="admin-block__head">
-              <label>Pipeline leads</label>
-              <button type="button" class="btn btn--ghost btn--sm" id="refreshLeads">↻ Refresh</button>
-            </div>
-
-            <div class="lead-filters lead-filters--src">
-              <span class="lead-filters__label">sumber</span>
-              <button type="button" class="lead-filter is-active" data-source="all">Semua <span class="cnt" id="cntSrcAll">0</span></button>
-              <button type="button" class="lead-filter" data-source="course">Course <span class="cnt" id="cntSrcCourse">0</span></button>
-              <button type="button" class="lead-filter" data-source="komunitas">Komunitas <span class="cnt" id="cntSrcKomunitas">0</span></button>
-            </div>
-
-            <div class="lead-filters">
-              <span class="lead-filters__label">status</span>
-              <button type="button" class="lead-filter is-active" data-status="all">Semua <span class="cnt" id="cntAll">0</span></button>
-              <button type="button" class="lead-filter" data-status="belum">Belum <span class="cnt" id="cntBelum">0</span></button>
-              <button type="button" class="lead-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntFollowUp">0</span></button>
-              <button type="button" class="lead-filter" data-status="bayar">Bayar <span class="cnt" id="cntBayar">0</span></button>
-              <span class="lead-filters__spacer"></span>
-              <button type="button" class="btn btn--ghost btn--sm" id="exportCsv">Export CSV</button>
-            </div>
-
-            <div class="table-scroll">
-              <table class="lead-table">
-                <thead>
-                  <tr>
-                    <th>Nama</th>
-                    <th>Kontak</th>
-                    <th>Discord ID</th>
-                    <th>Status</th>
-                    <th>Catatan</th>
-                    <th>Follow-up</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="leadsBody"></tbody>
-              </table>
-            </div>
-            <p class="hint" id="leadsEmpty" style="display:none;margin-top:16px">Belum ada lead di filter ini.</p>
-            <p class="hint" style="margin-top:10px">Klik WA → buka chat follow-up ke lead dengan template yang dipilih (template di <span style="font-family:var(--font-mono)">js/config.js</span>).</p>
-          </div>
-        </div>
+        </main>
       </div>
     </div>
-  </div>
 
   <footer class="footer">
     <div class="wrap footer__in">
@@ -235,6 +284,8 @@
       ['loginState', 'deniedState', 'editorState'].forEach(function (id) {
         document.getElementById(id).style.display = (id === state) ? 'block' : 'none';
       });
+      var center = document.querySelector('.a-center');
+      if (center) center.style.display = (state === 'editorState') ? 'none' : 'block';
     }
 
     // ============ Supabase belum dikonfigurasi ============
@@ -273,7 +324,7 @@
           err.textContent = '⚠️ ' + (res.error.message || 'Login gagal.');
           err.classList.add('show');
           btn.disabled = false;
-          btn.textContent = 'Masuk →';
+          btn.textContent = 'Masuk';
           if (/invalid login credentials/i.test(res.error.message || '')) {
             maybeOfferSignup(email, password);
           }
@@ -332,7 +383,8 @@
         show('editorState');
         document.getElementById('logoutBtn').style.display = 'inline-flex';
         loadContent();
-        loadLeads();
+        loadLeads('course');
+        loadLeads('komunitas');
       });
     }
 
@@ -466,7 +518,7 @@
 
       client.from('site_content').upsert({ key: 'homepage', value: content }).then(function (r) {
         btn.disabled = false;
-        btn.textContent = 'Simpan Konten →';
+        btn.textContent = 'Simpan Konten';
         if (r.error) {
           document.getElementById('saveState').textContent = '';
           err.textContent = '⚠️ Gagal simpan: ' + (r.error.message || 'terjadi kesalahan');
@@ -479,70 +531,84 @@
       });
     });
 
-    // ============ Tabs (Konten / Leads) ============
-    document.querySelectorAll('.admin-tab').forEach(function (b) {
+    // ============ Sidebar: ganti panel ============
+    var currentPanel = 'content';
+
+    function panelEl(panel) {
+      var map = { content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas' };
+      return document.getElementById(map[panel]);
+    }
+
+    document.querySelectorAll('.a-menu').forEach(function (b) {
       b.addEventListener('click', function () {
-        document.querySelectorAll('.admin-tab').forEach(function (x) { x.classList.remove('is-active'); });
+        document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
-        var isLeads = b.dataset.panel === 'leads';
-        document.getElementById('panelContent').style.display = isLeads ? 'none' : 'block';
-        document.getElementById('panelLeads').style.display = isLeads ? 'block' : 'none';
-        if (isLeads) loadLeads();
+        currentPanel = b.dataset.panel;
+        ['content', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
+          panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
+        });
+        if (currentPanel === 'leadsCourse') loadLeads('course');
+        if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
       });
     });
 
     // ============ Leads ============
-    var allLeads = [];
-    var currentLeadFilter = 'all';
-    var currentSourceFilter = 'all';
+    var DB_SOURCE = { course: 'landing-daftar', komunitas: 'komunitas' };
+    var leadsCache = { course: null, komunitas: null };
+    var statusFilters = { course: 'all', komunitas: 'all' };
 
+    var PANEL_OF = { course: 'leadsCourse', komunitas: 'leadsKomunitas' };
     function srcOf(l) { return l.source === 'komunitas' ? 'komunitas' : 'course'; }
+    function srcOfPanel(panel) { return panel === 'leadsKomunitas' ? 'komunitas' : 'course'; }
+    function bodyIdOf(panel) { return panel === 'leadsKomunitas' ? 'komunitasLeadsBody' : 'courseLeadsBody'; }
+    function emptyIdOf(panel) { return panel === 'leadsKomunitas' ? 'komunitasEmpty' : 'courseEmpty'; }
+    function filtersIdOf(panel) { return panel === 'leadsKomunitas' ? 'filtersKomunitas' : 'filtersCourse'; }
 
-    function loadLeads() {
+    function loadLeads(src) {
       if (!client) return;
-      client.from('leads').select('*').order('created_at', { ascending: false }).then(function (r) {
+      var panel = PANEL_OF[src];
+      client.from('leads').select('*').eq('source', DB_SOURCE[src]).order('created_at', { ascending: false }).then(function (r) {
         if (r.error) {
-          document.getElementById('leadsBody').innerHTML =
-            '<tr><td colspan="7" class="lead-meta">Gagal load leads: ' + esc(r.error.message || '') + '</td></tr>';
+          document.getElementById(bodyIdOf(panel)).innerHTML =
+            '<tr><td colspan="7" class="l-meta">Gagal load leads: ' + esc(r.error.message || '') + '</td></tr>';
           return;
         }
-        allLeads = r.data || [];
-        renderLeads();
+        leadsCache[src] = r.data || [];
+        refreshCounts();
+        renderLeads(panel);
       });
     }
 
-    function filteredLeads() {
-      return allLeads.filter(function (l) {
-        if (currentSourceFilter !== 'all' && srcOf(l) !== currentSourceFilter) return false;
-        if (currentLeadFilter !== 'all' && l.status !== currentLeadFilter) return false;
+    function filteredFor(panel) {
+      var src = srcOfPanel(panel);
+      var st = statusFilters[src];
+      return (leadsCache[src] || []).filter(function (l) {
+        if (st !== 'all' && l.status !== st) return false;
         return true;
       });
     }
 
-    function renderLeads() {
-      var body = document.getElementById('leadsBody');
-      var list = filteredLeads();
+    function renderLeads(panel) {
+      var body = document.getElementById(bodyIdOf(panel));
+      var list = filteredFor(panel);
       body.innerHTML = '';
-      list.forEach(function (l) { body.appendChild(leadRow(l)); });
-      document.getElementById('leadsEmpty').style.display = list.length ? 'none' : 'block';
-      document.getElementById('leadCountBadge').textContent = allLeads.length ? allLeads.length : '';
-      refreshCounts();
+      list.forEach(function (l) { body.appendChild(leadRow(l, panel)); });
+      document.getElementById(emptyIdOf(panel)).style.display = list.length ? 'none' : 'block';
     }
 
     function refreshCounts() {
-      var counts = { all: allLeads.length, belum: 0, follow_up: 0, bayar: 0, srcAll: allLeads.length, srcCourse: 0, srcKomunitas: 0 };
-      allLeads.forEach(function (l) {
-        if (counts[l.status] !== undefined) counts[l.status]++;
-        if (srcOf(l) === 'komunitas') counts.srcKomunitas++;
-        else counts.srcCourse++;
+      ['course', 'komunitas'].forEach(function (src) {
+        var list = leadsCache[src] || [];
+        var counts = { all: list.length, belum: 0, follow_up: 0, bayar: 0 };
+        list.forEach(function (l) { if (counts[l.status] !== undefined) counts[l.status]++; });
+        var s = src === 'course' ? 'Course' : 'Kom';
+        document.getElementById('cnt' + s + 'All').textContent = counts.all;
+        document.getElementById('cnt' + s + 'Belum').textContent = counts.belum;
+        document.getElementById('cnt' + s + 'FollowUp').textContent = counts.follow_up;
+        document.getElementById('cnt' + s + 'Bayar').textContent = counts.bayar;
+        var badge = document.getElementById('countMenu' + (src === 'course' ? 'Course' : 'Komunitas'));
+        if (badge) badge.textContent = counts.all;
       });
-      document.getElementById('cntAll').textContent = counts.all;
-      document.getElementById('cntBelum').textContent = counts.belum;
-      document.getElementById('cntFollowUp').textContent = counts.follow_up;
-      document.getElementById('cntBayar').textContent = counts.bayar;
-      document.getElementById('cntSrcAll').textContent = counts.srcAll;
-      document.getElementById('cntSrcCourse').textContent = counts.srcCourse;
-      document.getElementById('cntSrcKomunitas').textContent = counts.srcKomunitas;
     }
 
     function updateLead(id, patch) {
@@ -551,7 +617,7 @@
       });
     }
 
-    function leadRow(l) {
+    function leadRow(l, panel) {
       var tr = document.createElement('tr');
       tr.dataset.id = l.id;
 
@@ -574,45 +640,47 @@
 
       tr.innerHTML =
         '<td>' +
-          '<div class="lead-name">' + esc(l.name) + ' <span class="lead-src is-' + srcOf(l) + '">' + srcOf(l) + '</span></div>' +
-          '<div class="lead-meta">' + esc(created) + '</div>' +
+          '<div class="l-name">' + esc(l.name) + '</div>' +
+          '<div class="l-meta">' + esc(created) + '</div>' +
         '</td>' +
         '<td>' +
-          '<div class="lead-meta">' + esc(l.email || '—') + '</div>' +
-          (wa ? '<a class="lead-meta lead-walink" target="_blank" rel="noopener" href="' + wa + '">' + esc(l.whatsapp) + '</a>'
-               : '<div class="lead-meta">—</div>') +
+          '<div class="l-meta">' + esc(l.email || '—') + '</div>' +
+          (wa ? '<a class="l-meta l-wa" target="_blank" rel="noopener" href="' + wa + '">' + esc(l.whatsapp) + '</a>'
+               : '<div class="l-meta">—</div>') +
         '</td>' +
-        '<td class="lead-mono">' + esc(l.discord_id || '—') + '</td>' +
-        '<td><select class="lead-status st-' + esc(l.status) + '">' + statusOpts + '</select></td>' +
-        '<td><input class="lead-note" type="text" value="' + esc(l.notes || '') + '" placeholder="catatan…" /></td>' +
+        '<td class="l-meta">' + esc(l.discord_id || '—') + '</td>' +
+        '<td><select class="a-select st-' + esc(l.status) + '">' + statusOpts + '</select></td>' +
+        '<td><input class="a-note" type="text" value="' + esc(l.notes || '') + '" placeholder="catatan…" /></td>' +
         '<td>' +
-          '<div class="lead-fu">' +
-            '<select class="lead-tpl">' + tplOpts + '</select>' +
+          '<div class="l-fu">' +
+            '<select class="a-select">' + tplOpts + '</select>' +
             '<button type="button" class="btn btn--ghost btn--sm lead-wa">WA →</button>' +
           '</div>' +
         '</td>' +
         '<td><button type="button" class="btn btn--ghost btn--sm lead-del">Hapus</button></td>';
 
-      tr.querySelector('.lead-status').addEventListener('change', function (e) {
+      tr.querySelector('.a-select.st-' + esc(l.status)).addEventListener('change', function (e) {
         updateLead(l.id, { status: e.target.value }).then(function () {
-          e.target.className = 'lead-status st-' + e.target.value;
+          e.target.className = 'a-select st-' + e.target.value;
           refreshCounts();
+          renderLeads(panel);
         });
       });
 
-      var note = tr.querySelector('.lead-note');
+      var note = tr.querySelector('.a-note');
       note.addEventListener('change', function () { updateLead(l.id, { notes: note.value.trim() }); });
 
       tr.querySelector('.lead-wa').addEventListener('click', function () {
-        var tpl = (cfg.FOLLOWUP_TEMPLATES || [])[Number(tr.querySelector('.lead-tpl').value)];
+        var tpl = (cfg.FOLLOWUP_TEMPLATES || [])[Number(tr.querySelector('.l-fu .a-select').value)];
         if (!tpl || !wa) return;
         var text = tpl.text.replace(/\{nama\}/g, l.name).replace(/\{nama_lo\}/g, 'Xinde Labs');
         window.open(wa + '?text=' + encodeURIComponent(text), '_blank');
         if (l.status !== 'bayar') {
           l.status = 'follow_up';
-          tr.querySelector('.lead-status').value = 'follow_up';
-          tr.querySelector('.lead-status').className = 'lead-status st-follow_up';
-          refreshCounts();
+          updateLead(l.id, { status: 'follow_up' }).then(function () {
+            refreshCounts();
+            renderLeads(panel);
+          });
         }
       });
 
@@ -620,35 +688,30 @@
         if (!confirm('Hapus lead "' + l.name + '"? Tindakan ini tidak bisa dibatalkan.')) return;
         client.from('leads').delete().eq('id', l.id).then(function (r) {
           if (r.error) { alert('Gagal hapus: ' + (r.error.message || '')); return; }
-          loadLeads();
+          loadLeads(srcOfPanel(panel));
         });
       });
 
       return tr;
     }
 
-    document.querySelectorAll('.lead-filter[data-status]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        document.querySelectorAll('.lead-filter[data-status]').forEach(function (x) { x.classList.remove('is-active'); });
-        b.classList.add('is-active');
-        currentLeadFilter = b.dataset.status;
-        renderLeads();
+    ['course', 'komunitas'].forEach(function (src) {
+      var panel = PANEL_OF[src];
+      document.querySelectorAll('#' + filtersIdOf(panel) + ' .a-filter').forEach(function (b) {
+        b.addEventListener('click', function () {
+          document.querySelectorAll('#' + filtersIdOf(panel) + ' .a-filter').forEach(function (x) { x.classList.remove('is-active'); });
+          b.classList.add('is-active');
+          statusFilters[src] = b.dataset.status;
+          renderLeads(panel);
+        });
       });
     });
 
-    document.querySelectorAll('.lead-filter[data-source]').forEach(function (b) {
-      b.addEventListener('click', function () {
-        document.querySelectorAll('.lead-filter[data-source]').forEach(function (x) { x.classList.remove('is-active'); });
-        b.classList.add('is-active');
-        currentSourceFilter = b.dataset.source;
-        renderLeads();
-      });
-    });
+    document.getElementById('refreshCourse').addEventListener('click', function () { loadLeads('course'); });
+    document.getElementById('refreshKomunitas').addEventListener('click', function () { loadLeads('komunitas'); });
 
-    document.getElementById('refreshLeads').addEventListener('click', loadLeads);
-
-    document.getElementById('exportCsv').addEventListener('click', function () {
-      var rows = filteredLeads();
+    function exportCsvFor(panel) {
+      var rows = filteredFor(panel);
       if (!rows.length) { alert('Tidak ada lead untuk di-export.'); return; }
       var csv = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
       var lines = ['Nama,Email,WhatsApp,Discord ID,Sumber,Status,Catatan,Dibuat'];
@@ -659,12 +722,15 @@
       var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
       var a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = 'leads-xindelabs.csv';
+      a.download = 'leads-' + srcOfPanel(panel) + '-xindelabs.csv';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(a.href);
-    });
+    }
+
+    document.getElementById('exportCsvCourse').addEventListener('click', function () { exportCsvFor('leadsCourse'); });
+    document.getElementById('exportCsvKomunitas').addEventListener('click', function () { exportCsvFor('leadsKomunitas'); });
   </script>
 </body>
 </html>
