@@ -63,6 +63,18 @@ create table if not exists public.modules (
 alter table public.modules add column if not exists type text not null default 'video';
 alter table public.modules add column if not exists content text default '';
 
+-- 7. Tabel member_progress (progres belajar member per modul)
+create table if not exists public.member_progress (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  module_id text not null,
+  status text not null default 'not_started', -- 'not_started' | 'in_progress' | 'completed'
+  completed_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  unique (email, module_id)
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -71,6 +83,7 @@ alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
 alter table public.leads enable row level security;
 alter table public.modules enable row level security;
+alter table public.member_progress enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
 drop policy if exists "members read own" on public.members;
@@ -161,6 +174,20 @@ create policy "modules delete admin" on public.modules for delete
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
+-- member_progress: member cuma bisa baca & tulis progresnya sendiri
+drop policy if exists "member_progress read own" on public.member_progress;
+create policy "member_progress read own" on public.member_progress for select
+  using (auth.jwt() ->> 'email' = email);
+
+drop policy if exists "member_progress insert own" on public.member_progress;
+create policy "member_progress insert own" on public.member_progress for insert
+  with check (auth.jwt() ->> 'email' = email);
+
+drop policy if exists "member_progress update own" on public.member_progress;
+create policy "member_progress update own" on public.member_progress for update
+  using (auth.jwt() ->> 'email' = email)
+  with check (auth.jwt() ->> 'email' = email);
+
 -- ============================================================
 -- SEED: konten default + admin pertama
 -- ============================================================
@@ -231,6 +258,10 @@ drop trigger if exists trg_modules_updated on public.modules;
 create trigger trg_modules_updated before update on public.modules
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_member_progress_updated on public.member_progress;
+create trigger trg_member_progress_updated before update on public.member_progress
+  for each row execute function public.set_updated_at();
+
 -- Index
 create index if not exists idx_members_email on public.members (email);
 create index if not exists idx_admins_email on public.admins (email);
@@ -238,3 +269,4 @@ create index if not exists idx_content_key on public.site_content (key);
 create index if not exists idx_leads_status on public.leads (status);
 create index if not exists idx_leads_created on public.leads (created_at desc);
 create index if not exists idx_modules_sort on public.modules (sort);
+create index if not exists idx_member_progress_email on public.member_progress (email);

@@ -44,18 +44,6 @@
       </div>
     </div>
 
-    <!-- ============ PLAYER ============ -->
-    <div class="player-sticky" id="playerWrap" style="display:none">
-      <div class="wrap">
-        <div class="player-frame" id="playerFrame">
-          <iframe id="playerIframe" src="" title="Video modul" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-        </div>
-        <div class="player-text" id="playerText" style="display:none">
-          <div class="player-text__inner" id="playerTextContent"></div>
-        </div>
-      </div>
-    </div>
-
     <div class="wrap" style="padding:56px 24px;min-height:60vh">
 
       <!-- ============ Config notice ============ -->
@@ -79,20 +67,52 @@
 
       <!-- ============ MEMBER state ============ -->
       <div id="memberState" style="display:none">
-        <!-- Banner kalau course ditutup admin -->
-        <div class="notice notice--warn" id="courseClosedNotice" style="display:none;margin-bottom:20px">
-          ⚠️ Course sementara <b style="color:inherit">ditutup</b> oleh admin. Member aktif tetap bisa nonton modul yang sudah ada.
-        </div>
+      <!-- Banner kalau course ditutup admin -->
+      <div class="notice notice--warn" id="courseClosedNotice" style="display:none;margin-bottom:20px">
+        ⚠️ Course sementara <b style="color:inherit">ditutup</b> oleh admin. Member aktif tetap bisa nonton modul yang sudah ada.
+      </div>
 
-        <div class="section-head" style="margin-bottom:10px">
-          <p class="eyebrow"><span class="dot"></span>modul</p>
-          <h2 class="h2">Klik Modul Buat Mulai</h2>
-        </div>
+      <div class="lms">
+        <!-- Sidebar: progress + daftar modul -->
+        <aside class="lms-side">
+          <div class="lms-progress">
+            <div class="lms-progress__top">
+              <span class="lms-progress__label">Progress Belajar</span>
+              <b class="lms-progress__pct" id="progressPct">0%</b>
+            </div>
+            <div class="lms-progress__bar"><div class="lms-progress__fill" id="progressFill"></div></div>
+            <div class="lms-progress__hint" id="progressHint">0 dari 0 modul selesai</div>
+          </div>
+          <div class="lms-side__list" id="sideModules"><!-- diisi JS --></div>
+        </aside>
 
-        <div class="modules__list" id="moduleGrid"><!-- diisi JS --></div>
+        <!-- Main: player + judul + navigasi -->
+        <div class="lms-main">
+          <div class="lms-player">
+            <div class="player-frame">
+              <iframe id="playerIframe" src="" title="Materi modul" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            </div>
+            <div class="player-text" id="playerText" style="display:none">
+              <div class="player-text__inner" id="playerTextContent"></div>
+            </div>
+          </div>
+
+          <div class="lms-head">
+            <span class="lms-head__badge"><span class="mod-row__lv" id="moduleLevel">—</span></span>
+            <h2 class="lms-head__title" id="moduleTitle">Pilih modul dari daftar di samping.</h2>
+            <p class="lms-head__meta" id="moduleMeta"></p>
+          </div>
+
+          <div class="lms-nav">
+            <button type="button" class="btn btn--ghost" id="prevBtn" disabled>← Sebelumnya</button>
+            <button type="button" class="btn btn--primary" id="completeBtn">✓ Mark as Complete</button>
+            <button type="button" class="btn btn--ghost" id="nextBtn" disabled>Selanjutnya →</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
   <footer class="footer">
     <div class="wrap footer__in">
@@ -105,16 +125,13 @@
     var cfg = window.XINDE;
     var configNotice = document.getElementById('configNotice');
 
-    // ============ Render modul ============
-    function levelClass(lv) { return 'lv-' + lv.replace('_', '-'); }
-    function levelLabel(lv) { return lv === 'level-up' ? 'level-up' : lv; }
+    // ============ Utils ============
+    function levelClass(lv) { return 'lv-' + String(lv || 'beginner').replace('_', '-'); }
+    function levelLabel(lv) { return lv === 'level-up' ? 'level-up' : (lv || 'beginner'); }
     function durationLabel(d) {
       d = d || '';
       return /^\d+$/.test(String(d)) ? d + ' menit' : d;
     }
-
-    var activeModules = [];
-
     function isTextModule(m) {
       return (m.type === 'text') || (!m.video_id && (m.content || '').trim());
     }
@@ -124,50 +141,176 @@
       }).join('');
     }
 
-    function renderModules() {
-      var grid = document.getElementById('moduleGrid');
-      grid.innerHTML = activeModules.map(function (m, i) {
-        var txt = isTextModule(m);
-        return '<div class="mod-row" data-idx="' + i + '" role="button" tabindex="0">' +
-          '<span class="mod-row__no">' + String(i + 1).padStart(2, '0') + '</span>' +
-          '<span class="mod-row__lv ' + levelClass(m.level) + '">' + levelLabel(m.level) + '</span>' +
-          '<span class="mod-row__title">' + m.title + '</span>' +
-          '<span class="mod-row__meta">' + durationLabel(m.duration) + '</span>' +
-          '<span class="mod-row__play">' + (txt ? '📖 baca' : '▶ tonton') + '</span>' +
+    // ============ State ============
+    var activeModules = [];
+    var currentIdx = -1;
+    var progressMap = {};     // moduleKey -> 'not_started' | 'in_progress' | 'completed'
+    var memberEmail = 'local';
+    function moduleKey(m, i) { return (m && m.id) ? 'db:' + m.id : 'cfg:' + i; }
+    function statusOf(i) { return progressMap[moduleKey(activeModules[i], i)] || 'not_started'; }
+    function isCompleted(i) { return statusOf(i) === 'completed'; }
+
+    // ============ Progress: Supabase (member_progress) / localStorage ============
+    function lsKey() { return 'xinde_progress_' + memberEmail; }
+    function fromLocalStorage() {
+      progressMap = {};
+      try {
+        var raw = localStorage.getItem(lsKey());
+        if (raw) progressMap = JSON.parse(raw) || {};
+      } catch (e) {}
+    }
+    function toLocalStorage() {
+      try { localStorage.setItem(lsKey(), JSON.stringify(progressMap)); } catch (e) {}
+    }
+
+    function loadProgress(cb) {
+      if (cfg.supabaseConfigured() && typeof supabaseClient !== 'undefined' && memberEmail !== 'local') {
+        supabaseClient.from('member_progress').select('module_id, status').eq('email', memberEmail).then(function (r) {
+          progressMap = {};
+          if (!r.error) {
+            (r.data || []).forEach(function (p) { progressMap[p.module_id] = p.status; });
+          } else {
+            fromLocalStorage();
+          }
+          cb();
+        });
+        return;
+      }
+      fromLocalStorage();
+      cb();
+    }
+
+    function saveProgress() {
+      toLocalStorage();
+      if (cfg.supabaseConfigured() && typeof supabaseClient !== 'undefined' && memberEmail !== 'local') {
+        var rows = Object.keys(progressMap).map(function (k) {
+          return {
+            email: memberEmail,
+            module_id: k,
+            status: progressMap[k],
+            completed_at: progressMap[k] === 'completed' ? new Date().toISOString() : null,
+            updated_at: new Date().toISOString()
+          };
+        });
+        supabaseClient.from('member_progress').upsert(rows, { onConflict: 'email,module_id' }).then(function () {});
+      }
+    }
+
+    function setStatus(i, status) {
+      var k = moduleKey(activeModules[i], i);
+      if (progressMap[k] === status) return;
+      progressMap[k] = status;
+      saveProgress();
+      renderSidebar();
+      renderProgress();
+      refreshCompleteBtn();
+    }
+
+    // ============ Render ============
+    function renderSidebar() {
+      var el = document.getElementById('sideModules');
+      el.innerHTML = activeModules.map(function (m, i) {
+        var st = statusOf(i);
+        var icon = st === 'completed' ? '✓' : (st === 'in_progress' ? '▶' : '○');
+        var cls = st === 'completed' ? 'st-completed' : (st === 'in_progress' ? 'st-in-progress' : 'st-not-started');
+        return '<div class="lms-side-item' + (i === currentIdx ? ' active' : '') + '" data-idx="' + i + '" role="button" tabindex="0">' +
+          '<span class="lms-side-item__status ' + cls + '">' + icon + '</span>' +
+          '<span class="lms-side-item__no">' + String(i + 1).padStart(2, '0') + '</span>' +
+          '<div class="lms-side-item__body">' +
+            '<div class="lms-side-item__title">' + m.title + '</div>' +
+            '<div class="lms-side-item__meta">' + levelLabel(m.level) + ' · ' + durationLabel(m.duration) + '</div>' +
+          '</div>' +
         '</div>';
       }).join('');
-
-      var iframe = document.getElementById('playerIframe');
-      var textBox = document.getElementById('playerText');
-      var textContent = document.getElementById('playerTextContent');
-      function play(idx) {
-        var m = activeModules[idx];
-        if (!m) return;
-        grid.querySelectorAll('.mod-row').forEach(function (c) { c.classList.remove('active'); });
-        grid.querySelectorAll('.mod-row')[idx].classList.add('active');
-        if (isTextModule(m)) {
-          iframe.style.display = 'none';
-          textBox.style.display = 'block';
-          textContent.innerHTML = renderText(m.content);
-        } else {
-          textBox.style.display = 'none';
-          iframe.style.display = '';
-          iframe.src = m.video_id ? 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0' : '';
-        }
-      }
-      grid.querySelectorAll('.mod-row').forEach(function (row) {
-        row.addEventListener('click', function () { play(Number(row.dataset.idx)); });
-        row.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(Number(row.dataset.idx)); }
+      el.querySelectorAll('.lms-side-item').forEach(function (item) {
+        item.addEventListener('click', function () { openModule(Number(item.dataset.idx)); });
+        item.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModule(Number(item.dataset.idx)); }
         });
       });
     }
 
-    // Modul dari Supabase (tabel modules) — fallback ke config.js kalau kosong / gagal
+    function renderProgress() {
+      var total = activeModules.length;
+      var done = activeModules.filter(function (_, i) { return isCompleted(i); }).length;
+      var pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('progressPct').textContent = pct + '%';
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressHint').textContent = done + ' dari ' + total + ' modul selesai';
+    }
+
+    // ============ Buka modul ============
+    function openModule(i) {
+      var m = activeModules[i];
+      if (!m) return;
+      currentIdx = i;
+      if (statusOf(i) === 'not_started') setStatus(i, 'in_progress');
+
+      document.getElementById('moduleTitle').textContent = m.title;
+      document.getElementById('moduleLevel').className = 'mod-row__lv ' + levelClass(m.level);
+      document.getElementById('moduleLevel').textContent = levelLabel(m.level);
+      document.getElementById('moduleMeta').textContent =
+        'Modul ' + (i + 1) + ' dari ' + activeModules.length + ' · ' +
+        (isTextModule(m) ? 'materi teks' : 'video') + ' · ' + durationLabel(m.duration);
+
+      var iframe = document.getElementById('playerIframe');
+      var textBox = document.getElementById('playerText');
+      if (isTextModule(m)) {
+        iframe.style.display = 'none';
+        textBox.style.display = 'block';
+        document.getElementById('playerTextContent').innerHTML = renderText(m.content);
+      } else {
+        textBox.style.display = 'none';
+        iframe.style.display = '';
+        iframe.src = m.video_id ? 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0' : '';
+      }
+
+      document.getElementById('prevBtn').disabled = i === 0;
+      document.getElementById('nextBtn').disabled = i === activeModules.length - 1;
+      refreshCompleteBtn();
+      renderSidebar();
+      var act = document.querySelector('.lms-side-item.active');
+      if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function refreshCompleteBtn() {
+      var btn = document.getElementById('completeBtn');
+      if (currentIdx < 0) { btn.disabled = true; btn.textContent = '✓ Mark as Complete'; return; }
+      btn.disabled = false;
+      if (isCompleted(currentIdx)) {
+        btn.classList.add('btn--ghost');
+        btn.classList.remove('btn--primary');
+        btn.textContent = '✓ Selesai (klik buat batal)';
+      } else {
+        btn.classList.remove('btn--ghost');
+        btn.classList.add('btn--primary');
+        btn.textContent = '✓ Mark as Complete';
+      }
+    }
+
+    function toggleComplete() {
+      if (currentIdx < 0) return;
+      setStatus(currentIdx, isCompleted(currentIdx) ? 'in_progress' : 'completed');
+    }
+    function goPrev() { if (currentIdx > 0) openModule(currentIdx - 1); }
+    function goNext() { if (currentIdx < activeModules.length - 1) openModule(currentIdx + 1); }
+
+    document.getElementById('prevBtn').addEventListener('click', goPrev);
+    document.getElementById('nextBtn').addEventListener('click', goNext);
+    document.getElementById('completeBtn').addEventListener('click', toggleComplete);
+
+    // ============ Load modul + progress ============
+    function renderAll() {
+      renderSidebar();
+      renderProgress();
+      var idx = activeModules.findIndex(function (_, i) { return statusOf(i) !== 'completed'; });
+      openModule(idx >= 0 ? idx : 0);
+    }
+
     function loadModules() {
       if (!cfg.supabaseConfigured() || typeof supabaseClient === 'undefined') {
         activeModules = cfg.MODULES || [];
-        renderModules();
+        loadProgress(renderAll);
         return;
       }
       supabaseClient.from('modules').select('*').order('sort', { ascending: true }).then(function (r) {
@@ -176,8 +319,8 @@
         } else {
           activeModules = r.data;
         }
-        renderModules();
         loadCourseStatus();
+        loadProgress(renderAll);
       });
     }
 
@@ -194,9 +337,9 @@
 
     // ============ Member yang valid ============
     function showMember(user) {
+      memberEmail = (user && user.email) || 'local';
       document.getElementById('memberHead').style.display = 'block';
       document.getElementById('memberName').textContent = (user && user.email ? user.email.split('@')[0] : 'Member');
-      document.getElementById('playerWrap').style.display = 'block';
       document.getElementById('memberState').style.display = 'block';
       document.getElementById('logoutBtn').style.display = 'inline-flex';
       loadModules();
