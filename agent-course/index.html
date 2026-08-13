@@ -5,16 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Build Your Own Personalized Agent — For Sales Person</title>
   <meta name="description" content="Ecourse buat sales person: bangun AI Agent pribadi buat follow-up otomatis, riset calon client, bikin konten promosi, dan handle objeksi — tanpa coding." />
+  <meta name="theme-color" content="#030f0a" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23030f0a'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%2300ff88' font-family='monospace'%3E_%3C/text%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/config.js"></script>
   <script src="js/pixel.js"></script>
 </head>
-<body class="grid-bg">
+<body>
 
   <!-- ============ NAVBAR ============ -->
   <nav class="nav">
     <div class="nav-inner">
-      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span>_</span></a>
+      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span class="cursor">_</span></a>
       <div class="nav-links" id="navLinks">
         <a href="#modules">Course</a>
         <a href="#benefits">Yang Didapat</a>
@@ -68,7 +70,7 @@
   </header>
 
   <!-- ============ VIDEO INTRO ============ -->
-  <section class="section" id="intro">
+  <section class="section reveal" id="intro">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// intro.mp4</span>
@@ -86,7 +88,7 @@
   </section>
 
   <!-- ============ LIVE PROOF ============ -->
-  <section class="section" id="proof" style="padding-top:0">
+  <section class="section reveal" id="proof">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// live_proof</span>
@@ -111,7 +113,7 @@
   </section>
 
   <!-- ============ MODULES ============ -->
-  <section class="section" id="modules">
+  <section class="section reveal" id="modules">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// curriculum</span>
@@ -150,7 +152,7 @@
   </section>
 
   <!-- ============ 6 BENEFITS ============ -->
-  <section class="section" id="benefits">
+  <section class="section reveal" id="benefits">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// yang_didapat</span>
@@ -192,7 +194,7 @@
   </section>
 
   <!-- ============ TESTIMONI ============ -->
-  <section class="section" id="testimoni">
+  <section class="section reveal" id="testimoni">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// testimonials</span>
@@ -216,7 +218,7 @@
   </section>
 
   <!-- ============ PRICING ============ -->
-  <section class="section" id="pricing">
+  <section class="section reveal" id="pricing">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// pricing</span>
@@ -258,7 +260,7 @@
   </section>
 
   <!-- ============ FAQ ============ -->
-  <section class="section" id="faq">
+  <section class="section reveal" id="faq">
     <div class="container">
       <div class="section-head">
         <span class="section-tag">// faq</span>
@@ -302,7 +304,7 @@
   </section>
 
   <!-- ============ CLOSING CTA ============ -->
-  <section class="closing grid-bg">
+  <section class="closing reveal">
     <div class="container">
       <h2>Mulai Bangun Agent Lo <span class="grad-text">Malam Ini</span></h2>
       <p>Competitor lo udah pakai AI buat follow-up. Jangan biarin closing yang gampang lolos karena lo sibuk mikirin harus bales chat duluan.</p>
@@ -314,7 +316,7 @@
   <!-- ============ FOOTER ============ -->
   <footer class="footer">
     <div class="container footer-inner">
-      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span>_</span></a>
+      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span class="cursor">_</span></a>
       <div class="footer-links">
         <a href="#modules">Course</a>
         <a href="#pricing">Harga</a>
@@ -327,6 +329,19 @@
   </footer>
 
   <script>
+    // ============ Reveal on scroll ============
+    document.documentElement.classList.add('js');
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window) || !els.length) return;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12 });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+
     // ============ Hamburger mobile ============
     document.getElementById('hamburger').addEventListener('click', function () {
       document.getElementById('navLinks').classList.toggle('open');
