@@ -25,7 +25,7 @@ window.XINDE = (function () {
 
   // ---------------- Konten default (fallback CMS §6) ----------------
   const DEFAULT_CONTENT = {
-    hero_title: "Bangun <span class='grad-text'>AI Agent Pribadi</span> Lo dalam 30 Menit",
+    hero_title: "Bangun Karyawan Super Pintar — <span class='hl'>Bantu semua kerjaan lo 24/7 No Baper</span>",
     hero_subtitle:
       "Bukan cuma ChatGPT. Lo bakal punya agent yang follow-up calon client otomatis, riset prospek dalam 30 detik, bikin 10 caption promosi dalam 1 menit, dan jawab objeksi “mahal”, “nanti dulu”, “pikir-pikir”. <b>Tanpa coding.</b>",
     video_caption: "intro.mp4 — kenapa sales person butuh AI agent sendiri (2:45)",
