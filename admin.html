@@ -51,6 +51,11 @@
             </div>
             <div class="notice notice--warn form-error" id="loginError"></div>
             <button type="submit" class="btn btn--primary btn--block" id="loginBtn">Masuk →</button>
+            <div id="signupHint" style="display:none">
+              <p class="form-sub" style="margin-top:18px;font-size:12px">Email ini sudah terdaftar di tabel <span style="font-family:var(--font-mono)">admins</span>, tapi belum punya akun Supabase Auth.</p>
+              <button type="button" class="btn btn--ghost btn--block" id="signupBtn">Buat akun admin ini →</button>
+              <p class="form-sub" id="signupHintSub" style="margin-top:10px;font-size:12px"></p>
+            </div>
           </form>
         </div>
       </div>
@@ -216,11 +221,46 @@
           err.classList.add('show');
           btn.disabled = false;
           btn.textContent = 'Masuk →';
+          if (/invalid login credentials/i.test(res.error.message || '')) {
+            maybeOfferSignup(email, password);
+          }
           return;
         }
         initAdmin(res.data.user);
       });
     });
+
+    // ============ Kalau belum ada user Auth: tawarkan buat akun ============
+    function maybeOfferSignup(email, password) {
+      if (!client) return;
+      var hint = document.getElementById('signupHint');
+      var sub = document.getElementById('signupHintSub');
+      client.from('admins').select('email').eq('email', email).maybeSingle().then(function (r) {
+        if (r.error || !r.data) return;
+        hint.style.display = 'block';
+        sub.textContent = '';
+        var btn = document.getElementById('signupBtn');
+        btn.onclick = function () {
+          btn.disabled = true;
+          btn.textContent = 'Membuat akun…';
+          client.auth.signUp({ email: email, password: password }).then(function (sr) {
+            if (sr.error) {
+              sub.textContent = '⚠️ ' + (sr.error.message || 'Gagal membuat akun.');
+              btn.disabled = false;
+              btn.textContent = 'Buat akun admin ini →';
+              return;
+            }
+            if (sr.data.session) {
+              initAdmin(sr.data.user);
+            } else {
+              sub.textContent = 'Akun dibuat. Cek email (termasuk spam) lalu klik link verifikasi, setelah itu login lagi.';
+              btn.disabled = true;
+              btn.textContent = 'Akun dibuat ✓';
+            }
+          });
+        };
+      });
+    }
 
     // ============ Cek role admin + buka editor ============
     function initAdmin(user) {
