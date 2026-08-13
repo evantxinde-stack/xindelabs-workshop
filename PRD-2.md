@@ -54,11 +54,11 @@ Semua halaman **static HTML** (boleh React/Next kalau vibe tool default-nya gitu
 
 | Route | Halaman |
 |---|---|
-| `/` atau `/agent-course/` | Landing page (index.html) |
-| `/checkout` atau `/agent-course/checkout.html` | Checkout + lead form |
-| `/login` atau `/agent-course/login.html` | Login/Daftar (Supabase Auth) |
-| `/member` atau `/agent-course/member.html` | Member area / LMS |
-| `/admin` atau `/agent-course/admin.html` | **Admin CMS** (baru, dibangun di sini) |
+| `/` | Landing page (index.html) |
+| `/checkout` | Checkout + lead form |
+| `/login` | Login/Daftar (Supabase Auth) |
+| `/member` | Member area / LMS |
+| `/admin` | **Admin CMS** (baru, dibangun di sini) |
 | `/success` | Halaman sukses + Pixel Purchase |
 
 > ⚠️ Contract: path di atas HARUS konsisten — backend (n8n/Mayar) akan redirect ke path sukses/pending/failed. Pilih satu & konsisten.

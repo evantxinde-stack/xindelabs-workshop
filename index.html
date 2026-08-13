@@ -1,19 +1,403 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Build Your Own Personalized Agent — For Sales Person</title>
-<meta http-equiv="refresh" content="0; url=/agent-course/">
-<script>location.replace('/agent-course/');</script>
-<style>
-  body { margin: 0; background: #030f0a; color: #eafff5;
-         font-family: "SF Mono", Consolas, monospace; display: flex;
-         align-items: center; justify-content: center; min-height: 100vh; }
-  a { color: #00ff88; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build Your Own Personalized Agent — For Sales Person</title>
+  <meta name="description" content="Ecourse buat sales person: bangun AI Agent pribadi buat follow-up otomatis, riset calon client, bikin konten promosi, dan handle objeksi — tanpa coding." />
+  <meta name="theme-color" content="#040b08" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23040b08'/%3E%3Ctext x='50' y='66' font-size='46' text-anchor='middle' fill='%2300ff88' font-family='monospace'%3E_%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
 </head>
 <body>
-  <p>Mengarahkan ke <a href="/agent-course/">agent-course/</a>…</p>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <div class="nav__in">
+      <a href="index.html" class="wordmark">xinde<span>.</span></a>
+      <nav class="nav__right">
+        <div class="nav__links" id="navLinks">
+          <a class="nav__link" href="#modules">Course<span class="pdot"><i></i></span></a>
+          <a class="nav__link" href="#benefits">Yang Didapat<span class="pdot"><i></i></span></a>
+          <a class="nav__link" href="#pricing">Harga<span class="pdot"><i></i></span></a>
+          <a class="nav__link" href="login.html">Login<span class="pdot"><i></i></span></a>
+        </div>
+        <div class="nav__cta-desktop">
+          <a href="checkout.html" class="btn btn--primary btn--sm">Daftar Course</a>
+        </div>
+        <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="hero__gridline" aria-hidden="true"></div>
+      <div class="wrap hero__in">
+        <p class="eyebrow"><span class="dot dot--pulse"></span>untuk sales person · tanpa coding</p>
+        <h1 id="heroTitle">Bangun <span class="hl">AI agent pribadi</span> lo, tanpa nulis kode.</h1>
+        <p class="hero__sub" id="heroSub">
+          Agent yang follow-up calon client otomatis, riset prospek dalam 30 detik,
+          bikin 10 caption promosi dalam 1 menit, dan jawab objeksi
+          <b>"mahal"</b>, <b>"nanti dulu"</b>, <b>"pikir-pikir"</b>.
+        </p>
+        <div class="hero__cta">
+          <a href="checkout.html" class="btn btn--primary">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
+          <a href="#video" class="btn btn--ghost">Liat gimana caranya</a>
+        </div>
+        <p class="hero__anchor">mulai <b>Rp 599.000/tahun</b> · ≈Rp 1.600/hari · akses 24/7 dari HP</p>
+      </div>
+      <div class="wrap">
+        <div class="scrollhint" aria-hidden="true"><span>Scroll</span><span class="bar"></span></div>
+      </div>
+    </section>
+
+    <!-- ============ VIDEO ============ -->
+    <section class="section" id="video">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>coba liat sendiri</p>
+        <h2 class="h2 reveal">2 menit buat mikir ulang.</h2>
+        <div class="video__row">
+          <div class="video__side reveal d1">
+            <div class="profile">
+              <div class="profile__avatar">x</div>
+              <div>
+                <div class="profile__name">Xinde Labs</div>
+                <div class="profile__role">AI for sales</div>
+              </div>
+            </div>
+            <ul class="points">
+              <li>follow-up otomatis 24/7</li>
+              <li>riset prospek ±30 detik</li>
+              <li>konten promosi 1 menit</li>
+              <li>handle objeksi closing</li>
+            </ul>
+          </div>
+          <div class="video__stage reveal d2">
+            <div class="video__thumb" id="videoThumb">
+              <img id="videoThumbImg" src="https://i.ytimg.com/vi/M7lc1UVf-VE/hqdefault.jpg" alt="Preview video intro course" />
+              <button class="playbtn" id="playBtn" aria-label="Putar video intro course">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg>
+              </button>
+              <span class="video__label">INTRO — 2 MENIT</span>
+            </div>
+            <p class="video__cap" id="videoCaption">intro.mp4 — kenapa sales person butuh AI agent sendiri</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LIVE PROOF / STATS ============ -->
+    <section class="section" id="stats">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>bukan klaim kosong</p>
+        <h2 class="h2 reveal">Angka yang kejar target lo.</h2>
+        <div class="stats__grid reveal">
+          <div class="stat">
+            <div class="stat__num">24/7</div>
+            <div class="stat__lbl">Follow-up jalan terus, bahkan pas lo tidur</div>
+          </div>
+          <div class="stat">
+            <div class="stat__num">10x</div>
+            <div class="stat__lbl">Lebih banyak follow-up per hari, tanpa capek</div>
+          </div>
+          <div class="stat">
+            <div class="stat__num">30<span style="font-size:.45em">detik</span></div>
+            <div class="stat__lbl">Riset profil calon client sebelum telepon</div>
+          </div>
+        </div>
+        <p class="proof__disclaimer">* angka adalah ilustrasi contoh penggunaan — hasil tiap orang bisa berbeda.</p>
+      </div>
+    </section>
+
+    <!-- ============ MODULES (terminal receipt) ============ -->
+    <section class="section" id="modules">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>isi course-nya</p>
+        <h2 class="h2 reveal mb-head">Yang bakal lo bangun.</h2>
+        <div class="terminal reveal">
+          <div class="terminal__bar">
+            <i></i><i></i><i></i>
+            <span class="terminal__title">personal-agent — modules</span>
+          </div>
+          <div class="terminal__body">
+            <span class="terminal__cmd">ls modules/ --published</span><br />
+            <span class="mod-line"><span class="lv lv-beginner">beginner</span> · Kenalan sama AI Agent: Bukan Cuma ChatGPT</span><br />
+            <span class="mod-line"><span class="lv lv-beginner">beginner</span> · Setup Agent Pertama Lo dalam 30 Menit</span><br />
+            <span class="mod-line"><span class="lv lv-beginner">beginner</span> · Bikin Agent Follow-up WA yang Bales Sendiri</span><br />
+            <span class="mod-line"><span class="lv lv-level-up">level-up</span> · Agent Riset Calon Client</span><br />
+            <span class="mod-line"><span class="lv lv-level-up">level-up</span> · Agent Konten: 10 Caption Promosi dalam 1 Menit</span><br />
+            <span class="mod-line"><span class="lv lv-level-up">level-up</span> · Agent Objeksi: Jawab Mahal, Nanti Dulu, Pikir-pikir</span><br />
+            <span class="mod-line"><span class="lv lv-level-up">level-up</span> · Hubungin Agent ke WhatsApp &amp; Email</span><br />
+            <span class="mod-line"><span class="lv lv-pro">pro</span> · Agent Rekap: Laporan Closing Otomatis</span><br />
+            <span class="mod-line"><span class="lv lv-pro">pro</span> · Cara Ngatur Banyak Agent Biar Ga Kacau</span><br />
+            <span class="mod-rule">──────────────────────────────────────────</span><br />
+            <span class="mod-foot">9 modul video · beginner → pro · <b>terakhir update: 13 Agu</b> · rilis berikutnya: <b>—</b></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 6 BENEFITS ============ -->
+    <section class="section" id="benefits">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>apa yang lo dapet</p>
+        <h2 class="h2 reveal mb-head">Enam hal. Semuanya kepake.</h2>
+        <div class="reveal">
+          <div class="benefit">
+            <div class="benefit__word">Video Course <span class="arw">→</span></div>
+            <div class="benefit__desc">9 modul step-by-step, mobile-friendly, bisa diulang kapan aja. Lo liat prosesnya dari nol sampe jadi.</div>
+          </div>
+          <div class="benefit">
+            <div class="benefit__word">AI Bot Tanya Jawab <span class="arw">→</span></div>
+            <div class="benefit__desc">Bingung di tengah jalan? Tanya bot, jawabannya dikasih dalam konteks sales — bukan teori umum.</div>
+          </div>
+          <div class="benefit">
+            <div class="benefit__word">Kumpulan Prompt <span class="arw">→</span></div>
+            <div class="benefit__desc">Prompt follow-up, riset, dan konten yang tinggal copy-paste. Ganti nama client, jalan.</div>
+          </div>
+          <div class="benefit">
+            <div class="benefit__word">Komunitas Discord <span class="arw">→</span></div>
+            <div class="benefit__desc">Live Q&amp;A + update konten rutin bareng member lain yang sefrekuensi.</div>
+          </div>
+          <div class="benefit">
+            <div class="benefit__word">AI News <span class="arw">→</span></div>
+            <div class="benefit__desc">Update tools AI terbaru yang relevan sama kerjaan sales lo — tanpa lo mantau sendiri.</div>
+          </div>
+          <div class="benefit">
+            <div class="benefit__word">Use-case Update <span class="arw">→</span></div>
+            <div class="benefit__desc">Contoh agent baru tiap bulan. Biar lo ga ketinggalan dan terus naik level.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS ============ -->
+    <section class="section" id="testimonials">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>kata member</p>
+        <h2 class="h2 reveal mb-head">Bukan kami yang ngomong.</h2>
+        <div class="tgrid">
+          <article class="tcard reveal">
+            <div class="tbubble">Follow-up WA 40 calon client yang tadinya makan seharian, sekarang cuma 5 menit. Agent yang jawab, saya yang closing.</div>
+            <div class="tcard__by">member · via whatsapp · agen properti, Surabaya</div>
+          </article>
+          <article class="tcard reveal d1">
+            <div class="tbubble">Saya orang marketing, bukan IT. Setup agent pertama saya selesai 1 malam sambil nonton video modul. Beneran no-coding.</div>
+            <div class="tcard__by">member · via dm · freelance sales</div>
+          </article>
+          <article class="tcard reveal d2">
+            <div class="tbubble">Objeksi "nanti dulu" itu yang paling sering. Sekarang agent saya yang handle — jawabannya konsisten dan ga ngecewain prospek.</div>
+            <div class="tcard__by">member · via whatsapp · agen asuransi, Jakarta</div>
+          </article>
+        </div>
+        <p class="tnote">ditampilin apa adanya — isi kursus &amp; nama diubah demi privasi.</p>
+      </div>
+    </section>
+
+    <!-- ============ PRICING ============ -->
+    <section class="section pricing" id="pricing">
+      <div class="wrap">
+        <p class="eyebrow eyebrow--center reveal"><span class="dot"></span>pricing</p>
+        <h2 class="h2 reveal" style="text-align:center">Pilih cara lo mulai.</h2>
+        <div class="pricing__grid reveal">
+          <div class="pcard">
+            <div class="pcard__tier">Tahunan</div>
+            <div class="pcard__title">Akses 1 tahun</div>
+            <div class="pcard__price">Rp 599.000<small>/tahun</small></div>
+            <div class="pcard__anchor">≈ Rp 1.600/hari — lebih murah dari segelas kopi</div>
+            <ul class="pcard__list">
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Semua 9 modul video</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>AI Bot Tanya Jawab</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Prompt library + komunitas Discord</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>AI News + use-case update</li>
+            </ul>
+            <a href="checkout.html?tier=yearly" class="btn btn--ghost btn--block">Pilih Tahunan</a>
+          </div>
+          <div class="pcard pcard--best">
+            <span class="pcard__badge">TERBAIK · SELAMANYA</span>
+            <div class="pcard__tier">Lifetime · sekali bayar</div>
+            <div class="pcard__title">Akses selamanya</div>
+            <div class="pcard__price">Rp 999.000<small>sekali</small></div>
+            <div class="pcard__anchor">Ga perlu mikir renew — update use-case terus masuk</div>
+            <ul class="pcard__list">
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Semua fitur Tahunan</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Akses permanen, tanpa renew</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Semua use-case update masa depan gratis</li>
+              <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Prioritas jawaban bot + badge lifetime</li>
+            </ul>
+            <a href="checkout.html?tier=lifetime" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ FAQ ============ -->
+    <section class="section" id="faq">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>faq</p>
+        <h2 class="h2 reveal mb-head">Pertanyaan yang sering masuk.</h2>
+        <div class="faq reveal" id="faqList">
+          <div class="faq__item">
+            <button class="faq__q">Saya belum pernah ngoding. Bisa ikut?</button>
+            <div class="faq__a"><div>Bisa. Course ini memang dibuat untuk sales person non-teknis. Semua pakai tools no-code (ChatGPT/Claude, Google Sheets, WhatsApp, n8n) yang tinggal disetel lewat panduan langkah demi langkah.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Apa bedanya dengan ChatGPT biasa?</button>
+            <div class="faq__a"><div>ChatGPT cuma bisa dipakai kalau lo buka chat-nya. Agent yang lo bangun di course ini jalan terus tanpa lo ketik ulang: follow-up otomatis, riset calon client, sampai laporan closing — 24 jam, tanpa capek.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Ini khusus untuk sales tertentu?</button>
+            <div class="faq__a"><div>Utamanya agen asuransi, agen properti, dan freelancer, tapi framework-nya dipakai semua jenis sales: kursus, b2b, jasa, sampai reseller.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Paket Tahunan vs Lifetime bedanya apa?</button>
+            <div class="faq__a"><div>Tahunan Rp 599.000: akses semua konten 1 tahun. Lifetime Rp 999.000: bayar sekali, akses selamanya + dapat update use-case baru tanpa biaya tambahan.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Kalau saya tidak puas, ada refund?</button>
+            <div class="faq__a"><div>Ada garansi uang kembali 7 hari. Kalau masih belum yakin course ini cocok dalam 7 hari pertama, kirim bukti ke WhatsApp kami dan kami refund penuh tanpa drama.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Bagaimana cara bayarnya?</button>
+            <div class="faq__a"><div>Bayar via Mayar (transfer bank, QRIS, atau e-wallet). Setelah pembayaran, link course + invite Discord dikirim otomatis ke email lo. Cek juga folder spam.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Berapa lama saya butuh setiap hari?</button>
+            <div class="faq__a"><div>Cukup 30–45 menit per hari selama 1–2 minggu. Tiap modul maksimal 30 menit, dan bisa diulang kapan saja.</div></div>
+          </div>
+          <div class="faq__item">
+            <button class="faq__q">Apakah ada komunitasnya?</button>
+            <div class="faq__a"><div>Ada. Setiap member masuk Discord Xinde Labs — tempat tanya-jawab, sharing prompt, dan sesi use-case update bareng member lain.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CLOSING ============ -->
+    <section class="closing">
+      <div class="closing__glow" aria-hidden="true"></div>
+      <div class="wrap reveal">
+        <h2>Berhenti kerjain semuanya sendiri.<br /><span class="hl">Agent lo yang follow-up, riset, dan closing.</span></h2>
+        <a href="checkout.html" class="btn btn--primary btn--block" style="max-width:360px">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
+        <p class="hero__anchor" style="text-align:center">Rp 599.000/tahun · <b>Rp 999.000 lifetime</b> · garansi 7 hari</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer__in">
+      <span class="footer__copy">© 2026 Xinde Labs · Build Your Own Personalized Agent</span>
+      <div class="footer__links">
+        <a href="#modules">Course</a>
+        <a href="#pricing">Harga</a>
+        <a href="login.html">Login</a>
+        <a href="https://discord.gg/xindelabs" target="_blank" rel="noopener">Discord</a>
+      </div>
+      <a href="index.html" class="wordmark" style="font-size:15px">xinde<span>.</span></a>
+    </div>
+  </footer>
+
+  <script>
+    document.documentElement.classList.add('js');
+
+    // ============ Reveal on scroll ============
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window) || !els.length) return;
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.1 });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+
+    // ============ Hamburger ============
+    document.getElementById('hamburger').addEventListener('click', function () {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // ============ FAQ accordion ============
+    function bindFaq() {
+      document.querySelectorAll('.faq__item').forEach(function (item) {
+        item.querySelector('.faq__q').addEventListener('click', function () {
+          var isOpen = item.classList.contains('open');
+          document.querySelectorAll('.faq__item.open').forEach(function (o) {
+            o.classList.remove('open');
+            o.querySelector('.faq__a').style.maxHeight = null;
+          });
+          if (!isOpen) {
+            item.classList.add('open');
+            item.querySelector('.faq__a').style.maxHeight = item.querySelector('.faq__a').scrollHeight + 'px';
+          }
+        });
+      });
+    }
+    bindFaq();
+
+    // ============ Video play (thumbnail → iframe) ============
+    (function () {
+      var ytId = window.XINDE.VIDEO_YOUTUBE_ID;
+      var thumb = document.getElementById('videoThumb');
+      var stage = thumb.parentElement;
+      document.getElementById('playBtn').addEventListener('click', function () {
+        var frame = document.createElement('div');
+        frame.className = 'video__frame';
+        frame.innerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" title="Video intro" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>';
+        stage.replaceChild(frame, thumb);
+      });
+    })();
+
+    // ============ Konten dari CMS (Supabase) → fallback default ============
+    (function () {
+      var cfg = window.XINDE;
+      var defaults = cfg.DEFAULT_CONTENT;
+
+      function apply(c) {
+        var heroTitle = document.getElementById('heroTitle');
+        var heroSub = document.getElementById('heroSub');
+        var cap = document.getElementById('videoCaption');
+        if (c.hero_title && heroTitle) heroTitle.innerHTML = c.hero_title;
+        if (c.hero_subtitle && heroSub) heroSub.innerHTML = c.hero_subtitle;
+        if (c.video_caption && cap) cap.textContent = c.video_caption;
+        if (c.video_youtube_id) {
+          document.getElementById('videoThumbImg').src = 'https://i.ytimg.com/vi/' + c.video_youtube_id + '/hqdefault.jpg';
+        }
+
+        if (Array.isArray(c.testimonials) && c.testimonials.length) {
+          var grid = document.querySelector('.tgrid');
+          grid.innerHTML = c.testimonials.map(function (t) {
+            return '<article class="tcard"><div class="tbubble">' + t.quote + '</div><div class="tcard__by">member · ' + t.name + '</div></article>';
+          }).join('');
+        }
+
+        if (Array.isArray(c.faqs) && c.faqs.length) {
+          var list = document.getElementById('faqList');
+          list.innerHTML = c.faqs.map(function (f) {
+            return '<div class="faq__item"><button class="faq__q">' + f.q + '</button><div class="faq__a"><div>' + f.a + '</div></div></div>';
+          }).join('');
+          bindFaq();
+        }
+      }
+
+      if (!cfg.supabaseConfigured()) { apply(defaults); return; }
+      if (!window.supabase) { apply(defaults); return; }
+      var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      client.from('site_content').select('value').eq('key', 'homepage').single().then(function (res) {
+        if (res.error || !res.data) return apply(defaults);
+        apply(Object.assign({}, defaults, res.data.value || {}));
+      }).catch(function () { apply(defaults); });
+    })();
+  </script>
 </body>
 </html>

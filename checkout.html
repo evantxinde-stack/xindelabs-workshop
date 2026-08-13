@@ -1,143 +1,264 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout — Workshop Closing Naik dengan AI</title>
-<!-- META PIXEL — GANTI 921699146613715 -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.load=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '921699146613715');
-fbq('track', 'PageView');
-fbq('track', 'InitiateCheckout');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=921699146613715&ev=PageView&noscript=1"/></noscript>
-<style>
-  :root{--primary:#1a73e8;--dark:#0f172a;--dark-2:#1e293b;--accent:#f59e0b;--text:#334155;--border:#e2e8f0;--light:#f8fafc;}
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:var(--text);background:var(--light);line-height:1.6;}
-  .wrap{max-width:520px;margin:0 auto;padding:32px 20px 60px;}
-  .card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 4px 16px rgba(0,0,0,.06);}
-  h1{font-size:1.35rem;color:var(--dark);margin-bottom:6px;}
-  .sub{font-size:.95rem;color:var(--text);margin-bottom:20px;}
-  .product{background:var(--light);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;}
-  .product .name{font-weight:700;color:var(--dark);}
-  .product .price{font-weight:800;color:var(--primary);font-size:1.15rem;}
-  label{display:block;font-weight:600;font-size:.9rem;margin:14px 0 6px;color:var(--dark);}
-  input,select{width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:1rem;background:#fff;color:var(--dark);}
-  input:focus,select:focus{outline:2px solid var(--primary);border-color:transparent;}
-  .hint{font-size:.8rem;color:#64748b;margin-top:4px;}
-  .btn{display:block;width:100%;margin-top:22px;background:var(--accent);color:#111;font-weight:800;font-size:1.05rem;padding:15px;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,.35);}
-  .btn:hover{filter:brightness(1.05);}
-  .btn:disabled{opacity:.6;cursor:not-allowed;}
-  .secure{margin-top:12px;font-size:.8rem;color:#64748b;text-align:center;}
-  .secure svg{vertical-align:-3px;margin-right:4px;}
-  .pay-methods{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
-  .pay-methods span{background:var(--light);border:1px solid var(--border);border-radius:8px;padding:4px 10px;font-size:.75rem;font-weight:600;color:#475569;}
-  .error{display:none;background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;border-radius:10px;padding:12px;margin-top:14px;font-size:.9rem;}
-  .error.show{display:block;}
-  #loading{display:none;text-align:center;margin-top:18px;font-weight:600;color:var(--dark);}
-  #loading.show{display:block;}
-  .spinner{display:inline-block;width:18px;height:18px;border:3px solid #e2e8f0;border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-4px;margin-right:8px;}
-  @keyframes spin{to{transform:rotate(360deg);}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Build Your Own Personalized Agent</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23040b08'/%3E%3Ctext x='50' y='66' font-size='46' text-anchor='middle' fill='%2300ff88' font-family='monospace'%3E_%3C/text%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>🧾 Checkout</h1>
-    <p class="sub">Workshop "Closing Naik dengan AI" — live Zoom, 2 jam</p>
 
-    <div class="product">
-      <div>
-        <div class="name">Workshop Closing Naik dengan AI</div>
-        <div style="font-size:.8rem;color:#64748b;">Live Zoom • 2 Jam • Rekaman + Template</div>
+  <header class="nav">
+    <div class="nav__in">
+      <a href="index.html" class="wordmark">xinde<span>.</span></a>
+      <div class="nav__right">
+        <a href="index.html" class="btn btn--ghost btn--sm">← Kembali</a>
       </div>
-      <div class="price">Rp 299.000</div>
     </div>
+  </header>
 
-    <form id="checkoutForm">
-      <label for="nama">Nama Lengkap *</label>
-      <input type="text" id="nama" name="nama" required placeholder="Nama lo (sesuai bukti bayar)">
-      <span class="hint">Dipakai di sertifikat & email konfirmasi</span>
+  <div class="page">
+    <div class="auth-wrap">
+      <div class="form-card form-card--wide">
+        <h1 class="form-title">Daftar Course</h1>
+        <p class="form-sub">Isi data lo — link pembayaran langsung dikirim otomatis.</p>
 
-      <label for="email">Email Aktif *</label>
-      <input type="email" id="email" name="email" required placeholder="nama@email.com">
-      <span class="hint">Link Zoom & materi dikirim ke email ini</span>
+        <div class="notice notice--info">🔒 Data lo aman. Pembayaran diproses oleh <b>Mayar</b>, kami ga simpan data kartu.</div>
 
-      <label for="wa">Nomor WhatsApp *</label>
-      <input type="tel" id="wa" name="wa" required placeholder="08xxxxxxxxxx" pattern="[0-9+\s-]{9,15}">
-      <span class="hint">Grup peserta & notifikasi WA</span>
+        <form id="checkoutForm" novalidate>
+          <!-- ============ Tier selector ============ -->
+          <div class="field">
+            <label>Pilih Paket</label>
+            <div class="tier-options" id="tierOptions">
+              <div class="tier-opt">
+                <input type="radio" name="tier" id="tierYearly" value="yearly" checked />
+                <label for="tierYearly">
+                  <div class="tier-price">Rp 599.000</div>
+                  <div class="tier-period">1 tahun · ≈Rp 1.600/hari</div>
+                </label>
+              </div>
+              <div class="tier-opt">
+                <input type="radio" name="tier" id="tierLifetime" value="lifetime" />
+                <label for="tierLifetime">
+                  <div class="tier-price">Rp 999.000</div>
+                  <div class="tier-period">Lifetime · sekali bayar</div>
+                  <span class="tier-badge">TERBAIK</span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-      <button type="submit" class="btn" id="payBtn">💳 BAYAR SEKARANG — Rp 299.000</button>
-      <div class="secure">🔒 Pembayaran diproses aman via Tripay</div>
-      <div class="pay-methods">
-        <span>QRIS</span><span>Virtual Account</span><span>GoPay</span><span>OVO</span><span>DANA</span>
+          <!-- ============ Lead form ============ -->
+          <div class="field" data-field="nama">
+            <label for="nama">Nama Lengkap *</label>
+            <input type="text" id="nama" name="nama" placeholder="cth: Budi Santoso" autocomplete="name" required />
+            <div class="err-msg">Nama lengkap wajib diisi.</div>
+          </div>
+
+          <div class="field" data-field="email">
+            <label for="email">Email Aktif *</label>
+            <input type="email" id="email" name="email" placeholder="cth: budi@gmail.com" autocomplete="email" required />
+            <div class="hint">Link course + invite Discord dikirim ke email ini.</div>
+            <div class="err-msg">Email wajib diisi dan harus valid.</div>
+          </div>
+
+          <div class="field" data-field="wa">
+            <label for="wa">No. WhatsApp *</label>
+            <input type="tel" id="wa" name="wa" placeholder="cth: 08123456789" autocomplete="tel" inputmode="numeric" required />
+            <div class="hint">Format 08xx, minimal 9 digit.</div>
+            <div class="err-msg">No. WhatsApp harus diawali 08 dan minimal 9 digit.</div>
+          </div>
+
+          <!-- ============ Discord ID + tutorial ============ -->
+          <div class="field" data-field="discord">
+            <label for="discord">Discord User ID *</label>
+            <input type="number" id="discord" name="discord" placeholder="cth: 123456789012345678" inputmode="numeric" required />
+            <div class="hint">Angka 17–18 digit. Butuh bantuan? Buka tutorial di bawah.</div>
+            <div class="err-msg">Discord User ID harus berupa angka 17–18 digit.</div>
+          </div>
+
+          <div class="tutorial" id="discordTutorial">
+            <button type="button" class="tutorial-toggle">Cara cari Discord User ID lo 📱/💻</button>
+            <div class="tutorial-body">
+              <div class="tutorial-inner">
+                <div class="tut-tabs">
+                  <button type="button" class="tut-tab active" data-tab="mobile">📱 Mobile</button>
+                  <button type="button" class="tut-tab" data-tab="desktop">💻 Desktop</button>
+                </div>
+                <div class="tut-pane active" data-pane="mobile">
+                  <ol>
+                    <li>Buka Discord, ketuk avatar lo (kanan bawah).</li>
+                    <li>Ketuk <b>User Profile</b> → ikon <b>⋯</b> (titik tiga).</li>
+                    <li>Ketuk <b>Developer Mode</b> → nyalakan toggle-nya.</li>
+                    <li>Tutup menu, ketuk lagi avatar lo → <b>Copy User ID</b>.</li>
+                    <li>Tempel angka (17–18 digit) di kolom atas.</li>
+                  </ol>
+                </div>
+                <div class="tut-pane" data-pane="desktop">
+                  <ol>
+                    <li>Buka Discord (app/desktop), buka <b>User Settings</b> (ikon ⚙️).</li>
+                    <li>Sidebar kiri → <b>Advanced</b>.</li>
+                    <li>Nyalakan toggle <b>Developer Mode</b>.</li>
+                    <li>Klik kanan nama lo → <b>Copy User ID</b>.</li>
+                    <li>Tempel angka (17–18 digit) di kolom atas.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice notice--warn form-error" id="formError"></div>
+
+          <button type="submit" class="btn btn--primary btn--block" id="payBtn">
+            Bayar &amp; Daftar → <span id="payAmount">Rp 599.000</span>
+          </button>
+          <p class="hint" style="text-align:center;margin-top:12px">Setelah bayar, link course + Discord invite dikirim otomatis ke email.</p>
+        </form>
       </div>
-    </form>
-
-    <div id="loading"><span class="spinner"></span>Mengarahkan ke halaman pembayaran...</div>
-    <div class="error" id="errorBox"></div>
+    </div>
   </div>
-</div>
 
-<script>
-(function(){
-  var form = document.getElementById('checkoutForm');
-  var btn = document.getElementById('payBtn');
-  var loading = document.getElementById('loading');
-  var errorBox = document.getElementById('errorBox');
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <span class="footer__copy">© 2026 Xinde Labs · Pembayaran diproses Mayar</span>
+    </div>
+  </footer>
 
-  // ⚙️ GANTI INI: URL webhook n8n lo
-  // Format: https://<domain-n8n>/webhook/create-payment
-  var N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
+  <script>
+    fbq('track', 'InitiateCheckout');
 
-  form.addEventListener('submit', function(e){
-    e.preventDefault();
-    errorBox.classList.remove('show');
-    loading.classList.add('show');
-    btn.disabled = true;
+    var cfg = window.XINDE;
+    var form = document.getElementById('checkoutForm');
+    var payBtn = document.getElementById('payBtn');
+    var payAmount = document.getElementById('payAmount');
+    var formError = document.getElementById('formError');
 
-    var payload = {
-      nama: document.getElementById('nama').value.trim(),
-      email: document.getElementById('email').value.trim(),
-      wa: document.getElementById('wa').value.trim(),
-      produk: "workshop-closing-naik-ai",
-      harga: 299000
-    };
-
-    fetch(N8N_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    .then(function(resp){
-      if (!resp.ok) throw new Error('Webhook error ' + resp.status);
-      return resp.json();
-    })
-    .then(function(data){
-      if (data && data.payment_url) {
-        window.location.href = data.payment_url;
-      } else {
-        throw new Error('payment_url tidak ditemukan di response');
+    // ---------- Preselect tier dari URL (?tier=yearly|lifetime) ----------
+    (function () {
+      var t = new URLSearchParams(location.search).get('tier');
+      if (t === 'lifetime' || t === 'yearly') {
+        document.getElementById(t === 'lifetime' ? 'tierLifetime' : 'tierYearly').checked = true;
       }
-    })
-    .catch(function(err){
-      loading.classList.remove('show');
-      btn.disabled = false;
-      errorBox.textContent = 'Terjadi kendala: ' + err.message + '. Coba lagi atau DM @xindelabs.id';
-      errorBox.classList.add('show');
+      updatePrice();
+    })();
+
+    function selectedTier() {
+      return document.querySelector('input[name="tier"]:checked');
+    }
+    function updatePrice() {
+      var tier = selectedTier().value;
+      var p = cfg.PRICES[tier];
+      payAmount.textContent = p.label;
+    }
+    document.querySelectorAll('input[name="tier"]').forEach(function (r) {
+      r.addEventListener('change', updatePrice);
     });
-  });
-})();
-</script>
+
+    // ---------- Discord tutorial ----------
+    document.querySelector('.tutorial-toggle').addEventListener('click', function () {
+      var t = document.getElementById('discordTutorial');
+      var open = t.classList.toggle('open');
+      var body = t.querySelector('.tutorial-body');
+      body.style.maxHeight = open ? body.scrollHeight + 'px' : null;
+    });
+    document.querySelectorAll('.tut-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tut-tab').forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var name = tab.dataset.tab;
+        document.querySelectorAll('.tut-pane').forEach(function (p) {
+          p.classList.toggle('active', p.dataset.pane === name);
+        });
+      });
+    });
+
+    // ---------- Validasi ----------
+    function validators() {
+      return {
+        nama: function (v) { return v.trim().length >= 2; },
+        email: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
+        wa: function (v) {
+          var s = v.replace(/\D/g, '');
+          return s.length >= 9 && /^08/.test(s);
+        },
+        discord: function (v) {
+          var s = v.replace(/\D/g, '');
+          return s.length >= 17 && s.length <= 18;
+        }
+      };
+    }
+
+    function validate() {
+      var v = validators();
+      var ok = true;
+      Object.keys(v).forEach(function (name) {
+        var field = form.querySelector('[data-field="' + name + '"]');
+        var input = field.querySelector('input');
+        var pass = v[name](input.value);
+        field.classList.toggle('invalid', !pass);
+        if (!pass) ok = false;
+      });
+      return ok;
+    }
+
+    form.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        this.closest('.field').classList.remove('invalid');
+      });
+    });
+
+    // ---------- Submit → POST n8n webhook (PRD §5 contract) ----------
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validate()) {
+        formError.classList.add('show');
+        formError.textContent = '⚠️ Cek lagi isian yang merah, ya.';
+        return;
+      }
+      formError.classList.remove('show');
+
+      var tier = selectedTier().value;
+      var payload = {
+        nama: document.getElementById('nama').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        wa: document.getElementById('wa').value.trim(),
+        discord: document.getElementById('discord').value.trim(),
+        produk: cfg.PRODUCT_KEY,
+        harga: cfg.PRICES[tier].harga
+      };
+
+      fbq('track', 'AddPaymentInfo');
+      payBtn.disabled = true;
+      payBtn.textContent = 'Mengarahkan ke pembayaran…';
+
+      fetch(cfg.N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          var url = data.payment_url;
+          if (!url) throw new Error('payment_url tidak ada');
+          window.location.href = url;
+        })
+        .catch(function () {
+          payBtn.disabled = false;
+          payBtn.textContent = 'Bayar & Daftar → ' + cfg.PRICES[selectedTier().value].label;
+          formError.classList.add('show');
+          formError.textContent = '⚠️ Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
+        });
+    });
+  </script>
 </body>
 </html>
