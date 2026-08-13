@@ -178,7 +178,15 @@
               <button type="button" class="btn btn--ghost btn--sm" id="refreshLeads">↻ Refresh</button>
             </div>
 
+            <div class="lead-filters lead-filters--src">
+              <span class="lead-filters__label">sumber</span>
+              <button type="button" class="lead-filter is-active" data-source="all">Semua <span class="cnt" id="cntSrcAll">0</span></button>
+              <button type="button" class="lead-filter" data-source="course">Course <span class="cnt" id="cntSrcCourse">0</span></button>
+              <button type="button" class="lead-filter" data-source="komunitas">Komunitas <span class="cnt" id="cntSrcKomunitas">0</span></button>
+            </div>
+
             <div class="lead-filters">
+              <span class="lead-filters__label">status</span>
               <button type="button" class="lead-filter is-active" data-status="all">Semua <span class="cnt" id="cntAll">0</span></button>
               <button type="button" class="lead-filter" data-status="belum">Belum <span class="cnt" id="cntBelum">0</span></button>
               <button type="button" class="lead-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntFollowUp">0</span></button>
@@ -486,6 +494,9 @@
     // ============ Leads ============
     var allLeads = [];
     var currentLeadFilter = 'all';
+    var currentSourceFilter = 'all';
+
+    function srcOf(l) { return l.source === 'komunitas' ? 'komunitas' : 'course'; }
 
     function loadLeads() {
       if (!client) return;
@@ -500,11 +511,17 @@
       });
     }
 
+    function filteredLeads() {
+      return allLeads.filter(function (l) {
+        if (currentSourceFilter !== 'all' && srcOf(l) !== currentSourceFilter) return false;
+        if (currentLeadFilter !== 'all' && l.status !== currentLeadFilter) return false;
+        return true;
+      });
+    }
+
     function renderLeads() {
       var body = document.getElementById('leadsBody');
-      var list = currentLeadFilter === 'all'
-        ? allLeads
-        : allLeads.filter(function (l) { return l.status === currentLeadFilter; });
+      var list = filteredLeads();
       body.innerHTML = '';
       list.forEach(function (l) { body.appendChild(leadRow(l)); });
       document.getElementById('leadsEmpty').style.display = list.length ? 'none' : 'block';
@@ -513,14 +530,19 @@
     }
 
     function refreshCounts() {
-      var counts = { all: allLeads.length, belum: 0, follow_up: 0, bayar: 0 };
+      var counts = { all: allLeads.length, belum: 0, follow_up: 0, bayar: 0, srcAll: allLeads.length, srcCourse: 0, srcKomunitas: 0 };
       allLeads.forEach(function (l) {
         if (counts[l.status] !== undefined) counts[l.status]++;
+        if (srcOf(l) === 'komunitas') counts.srcKomunitas++;
+        else counts.srcCourse++;
       });
       document.getElementById('cntAll').textContent = counts.all;
       document.getElementById('cntBelum').textContent = counts.belum;
       document.getElementById('cntFollowUp').textContent = counts.follow_up;
       document.getElementById('cntBayar').textContent = counts.bayar;
+      document.getElementById('cntSrcAll').textContent = counts.srcAll;
+      document.getElementById('cntSrcCourse').textContent = counts.srcCourse;
+      document.getElementById('cntSrcKomunitas').textContent = counts.srcKomunitas;
     }
 
     function updateLead(id, patch) {
@@ -552,8 +574,8 @@
 
       tr.innerHTML =
         '<td>' +
-          '<div class="lead-name">' + esc(l.name) + '</div>' +
-          '<div class="lead-meta">' + esc(created) + (l.source ? ' · ' + esc(l.source) : '') + '</div>' +
+          '<div class="lead-name">' + esc(l.name) + ' <span class="lead-src is-' + srcOf(l) + '">' + srcOf(l) + '</span></div>' +
+          '<div class="lead-meta">' + esc(created) + '</div>' +
         '</td>' +
         '<td>' +
           '<div class="lead-meta">' + esc(l.email || '—') + '</div>' +
@@ -605,11 +627,20 @@
       return tr;
     }
 
-    document.querySelectorAll('.lead-filter').forEach(function (b) {
+    document.querySelectorAll('.lead-filter[data-status]').forEach(function (b) {
       b.addEventListener('click', function () {
-        document.querySelectorAll('.lead-filter').forEach(function (x) { x.classList.remove('is-active'); });
+        document.querySelectorAll('.lead-filter[data-status]').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentLeadFilter = b.dataset.status;
+        renderLeads();
+      });
+    });
+
+    document.querySelectorAll('.lead-filter[data-source]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.lead-filter[data-source]').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        currentSourceFilter = b.dataset.source;
         renderLeads();
       });
     });
@@ -617,15 +648,13 @@
     document.getElementById('refreshLeads').addEventListener('click', loadLeads);
 
     document.getElementById('exportCsv').addEventListener('click', function () {
-      var rows = currentLeadFilter === 'all'
-        ? allLeads
-        : allLeads.filter(function (l) { return l.status === currentLeadFilter; });
+      var rows = filteredLeads();
       if (!rows.length) { alert('Tidak ada lead untuk di-export.'); return; }
       var csv = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
-      var lines = ['Nama,Email,WhatsApp,Discord ID,Status,Sumber,Catatan,Dibuat'];
+      var lines = ['Nama,Email,WhatsApp,Discord ID,Sumber,Status,Catatan,Dibuat'];
       rows.forEach(function (l) {
         lines.push([csv(l.name), csv(l.email), csv(l.whatsapp), csv(l.discord_id),
-                    csv(l.status), csv(l.source), csv(l.notes), csv(l.created_at)].join(','));
+                    csv(srcOf(l)), csv(l.status), csv(l.notes), csv(l.created_at)].join(','));
       });
       var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
       var a = document.createElement('a');

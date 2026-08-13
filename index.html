@@ -327,6 +327,51 @@
       </div>
     </section>
 
+    <!-- ============ KOMUNITAS GRATIS (lead capture terpisah) ============ -->
+    <section class="section comm" id="komunitas">
+      <div class="wrap">
+        <div class="comm__grid">
+          <div class="comm__info reveal">
+            <p class="eyebrow"><span class="dot dot--pulse"></span>gratis · buat semua sales</p>
+            <h2 class="h2">Join Komunitas <span class="hl">AI Connect Circle</span> GRATIS!</h2>
+            <p class="lead">Forum sales person Indonesia yang lagi naik level pakai AI — tanya-jawab, sharing prompt, diskusi use-case, dan update tools terbaru tiap minggu.</p>
+            <ul class="points">
+              <li>gratis selamanya · tanpa kartu kredit</li>
+              <li>share &amp; curi prompt terbaik dari sesama sales</li>
+              <li>update AI tools buat closing tiap minggu</li>
+            </ul>
+          </div>
+          <div class="comm__card reveal d1">
+            <form id="commForm" novalidate>
+              <div class="field">
+                <label for="commName">Nama Lengkap</label>
+                <input type="text" id="commName" placeholder="cth: Budi Santoso" autocomplete="name" required />
+                <div class="err-msg">Nama wajib diisi.</div>
+              </div>
+              <div class="field">
+                <label for="commEmail">Email Aktif</label>
+                <input type="email" id="commEmail" placeholder="cth: budi@gmail.com" autocomplete="email" required />
+                <div class="err-msg">Email aktif wajib diisi.</div>
+              </div>
+              <div class="field">
+                <label for="commWhatsapp">No. WhatsApp</label>
+                <input type="tel" id="commWhatsapp" placeholder="cth: 0812 3456 7890" autocomplete="tel" required />
+                <div class="err-msg">No. WhatsApp wajib diisi.</div>
+              </div>
+              <div class="notice notice--warn form-error" id="commError"></div>
+              <button type="submit" class="btn btn--primary btn--block" id="commSubmit">Gabung Gratis <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></button>
+            </form>
+            <div id="commDone" style="display:none">
+              <div class="lead-done">
+                <h3>Selamat datang di Circle! 🎉</h3>
+                <p>Makasih <b id="commDoneName"></b>. Link invite <b>AI Connect Circle</b> dikirim ke WhatsApp &amp; email lo — cek juga folder spam.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ CLOSING ============ -->
     <section class="closing">
       <div class="closing__glow" aria-hidden="true"></div>
@@ -344,6 +389,7 @@
       <span class="footer__copy">© 2026 Xinde Labs · Build Your Own Personalized Agent</span>
       <div class="footer__links">
         <a href="#modules">Course</a>
+        <a href="#komunitas">Komunitas</a>
         <a href="#pricing">Harga</a>
         <a href="login.html">Login</a>
         <a href="https://discord.gg/xindelabs" target="_blank" rel="noopener" id="footerDiscord">Discord</a>
@@ -357,6 +403,27 @@
 
     var cfg = window.XINDE;
     var currentVideoId = cfg.VIDEO_YOUTUBE_ID;
+
+    // ============ Helper form leads ============
+    function normPhone(p) {
+      var d = String(p).replace(/[^\d]/g, '');
+      if (!d) return '';
+      if (d[0] === '0') d = '62' + d.slice(1);
+      else if (d[0] !== '6' && d[0] !== '9') d = '62' + d;
+      return d;
+    }
+    function markInvalid(field) {
+      field.closest('.field').classList.add('invalid');
+      field.addEventListener('input', function () { field.closest('.field').classList.remove('invalid'); }, { once: true });
+    }
+    function saveLead(payload, onDone, onFail) {
+      if (!cfg.supabaseConfigured() || !window.supabase) { onDone(); return; }
+      var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      client.from('leads').insert(payload).then(function (r) {
+        if (r.error) return onFail('Gagal simpan data: ' + (r.error.message || 'coba lagi'));
+        onDone();
+      }).catch(function () { onFail(); });
+    }
 
     // ============ Reveal on scroll ============
     (function () {
@@ -464,23 +531,10 @@
         apply(Object.assign({}, defaults, res.data.value || {}));
       }).catch(function () { apply(defaults); });
     })();
-    // ============ Form Daftar Course → tabel leads ============
+    // ============ Form Daftar Course → tabel leads (source: course) ============
     (function () {
       var form = document.getElementById('leadForm');
       if (!form) return;
-
-      function normPhone(p) {
-        var d = String(p).replace(/[^\d]/g, '');
-        if (!d) return '';
-        if (d[0] === '0') d = '62' + d.slice(1);
-        else if (d[0] !== '6' && d[0] !== '9') d = '62' + d;
-        return d;
-      }
-
-      function markInvalid(field) {
-        field.closest('.field').classList.add('invalid');
-        field.addEventListener('input', function () { field.closest('.field').classList.remove('invalid'); }, { once: true });
-      }
 
       form.addEventListener('submit', function (e) {
         e.preventDefault();
@@ -501,17 +555,6 @@
         btn.disabled = true;
         btn.textContent = 'Mengirim…';
 
-        var insert = function (client) {
-          return client.from('leads').insert({
-            name: name,
-            email: email,
-            whatsapp: normPhone(phoneRaw),
-            discord_id: discord,
-            status: 'belum',
-            source: 'landing-daftar'
-          });
-        };
-
         var done = function () {
           document.getElementById('doneName').textContent = name;
           form.style.display = 'none';
@@ -525,15 +568,60 @@
           err.classList.add('show');
         };
 
-        if (cfg.supabaseConfigured() && window.supabase) {
-          var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-          insert(client).then(function (r) {
-            if (r.error) return fail('Gagal simpan data: ' + (r.error.message || 'coba lagi'));
-            done();
-          }).catch(function () { fail(); });
-        } else {
-          done();
-        }
+        saveLead({
+          name: name,
+          email: email,
+          whatsapp: normPhone(phoneRaw),
+          discord_id: discord,
+          status: 'belum',
+          source: 'landing-daftar'
+        }, done, fail);
+      });
+    })();
+
+    // ============ Form Komunitas Gratis → tabel leads (source: komunitas) ============
+    (function () {
+      var form = document.getElementById('commForm');
+      if (!form) return;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = document.getElementById('commName').value.trim();
+        var email = document.getElementById('commEmail').value.trim();
+        var phoneRaw = document.getElementById('commWhatsapp').value.trim();
+        var btn = document.getElementById('commSubmit');
+        var err = document.getElementById('commError');
+
+        var ok = true;
+        if (!name) { markInvalid(document.getElementById('commName')); ok = false; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { markInvalid(document.getElementById('commEmail')); ok = false; }
+        if (!normPhone(phoneRaw)) { markInvalid(document.getElementById('commWhatsapp')); ok = false; }
+        if (!ok) return;
+
+        err.classList.remove('show');
+        btn.disabled = true;
+        btn.textContent = 'Mengirim…';
+
+        var done = function () {
+          document.getElementById('commDoneName').textContent = name;
+          form.style.display = 'none';
+          document.getElementById('commDone').style.display = 'block';
+        };
+
+        var fail = function (msg) {
+          btn.disabled = false;
+          btn.textContent = 'Gabung Gratis →';
+          err.textContent = '⚠️ ' + (msg || 'Gagal daftar, coba lagi.');
+          err.classList.add('show');
+        };
+
+        saveLead({
+          name: name,
+          email: email,
+          whatsapp: normPhone(phoneRaw),
+          status: 'belum',
+          source: 'komunitas'
+        }, done, fail);
       });
     })();
   </script>

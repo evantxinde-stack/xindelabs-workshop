@@ -718,6 +718,30 @@ h1, h2, h3, .display {
 }
 
 /* ============================================================
+   KOMUNITAS GRATIS (lead capture terpisah)
+   ============================================================ */
+.comm__grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 48px;
+  align-items: center;
+  max-width: 960px;
+  margin: 0 auto;
+}
+.comm__info .h2 { margin: 12px 0 14px; }
+.comm__info .lead { margin-bottom: 22px; }
+.comm__card {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 34px 38px;
+}
+@media (max-width: 840px) {
+  .comm__grid { grid-template-columns: 1fr; gap: 32px; }
+  .comm__card { padding: 26px 20px; }
+}
+
+/* ============================================================
    MEMBER / LMS
    ============================================================ */
 .member-head {
@@ -908,7 +932,30 @@ h1, h2, h3, .display {
   flex-wrap: wrap;
   margin-bottom: 18px;
 }
+.lead-filters--src { margin-bottom: 10px; }
+.lead-filters__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-dim);
+  margin-right: 4px;
+}
 .lead-filters__spacer { flex: 1; }
+.lead-src {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 6px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+.lead-src.is-course { color: var(--green); background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); }
+.lead-src.is-komunitas { color: var(--cyan); background: rgba(0, 229, 255, 0.08); border: 1px solid rgba(0, 229, 255, 0.3); }
 .lead-filter {
   background: none;
   border: 1px solid var(--line);
