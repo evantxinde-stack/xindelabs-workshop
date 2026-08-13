@@ -10,7 +10,7 @@ window.XINDE = (function () {
   // n8n webhook (SUDAH LIVE — contract PRD §5)
   const N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
 
-  // Supabase (isi dari project lo — §6)
+  // Supabase (project live)
   const SUPABASE_URL = "https://qxzvmnbhplgmspdxdbmg.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDQyMjksImV4cCI6MjEwMjE4MDIyOX0.19lSzSLuNeFyDQ1r-3hYP50j01f1GeaC4ZSqWI-ajs8";
 

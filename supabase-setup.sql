@@ -1,5 +1,6 @@
 -- ============================================================
 -- SUPABASE SETUP v2 — members + CMS (jalankan di SQL Editor)
+-- File ini AMAN dijalankan ulang (idempotent).
 -- ============================================================
 
 -- 1. Tabel members (member course)
@@ -38,31 +39,38 @@ alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
+drop policy if exists "members read own" on public.members;
 create policy "members read own" on public.members for select
   using (auth.jwt() ->> 'email' = email);
 
 -- admins: user cuma bisa baca apakah dirinya admin (by email)
+drop policy if exists "admins read self" on public.admins;
 create policy "admins read self" on public.admins for select
   using (auth.jwt() ->> 'email' = email);
 
 -- site_content: SEMUA orang bisa baca (konten publik landing page)
+drop policy if exists "content read all" on public.site_content;
 create policy "content read all" on public.site_content for select
   using (true);
 
 -- site_content: cuma ADMIN yang bisa tulis/ubah
+drop policy if exists "content write admin" on public.site_content;
 create policy "content write admin" on public.site_content for insert
   with check (exists (
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
+drop policy if exists "content update admin" on public.site_content;
 create policy "content update admin" on public.site_content for update
   using (exists (
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
 -- members: service_role (n8n) boleh tulis — anon ga bisa
+drop policy if exists "service insert members" on public.members;
 create policy "service insert members" on public.members for insert
   with check (true);
+drop policy if exists "service update members" on public.members;
 create policy "service update members" on public.members for update
   using (true);
 
@@ -70,24 +78,39 @@ create policy "service update members" on public.members for update
 -- SEED: konten default + admin pertama
 -- ============================================================
 
--- Admin pertama: GANTI email ini dengan email lo
-insert into public.admins (email) values ('GANTI_EMAIL_ADMIN_LO@email.com')
+-- Admin pertama (email lo)
+insert into public.admins (email) values ('evant.xinde@gmail.com')
 on conflict (email) do nothing;
 
--- Konten default landing page
+-- Konten landing page — re-run akan UPDATE ke copy terbaru
 insert into public.site_content (key, value) values
 ('homepage', '{
-  "hero_title": "Bukan karena lo kurang jualan — tapi karena lo masih kerjain semuanya sendiri.",
-  "hero_subtitle": "Belajar bangun AI Agent pribadi lo sendiri — yang follow-up otomatis, riset calon client, bikin konten promosi, dan bales pertanyaan 24 jam. Tanpa coding. Tanpa jago teknologi.",
-  "video_youtube_id": "YOUTUBE_VIDEO_ID",
-  "video_caption": "INTRO — 2 MENIT · Liat duluan kayak gimana rasanya",
+  "hero_title": "Bangun Karyawan Super Pintar — <span class=''hl''>Bantu semua kerjaan lo 24/7 No Baper</span>",
+  "hero_subtitle": "Bukan cuma ChatGPT. Lo bakal punya agent yang follow-up calon client otomatis, riset prospek dalam 30 detik, bikin 10 caption promosi dalam 1 menit, dan jawab objeksi “mahal”, “nanti dulu”, “pikir-pikir”. <b>Tanpa coding.</b>",
+  "video_youtube_id": "M7lc1UVf-VE",
+  "video_caption": "intro.mp4 — kenapa sales person butuh AI agent sendiri (2:45)",
   "price_yearly": 599000,
   "price_lifetime": 999000,
-  "discord_link": "https://discord.gg/G3EXTQt9e",
-  "whatsapp_link": "https://wa.me/62895335137700",
-  "instagram_handle": "@xindelabs.id"
+  "discord_link": "https://discord.gg/xindelabs",
+  "whatsapp_link": "https://wa.me/6281234567890",
+  "instagram_handle": "@xindelabs.id",
+  "testimonials": [
+    {"quote": "Follow-up WA 40 calon client yang tadinya makan seharian, sekarang cuma 5 menit. Agent yang jawab, saya yang closing.", "name": "Rudi, Agen Properti Surabaya"},
+    {"quote": "Saya orang marketing, bukan IT. Setup agent pertama saya selesai 1 malam sambil nonton video modul. Beneran no-coding.", "name": "Maya, Freelance Sales"},
+    {"quote": "Objeksi “nanti dulu” itu yang paling sering. Sekarang agent saya yang handle, jawabannya konsisten dan ga ngecewain prospek.", "name": "Andi, Agen Asuransi Jakarta"}
+  ],
+  "faqs": [
+    {"q": "Saya belum pernah ngoding. Bisa ikut?", "a": "Bisa. Course ini memang dibuat untuk sales person non-teknis. Semua pakai tools no-code (ChatGPT/Claude, Google Sheets, WhatsApp, n8n) yang tinggal disetel lewat panduan langkah demi langkah."},
+    {"q": "Apa bedanya dengan ChatGPT biasa?", "a": "ChatGPT cuma bisa dipakai kalau lo buka chat-nya. Agent yang lo bangun di course ini jalan terus tanpa lo ketik ulang: follow-up otomatis, riset calon client, sampai laporan closing — 24 jam, tanpa capek."},
+    {"q": "Ini khusus untuk sales tertentu?", "a": "Utamanya agen asuransi, agen properti, dan freelancer, tapi framework-nya dipakai semua jenis sales: kursus, b2b, jasa, sampai reseller."},
+    {"q": "Paket Tahunan vs Lifetime bedanya apa?", "a": "Tahunan Rp 599.000: akses semua konten 1 tahun. Lifetime Rp 999.000: bayar sekali, akses selamanya + dapat update use-case baru tanpa biaya tambahan."},
+    {"q": "Kalau saya tidak puas, ada refund?", "a": "Ada garansi uang kembali 7 hari. Kalau masih belum yakin course ini cocok dalam 7 hari pertama, kirim bukti ke WhatsApp kami dan kami refund penuh tanpa drama."},
+    {"q": "Bagaimana cara bayarnya?", "a": "Bayar via Mayar (transfer bank, QRIS, atau e-wallet). Setelah pembayaran, link course + invite Discord dikirim otomatis ke email lo. Cek juga folder spam."},
+    {"q": "Berapa lama saya butuh setiap hari?", "a": "Cukup 30–45 menit per hari selama 1–2 minggu. Tiap modul maksimal 30 menit, dan bisa diulang kapan saja."},
+    {"q": "Apakah ada komunitasnya?", "a": "Ada. Setiap member masuk Discord Xinde Labs — tempat tanya-jawab, sharing prompt, dan sesi use-case update bareng member lain."}
+  ]
 }')
-on conflict (key) do nothing;
+on conflict (key) do update set value = excluded.value, updated_at = now(), updated_by = 'seed';
 
 -- ============================================================
 -- TRIGGER updated_at

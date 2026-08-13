@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin CMS — Xinde Labs</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav__in">
+      <a href="index.html" class="wordmark">xindelabs<span>.</span></a>
+      <div class="nav__right">
+        <a href="index.html" class="btn btn--ghost btn--sm">← Lihat Site</a>
+        <button class="btn btn--ghost btn--sm" id="logoutBtn" style="display:none">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="wrap admin-wrap">
+
+      <div class="notice notice--warn" id="configNotice" style="display:none;max-width:760px">
+        ⚠️ Supabase belum dikonfigurasi. Isi <b style="color:inherit">SUPABASE_URL</b> &amp; <b style="color:inherit">SUPABASE_ANON_KEY</b> di <span style="font-family:var(--font-mono)">js/config.js</span> dulu — CMS butuh tabel <span style="font-family:var(--font-mono)">admins</span> &amp; <span style="font-family:var(--font-mono)">site_content</span>.
+      </div>
+
+      <!-- ============ LOGIN ============ -->
+      <div id="loginState" style="display:none">
+        <div class="form-card" style="margin:0 auto">
+          <p class="eyebrow"><span class="dot"></span>admin cms</p>
+          <h1 class="form-title">Login Admin</h1>
+          <p class="form-sub">Pakai email yang terdaftar sebagai admin (tabel <span style="font-family:var(--font-mono);font-size:12px">admins</span>).</p>
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="email lo" autocomplete="email" required />
+              <div class="err-msg">Email wajib diisi.</div>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <div class="err-msg">Password wajib diisi.</div>
+            </div>
+            <div class="notice notice--warn form-error" id="loginError"></div>
+            <button type="submit" class="btn btn--primary btn--block" id="loginBtn">Masuk →</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ DENIED ============ -->
+      <div id="deniedState" style="display:none">
+        <div class="form-card" style="margin:0 auto">
+          <p class="eyebrow"><span class="dot"></span>admin cms</p>
+          <h1 class="form-title">🔒 Akses Ditolak</h1>
+          <p class="form-sub">Email <b id="deniedEmail" style="font-family:var(--font-mono);font-weight:600">ini</b> tidak terdaftar sebagai admin. Kontak pemilik buat didaftarkan di tabel <span style="font-family:var(--font-mono);font-size:12px">admins</span>.</p>
+          <a href="index.html" class="btn btn--ghost btn--block">← Kembali ke Landing</a>
+        </div>
+      </div>
+
+      <!-- ============ EDITOR ============ -->
+      <div id="editorState" style="display:none">
+        <div class="section-head" style="text-align:left;margin-bottom:34px">
+          <p class="eyebrow"><span class="dot"></span>admin cms</p>
+          <h2 class="h2">Edit Konten Landing Page</h2>
+          <p class="lead" style="font-size:15px">Simpan → landing page langsung tampil setelah refresh.</p>
+        </div>
+
+        <form id="cmsForm">
+          <div class="admin-block">
+            <div class="admin-block__head"><label>Hero</label></div>
+            <div class="field">
+              <label for="f_hero_title">Hero Title</label>
+              <textarea id="f_hero_title" rows="2"></textarea>
+              <div class="hint">Boleh HTML — pakai &lt;span class='hl'&gt;…&lt;/span&gt; buat frasa hijau.</div>
+            </div>
+            <div class="field">
+              <label for="f_hero_subtitle">Hero Subtitle</label>
+              <textarea id="f_hero_subtitle" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="admin-block">
+            <div class="admin-block__head"><label>Video Intro</label></div>
+            <div class="admin-grid2">
+              <div class="field">
+                <label for="f_video_id">YouTube Video ID</label>
+                <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE" />
+              </div>
+              <div class="field">
+                <label for="f_video_caption">Caption Video</label>
+                <input type="text" id="f_video_caption" placeholder="intro.mp4 — …" />
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-block">
+            <div class="admin-block__head"><label>Pricing</label></div>
+            <div class="admin-grid2">
+              <div class="field">
+                <label for="f_price_yearly">Harga Tahunan (Rp)</label>
+                <input type="number" id="f_price_yearly" step="1000" min="0" />
+              </div>
+              <div class="field">
+                <label for="f_price_lifetime">Harga Lifetime (Rp)</label>
+                <input type="number" id="f_price_lifetime" step="1000" min="0" />
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-block">
+            <div class="admin-block__head"><label>Link Komunitas</label></div>
+            <div class="admin-grid3">
+              <div class="field">
+                <label for="f_discord">Link Discord</label>
+                <input type="url" id="f_discord" placeholder="https://discord.gg/…" />
+              </div>
+              <div class="field">
+                <label for="f_wa">Link WhatsApp</label>
+                <input type="url" id="f_wa" placeholder="https://wa.me/62…" />
+              </div>
+              <div class="field">
+                <label for="f_ig">Handle Instagram</label>
+                <input type="text" id="f_ig" placeholder="@xindelabs.id" />
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-block">
+            <div class="admin-block__head">
+              <label>Testimoni</label>
+              <button type="button" class="btn btn--ghost btn--sm" id="addTestimonial">+ Tambah</button>
+            </div>
+            <div id="testimonialRows"></div>
+          </div>
+
+          <div class="admin-block">
+            <div class="admin-block__head">
+              <label>FAQ</label>
+              <button type="button" class="btn btn--ghost btn--sm" id="addFaq">+ Tambah</button>
+            </div>
+            <div id="faqRows"></div>
+          </div>
+
+          <div class="notice notice--ok" id="saveMsg" style="display:none"></div>
+          <div class="notice notice--warn" id="saveErr" style="display:none"></div>
+
+          <div class="admin-tools">
+            <button type="submit" class="btn btn--primary" id="saveBtn">Simpan Konten →</button>
+            <span class="hint" id="saveState">Belum ada perubahan.</span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <span class="footer__copy">© 2026 Xinde Labs · Admin CMS</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    var cfg = window.XINDE;
+    var client = null;
+
+    // ============ State switcher ============
+    function show(state) {
+      ['loginState', 'deniedState', 'editorState'].forEach(function (id) {
+        document.getElementById(id).style.display = (id === state) ? 'block' : 'none';
+      });
+    }
+
+    // ============ Supabase belum dikonfigurasi ============
+    if (!cfg.supabaseConfigured() || !window.supabase) {
+      document.getElementById('configNotice').style.display = 'block';
+      show('loginState');
+      document.getElementById('loginBtn').disabled = true;
+    } else {
+      client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      client.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) initAdmin(res.data.session.user);
+        else show('loginState');
+      });
+    }
+
+    // ============ Login ============
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!client) return;
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var btn = document.getElementById('loginBtn');
+      var err = document.getElementById('loginError');
+
+      if (!email || !password) {
+        err.textContent = '⚠️ Isi email dan password dulu.';
+        err.classList.add('show');
+        return;
+      }
+      err.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Masuk…';
+
+      client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+        if (res.error) {
+          err.textContent = '⚠️ ' + (res.error.message || 'Login gagal.');
+          err.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Masuk →';
+          return;
+        }
+        initAdmin(res.data.user);
+      });
+    });
+
+    // ============ Cek role admin + buka editor ============
+    function initAdmin(user) {
+      if (!client) return;
+      client.from('admins').select('email').eq('email', user.email).maybeSingle().then(function (r) {
+        if (r.error) {
+          show('deniedState');
+          document.getElementById('deniedEmail').textContent = user.email;
+          return;
+        }
+        if (!r.data) {
+          show('deniedState');
+          document.getElementById('deniedEmail').textContent = user.email;
+          return;
+        }
+        show('editorState');
+        document.getElementById('logoutBtn').style.display = 'inline-flex';
+        loadContent();
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      if (client) client.auth.signOut().then(function () { location.reload(); });
+    });
+
+    // ============ Render dynamic rows ============
+    function testimonialRow(t) {
+      t = t || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Quote</label><textarea rows="3">' + esc(t.quote || '') + '</textarea></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Nama</label><input type="text" placeholder="cth: Rudi, Agen Properti Surabaya" value="' + esc(t.name || '') + '" /></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
+    function faqRow(f) {
+      f = f || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Pertanyaan</label><input type="text" value="' + esc(f.q || '') + '" /></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Jawaban</label><textarea rows="2">' + esc(f.a || '') + '</textarea></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.getElementById('addTestimonial').addEventListener('click', function () {
+      document.getElementById('testimonialRows').appendChild(testimonialRow());
+    });
+    document.getElementById('addFaq').addEventListener('click', function () {
+      document.getElementById('faqRows').appendChild(faqRow());
+    });
+
+    // ============ Load konten ke form ============
+    function loadContent() {
+      client.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
+        var v = (r.data && r.data.value) ? r.data.value : {};
+        var d = cfg.DEFAULT_CONTENT;
+
+        document.getElementById('f_hero_title').value = v.hero_title || d.hero_title || '';
+        document.getElementById('f_hero_subtitle').value = v.hero_subtitle || d.hero_subtitle || '';
+        var vId = v.video_youtube_id;
+        if (!vId || /^youtube/i.test(vId)) vId = cfg.VIDEO_YOUTUBE_ID || '';
+        document.getElementById('f_video_id').value = vId;
+        document.getElementById('f_video_caption').value = v.video_caption || d.video_caption || '';
+        document.getElementById('f_price_yearly').value = v.price_yearly || cfg.PRICES.yearly.harga || '';
+        document.getElementById('f_price_lifetime').value = v.price_lifetime || cfg.PRICES.lifetime.harga || '';
+        document.getElementById('f_discord').value = v.discord_link || '';
+        document.getElementById('f_wa').value = v.whatsapp_link || '';
+        document.getElementById('f_ig').value = v.instagram_handle || '';
+
+        var rows = document.getElementById('testimonialRows');
+        rows.innerHTML = '';
+        (v.testimonials && v.testimonials.length ? v.testimonials : d.testimonials || []).forEach(function (t) {
+          rows.appendChild(testimonialRow(t));
+        });
+
+        var frows = document.getElementById('faqRows');
+        frows.innerHTML = '';
+        (v.faqs && v.faqs.length ? v.faqs : d.faqs || []).forEach(function (f) {
+          frows.appendChild(faqRow(f));
+        });
+      });
+    }
+
+    // ============ Kumpulkan + simpan ============
+    function collectRows(containerId) {
+      var out = [];
+      document.querySelectorAll('#' + containerId + ' .admin-row').forEach(function (row) {
+        var main = row.querySelector('.admin-row__main');
+        var fields = main.querySelectorAll('input, textarea');
+        out.push(Array.prototype.map.call(fields, function (f) { return f.value.trim(); }));
+      });
+      return out;
+    }
+
+    document.getElementById('cmsForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('saveMsg');
+      var err = document.getElementById('saveErr');
+      msg.style.display = 'none';
+      err.style.display = 'none';
+
+      if (!document.getElementById('f_hero_title').value.trim()) {
+        err.textContent = '⚠️ Hero title wajib diisi.';
+        err.style.display = 'flex';
+        return;
+      }
+
+      var tRows = collectRows('testimonialRows');
+      var fRows = collectRows('faqRows');
+
+      var content = {
+        hero_title: document.getElementById('f_hero_title').value.trim(),
+        hero_subtitle: document.getElementById('f_hero_subtitle').value.trim(),
+        video_youtube_id: document.getElementById('f_video_id').value.trim(),
+        video_caption: document.getElementById('f_video_caption').value.trim(),
+        price_yearly: Number(document.getElementById('f_price_yearly').value) || 0,
+        price_lifetime: Number(document.getElementById('f_price_lifetime').value) || 0,
+        discord_link: document.getElementById('f_discord').value.trim(),
+        whatsapp_link: document.getElementById('f_wa').value.trim(),
+        instagram_handle: document.getElementById('f_ig').value.trim(),
+        testimonials: tRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) {
+          return { quote: r[0], name: r[1] };
+        }),
+        faqs: fRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) {
+          return { q: r[0], a: r[1] };
+        })
+      };
+
+      var btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      document.getElementById('saveState').textContent = 'Mengirim ke Supabase…';
+
+      client.from('site_content').upsert({ key: 'homepage', value: content }).then(function (r) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten →';
+        if (r.error) {
+          document.getElementById('saveState').textContent = '';
+          err.textContent = '⚠️ Gagal simpan: ' + (r.error.message || 'terjadi kesalahan');
+          err.style.display = 'flex';
+          return;
+        }
+        document.getElementById('saveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        msg.textContent = '✅ Konten tersimpan — landing page sudah update.';
+        msg.style.display = 'flex';
+      });
+    });
+  </script>
+</body>
+</html>
