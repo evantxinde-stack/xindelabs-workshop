@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pembayaran Berhasil — Build Your Own Personalized Agent</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body class="grid-bg">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span>_</span></a>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="success-wrap">
+      <div class="form-card success-card">
+        <div class="success-emoji">🎉</div>
+        <h1 class="form-title">Pembayaran Berhasil!</h1>
+        <p class="form-sub" id="successSub">Course lo udah aktif. Simak langkah di bawah buat mulai.</p>
+
+        <div class="steps">
+          <h4>Langkah Selanjutnya</h4>
+          <ol>
+            <li>Buka email lo — link akses course &amp; <b>invite Discord</b> udah dikirim.</li>
+            <li><b>Cek folder spam</b> kalau ga ketemu di inbox (15–30 menit).</li>
+            <li>Masuk Discord pakai invite itu, pilih role member.</li>
+            <li>Masuk <b>member area</b> dan mulai modul pertama.</li>
+          </ol>
+        </div>
+
+        <a href="member.html" class="btn btn-primary btn-block">Buka Member Area →</a>
+        <p class="hint" style="text-align:center;margin-top:12px">
+          Butuh bantuan? Hubungi <a id="waLink" href="#">WhatsApp kami</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-copy">© 2026 Xinde Labs</span>
+    </div>
+  </footer>
+
+  <script>
+    // ============ Pixel Purchase (PRD §8) ============
+    (function () {
+      var qs = new URLSearchParams(location.search);
+      var tier = qs.get('tier') || 'yearly';
+      var harga = parseInt(qs.get('harga'), 10) || (window.XINDE.PRICES[tier] ? window.XINDE.PRICES[tier].harga : 599000);
+      fbq('track', 'Purchase', { value: harga, currency: 'IDR' });
+    })();
+  </script>
+</body>
+</html>

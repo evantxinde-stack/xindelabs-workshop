@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Build Your Own Personalized Agent</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body class="grid-bg">
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span>_</span></a>
+      <div class="nav-cta">
+        <a href="index.html" class="btn btn-ghost btn-sm">← Kembali</a>
+        <button class="hamburger" id="hamburger" aria-label="Menu" style="display:none"></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+    <div class="auth-wrap">
+      <div class="form-card">
+        <h1 class="form-title">Login Member</h1>
+        <p class="form-sub">Masuk buat akses member area / LMS lo.</p>
+
+        <div class="notice warn" id="configNotice" style="display:none">
+          ⚠️ Supabase belum dikonfigurasi. Isi <b>SUPABASE_URL</b> &amp; <b>SUPABASE_ANON_KEY</b> di <span class="mono">js/config.js</span> dulu.
+        </div>
+        <div class="notice info" id="verifyNotice" style="display:none">
+          📩 Email verifikasi sudah dikirim. Cek inbox (atau spam) lalu klik link verifikasi sebelum login.
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="field" data-field="email">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="email lo" autocomplete="email" required />
+            <div class="err-msg">Email wajib diisi.</div>
+          </div>
+          <div class="field" data-field="password">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+            <div class="err-msg">Password wajib diisi.</div>
+          </div>
+          <div class="form-error notice warn" id="formError"></div>
+          <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Masuk →</button>
+        </form>
+
+        <p class="hint" style="text-align:center;margin-top:16px">
+          Belum punya akun? <a href="checkout.html">Daftar course dulu</a>. Belum jadi member, <a href="index.html#pricing">lihat harga</a>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-copy">© 2026 Xinde Labs</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    var cfg = window.XINDE;
+    var configNotice = document.getElementById('configNotice');
+
+    if (!cfg.supabaseConfigured()) {
+      configNotice.style.display = 'block';
+      document.getElementById('loginForm').querySelector('button[type="submit"]').disabled = true;
+    } else {
+      var supabaseClient = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+      // Sudah login? langsung ke member area
+      supabaseClient.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) {
+          window.location.href = 'member.html';
+        }
+      });
+
+      document.getElementById('loginForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var err = document.getElementById('formError');
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        var btn = document.getElementById('submitBtn');
+
+        if (!email || !password) {
+          err.textContent = '⚠️ Isi email dan password dulu.';
+          err.classList.add('show');
+          return;
+        }
+        err.classList.remove('show');
+        btn.disabled = true;
+        btn.textContent = 'Masuk…';
+
+        supabaseClient.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+          if (res.error) {
+            if (res.error.message && /verif/i.test(res.error.message)) {
+              document.getElementById('verifyNotice').style.display = 'block';
+            }
+            err.textContent = '⚠️ ' + (res.error.message || 'Login gagal.');
+            err.classList.add('show');
+            btn.disabled = false;
+            btn.textContent = 'Masuk →';
+            return;
+          }
+          window.location.href = 'member.html';
+        });
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Area — Build Your Own Personalized Agent</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body class="grid-bg">
+
+  <!-- ============ NAVBAR ============ -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="logo"><span class="prompt">~/</span>personal-agent<span>_</span></a>
+      <div class="nav-cta">
+        <button class="btn btn-ghost btn-sm" id="logoutBtn" style="display:none">Logout</button>
+        <button class="hamburger" id="hamburger" aria-label="Menu" style="display:none"></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page">
+
+    <!-- ============ HEADER MEMBER ============ -->
+    <div class="member-head" id="memberHead" style="display:none">
+      <div class="container">
+        <h1 class="member-title">Selamat Datang, <span id="memberName">Member</span> 👋</h1>
+        <p class="member-welcome" id="memberStatus">
+          Status: <b>member aktif</b> · tier <span id="memberTier">—</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="member-head" id="blockedHead" style="display:none">
+      <div class="container">
+        <h1 class="member-title">Belum Jadi Member</h1>
+        <p class="member-welcome">Course masih terkunci. Upgrade dulu buat akses semua modul.</p>
+      </div>
+    </div>
+
+    <!-- ============ PLAYER ============ -->
+    <div class="player-sticky" id="playerWrap" style="display:none">
+      <div class="container">
+        <div class="player-frame" id="playerFrame">
+          <iframe id="playerIframe" src="" title="Video modul" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="padding:40px 20px;min-height:60vh">
+
+      <!-- ============ Config notice ============ -->
+      <div class="notice warn" id="configNotice" style="display:none;max-width:720px;margin:0 auto 24px">
+        ⚠️ Supabase belum dikonfigurasi. Isi <b>SUPABASE_URL</b> &amp; <b>SUPABASE_ANON_KEY</b> di <span class="mono">js/config.js</span> dulu supaya login gate &amp; cek membership jalan.
+      </div>
+
+      <!-- ============ BLOCKED state ============ -->
+      <div id="blockedState" style="display:none;max-width:720px;margin:0 auto">
+        <div class="form-card" style="margin:0 auto">
+          <h2 class="form-title">🔒 Akses Terkunci</h2>
+          <p class="form-sub">Hanya member dengan status <b>paid</b> yang bisa buka LMS.</p>
+          <ul class="price-feats" style="list-style:none;margin:0 0 24px;padding:0">
+            <li>Status: <b id="blockedStatus" style="color:var(--danger)">belum terdaftar</b></li>
+            <li>Tier: <span id="blockedTier" style="color:var(--muted)">—</span></li>
+          </ul>
+          <a href="checkout.html" class="btn btn-primary btn-block">Daftar Course →</a>
+          <p class="hint" style="text-align:center;margin-top:12px">Sudah bayar tapi belum aktif? Hubungi <a id="waLinkBlocked" href="#">WhatsApp kami</a>.</p>
+        </div>
+      </div>
+
+      <!-- ============ MEMBER state ============ -->
+      <div id="memberState" style="display:none">
+        <!-- Link ekstra -->
+        <div class="member-links" id="extraLinks">
+          <a class="mlink" href="https://chatgpt.com" target="_blank" rel="noopener"><span class="ico">🤖</span>AI Bot Tanya Jawab<small>tanya seputar course</small></a>
+          <a class="mlink" href="https://discord.gg/xindelabs" target="_blank" rel="noopener"><span class="ico">💬</span>Komunitas Discord<small>share &amp; tanya</small></a>
+          <a class="mlink" href="#" id="promptLink"><span class="ico">📚</span>Prompt Library<small>copy-paste siap pakai</small></a>
+          <a class="mlink" href="#" id="newsLink"><span class="ico">📰</span>AI News<small>update tools terbaru</small></a>
+        </div>
+
+        <div class="section-head" style="margin-bottom:24px">
+          <span class="section-tag">// modul</span>
+          <h2 class="section-title">Klik Modul Buat Mulai</h2>
+        </div>
+
+        <div class="module-grid" id="moduleGrid"><!-- diisi JS --></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="container footer-inner">
+      <span class="footer-copy">© 2026 Xinde Labs · Member Area</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    var cfg = window.XINDE;
+    var configNotice = document.getElementById('configNotice');
+
+    // ============ Render modul ============
+    function levelClass(lv) { return 'lv-' + lv.replace('_', '-'); }
+    function levelLabel(lv) { return lv === 'level-up' ? 'level-up' : lv; }
+
+    function renderModules() {
+      var grid = document.getElementById('moduleGrid');
+      grid.innerHTML = cfg.MODULES.map(function (m, i) {
+        return '<button type="button" class="module-card" data-idx="' + i + '">' +
+          '<span class="lv-badge ' + levelClass(m.level) + '">' + levelLabel(m.level) + '</span>' +
+          '<span class="module-title">' + (i + 1) + '. ' + m.title + '</span>' +
+          '<span class="module-meta">' + m.duration + ' · <span class="grad-text">▶ tonton</span></span>' +
+        '</button>';
+      }).join('');
+
+      var iframe = document.getElementById('playerIframe');
+      grid.querySelectorAll('.module-card').forEach(function (card) {
+        card.addEventListener('click', function () {
+          var m = cfg.MODULES[card.dataset.idx];
+          iframe.src = 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0';
+          grid.querySelectorAll('.module-card').forEach(function (c) { c.classList.remove('active'); });
+          card.classList.add('active');
+        });
+      });
+    }
+
+    // ============ Member yang valid ============
+    function showMember(user) {
+      document.getElementById('memberHead').style.display = 'block';
+      document.getElementById('memberName').textContent = (user && user.email ? user.email.split('@')[0] : 'Member');
+      document.getElementById('playerWrap').style.display = 'block';
+      document.getElementById('memberState').style.display = 'block';
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+      renderModules();
+    }
+
+    function showBlocked(info) {
+      document.getElementById('blockedHead').style.display = 'block';
+      document.getElementById('blockedState').style.display = 'block';
+      if (info) {
+        document.getElementById('blockedStatus').textContent = info.status || 'tidak ada data member';
+        document.getElementById('blockedTier').textContent = info.tier || '—';
+      }
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+    }
+
+    // ============ Supabase belum dikonfigurasi ============
+    if (!cfg.supabaseConfigured()) {
+      configNotice.style.display = 'block';
+      document.getElementById('memberHead').style.display = 'block';
+      document.getElementById('memberName').textContent = 'Member';
+      document.getElementById('logoutBtn').style.display = 'inline-flex';
+      showMember({ email: 'member' });
+      return;
+    }
+
+    // ============ Login gate + membership check ============
+    var supabaseClient = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      supabaseClient.auth.signOut().then(function () { window.location.href = 'login.html'; });
+    });
+
+    supabaseClient.auth.getSession().then(function (res) {
+      if (!res.data || !res.data.session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      var user = res.data.session.user;
+      var email = (user && user.email) || '';
+
+      // Query tabel members by email
+      supabaseClient
+        .from('members')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle()
+        .then(function (r) {
+          if (r.error) {
+            document.getElementById('blockedState').style.display = 'block';
+            document.getElementById('blockedHead').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'inline-flex';
+            document.getElementById('blockedStatus').textContent = 'gagal cek membership (' + r.error.message + ')';
+            return;
+          }
+          var m = r.data;
+          if (!m || m.status !== 'paid') {
+            return showBlocked(m ? { status: m.status, tier: m.tier } : null);
+          }
+
+          // Cek masa aktif
+          if (m.tier === 'lifetime') {
+            document.getElementById('memberTier').textContent = 'Lifetime · aktif selamanya';
+            showMember(user);
+          } else if (m.tier === 'yearly') {
+            var until = new Date(m.paid_until);
+            var now = new Date();
+            if (isNaN(until.getTime())) { showMember(user); return; }
+            if (until < now) {
+              return showBlocked({ status: 'expired', tier: 'yearly · berakhir ' + until.toLocaleDateString('id-ID') });
+            }
+            document.getElementById('memberTier').textContent = 'Tahunan · aktif s.d. ' + until.toLocaleDateString('id-ID');
+            showMember(user);
+          } else {
+            showBlocked({ status: m.status, tier: m.tier });
+          }
+        });
+    });
+  </script>
+</body>
+</html>
