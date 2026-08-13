@@ -692,30 +692,12 @@ h1, h2, h3, .display {
 .form-error.show { display: flex; }
 
 /* ============================================================
-   LEAD FORM (daftar course di landing)
+   LEAD FORM (komunitas gratis)
    ============================================================ */
-.lead-card {
-  max-width: 560px;
-  margin: 40px auto 0;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 34px 38px;
-}
-.lead-card__note {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--muted-dim);
-  font-family: var(--font-mono);
-}
 .lead-done { text-align: center; padding: 8px 0 4px; }
 .lead-done h3 { font-family: var(--font-serif); font-size: 26px; font-weight: 400; margin: 0 0 14px; letter-spacing: -0.01em; }
 .lead-done p { color: var(--muted); font-size: 15px; line-height: 1.7; margin: 0 0 26px; }
 .lead { color: var(--muted); font-size: 16.5px; line-height: 1.7; margin-top: 10px; }
-@media (max-width: 720px) {
-  .lead-card { padding: 26px 20px; margin-top: 28px; }
-}
 
 /* ============================================================
    KOMUNITAS GRATIS (lead capture terpisah)
