@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// \ud83d\udd11 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = 'GANTI_TOKEN_DI_VPS';\n\n// \ud83c\udff7\ufe0f PRODUCT ID per TIER (produk membership Mayar)\n// 1 Tahun   \u2192 Rp 599.000 \u2192 d8927ccd-4323-4500-b4f3-2f0e4f82acd1\n// Life-Time \u2192 Rp 999.000 \u2192 56284414-f48b-47b9-af79-74d2b0f4b2dd\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  }\n};\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// Data dari checkout page (n8n v2: JSON langsung di $json)\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier: 'yearly' | 'lifetime' (fallback: yearly)\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// Nomor HP Mayar (format 08..., min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// Payload ke Mayar (amount & productId sesuai tier \u2192 invoice muncul sesuai pilihan)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: t.amount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: (t.label + ' ' + (discord || '-')).slice(0, 24)\n};\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: t.amount,\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
+        "jsCode": "// \ud83d\udd11 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = 'GANTI_TOKEN_DI_VPS';\n\n// \ud83c\udff7\ufe0f PRODUCT ID per TIER (produk membership Mayar)\n// 1 Tahun   \u2192 Rp 599.000 \u2192 d8927ccd-4323-4500-b4f3-2f0e4f82acd1\n// Life-Time \u2192 Rp 999.000 \u2192 56284414-f48b-47b9-af79-74d2b0f4b2dd\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  }\n};\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// Data dari checkout page (n8n v2: JSON langsung di $json)\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier: 'yearly' | 'lifetime' (fallback: yearly)\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// URL return (ke halaman status di Vercel \u2014 bawa tier & harga buat Pixel Purchase)\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html?tier=' + tier + '&harga=' + t.amount;\n\n// Nomor HP Mayar (format 08..., min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// Payload ke Mayar (amount & productId sesuai tier \u2192 invoice muncul sesuai pilihan)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: t.amount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: (t.label + ' ' + (discord || '-')).slice(0, 24)\n};\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: t.amount,\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
       },
       "id": "code-build-payload",
       "name": "Code: Build Mayar Payload",
@@ -109,6 +109,62 @@
         -700,
         0
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// \ud83d\uddc4\ufe0f Siapkan data leads (disimpan SEBELUM user bayar \u2014 untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    notes: 'invoice: ' + (payment.reference || '') + ' \u00b7 tier: ' + (payment.tierLabel || ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjYwNDIyOSwiZXhwIjoyMTAyMTgwMjI5fQ.UBxJl-T16_ggpFoteFf05hfzENpbgf1rB71sawQhl1M'\n  }\n};"
+      },
+      "id": "code-prep-lead",
+      "name": "Code: Siapkan Data Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjYwNDIyOSwiZXhwIjoyMTAyMTgwMjI5fQ.UBxJl-T16_ggpFoteFf05hfzENpbgf1rB71sawQhl1M"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjYwNDIyOSwiZXhwIjoyMTAyMTgwMjI5fQ.UBxJl-T16_ggpFoteFf05hfzENpbgf1rB71sawQhl1M"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, email: $json.email, whatsapp: $json.whatsapp, discord_id: $json.discord_id, status: $json.status, source: $json.source, notes: $json.notes }) }}",
+        "options": {
+          "timeout": 15000,
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "http-insert-lead",
+      "name": "HTTP: Simpan Leads (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        180
+      ],
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -128,6 +184,11 @@
         [
           {
             "node": "HTTP: Mayar Checkout",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code: Siapkan Data Leads",
             "type": "main",
             "index": 0
           }
@@ -161,6 +222,17 @@
         [
           {
             "node": "Webhook: Checkout Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Data Leads": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Simpan Leads (Supabase)",
             "type": "main",
             "index": 0
           }
