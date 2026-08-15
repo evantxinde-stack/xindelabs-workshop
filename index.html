@@ -366,9 +366,7 @@
         <a href="#komunitas">Komunitas</a>
         <a href="#pricing">Harga</a>
         <a href="login.html">Login</a>
-        <a href="https://discord.gg/xindelabs" target="_blank" rel="noopener" id="footerDiscord">Discord</a>
         <a href="https://instagram.com/xindelabs.id" target="_blank" rel="noopener" id="footerInstagram">Instagram</a>
-        <a href="https://wa.me/6281234567890" target="_blank" rel="noopener" id="footerWhatsapp">WhatsApp</a>
       </div>
       <a href="index.html" class="wordmark" style="font-size:15px">xindelabs<span>.</span></a>
     </div>
@@ -493,17 +491,10 @@
           elClosingPrices.innerHTML = 'Rp ' + fmt.format(py || 599000) + '/tahun · <b>Rp ' + fmt.format(pl || 999000) + ' lifetime</b>';
         }
 
-        if (c.discord_link) {
-          var fd = document.getElementById('footerDiscord');
-          if (fd) fd.href = c.discord_link;
-        }
         if (c.instagram_handle) {
           var fi = document.getElementById('footerInstagram');
           if (fi) fi.href = 'https://instagram.com/' + String(c.instagram_handle).replace(/^@/, '');
         }
-        if (c.whatsapp_link) {
-          var fw = document.getElementById('footerWhatsapp');
-          if (fw) fw.href = c.whatsapp_link;
         }
       }
 
