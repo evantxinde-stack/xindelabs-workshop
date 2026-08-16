@@ -505,6 +505,44 @@ h1, h2, h3, .display {
 .founder__text p strong { color: var(--text); }
 
 /* ============================================================
+   5 USE CASE HERMES AGENT
+   ============================================================ */
+.usecase {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  margin-top: 8px;
+}
+.ucard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  position: relative;
+  transition: border-color .18s ease, background .18s ease;
+}
+.ucard:hover { border-color: var(--line-strong); background: var(--bg-3); }
+.ucard__name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--green);
+}
+.ucard__name::before { content: "→ "; color: var(--green-dim); }
+.ucard__who {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--cyan);
+  text-transform: uppercase;
+}
+.ucard__prob { font-size: 14.5px; line-height: 1.6; color: var(--muted); }
+
+/* ============================================================
    PRICING
    ============================================================ */
 .pricing__grid {
@@ -1198,6 +1236,7 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .founder__grid { grid-template-columns: 1fr; gap: 30px; }
   .founder__photo { max-width: 300px; margin: 0 auto; }
   .founder__text p { font-size: 16px; line-height: 1.7; }
+  .usecase { grid-template-columns: 1fr; }
 
   .pricing__grid { grid-template-columns: 1fr; gap: 28px; }
   .pcard { padding: 34px 22px; }
@@ -1219,4 +1258,5 @@ html.js .reveal.d3 { transition-delay: .24s; }
 @media (min-width: 721px) and (max-width: 1000px) {
   .tgrid { grid-template-columns: 1fr; }
   .founder__grid { grid-template-columns: 320px 1fr; gap: 40px; }
+  .usecase { grid-template-columns: repeat(2, 1fr); }
 }
