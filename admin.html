@@ -216,6 +216,15 @@
                 <div id="faqRows"></div>
               </div>
 
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>Use Cases</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addUsecase">+ Tambah</button>
+                </div>
+                <div id="usecaseRows"></div>
+                <div class="hint" style="margin-top:8px">Setiap use case punya: Nama (cth: Hermes Finance), Target (untuk siapa), dan Deskripsi singkat. Perubahan langsung tampil di landing page.</div>
+              </div>
+
               <div class="notice notice--ok" id="saveMsg" style="display:none"></div>
               <div class="notice notice--warn" id="saveErr" style="display:none"></div>
 
@@ -514,6 +523,21 @@
       return wrap;
     }
 
+    function usecaseRow(u) {
+      u = u || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Nama</label><input type="text" placeholder="cth: Hermes Finance" value="' + esc(u.name || '') + '" /></div>' +
+          '<div class="field"><label>Target</label><input type="text" placeholder="untuk siapa — cth: klinik · UMKM · pebisnis" value="' + esc(u.who || '') + '" /></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Deskripsi</label><textarea rows="2" placeholder="Jelaskan masalah yang dipecahkan…">' + esc(u.prob || '') + '</textarea></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
     function esc(s) {
       return String(s == null ? '' : s)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -525,6 +549,9 @@
     });
     document.getElementById('addFaq').addEventListener('click', function () {
       document.getElementById('faqRows').appendChild(faqRow());
+    });
+    document.getElementById('addUsecase').addEventListener('click', function () {
+      document.getElementById('usecaseRows').appendChild(usecaseRow());
     });
 
     // ============ Load konten ke form ============
@@ -556,6 +583,12 @@
         (v.faqs && v.faqs.length ? v.faqs : d.faqs || []).forEach(function (f) {
           frows.appendChild(faqRow(f));
         });
+
+        var urows = document.getElementById('usecaseRows');
+        urows.innerHTML = '';
+        (v.usecases && v.usecases.length ? v.usecases : []).forEach(function (u) {
+          urows.appendChild(usecaseRow(u));
+        });
       });
     }
 
@@ -585,6 +618,7 @@
 
       var tRows = collectRows('testimonialRows');
       var fRows = collectRows('faqRows');
+      var uRows = collectRows('usecaseRows');
 
       var content = {
         hero_title: document.getElementById('f_hero_title').value.trim(),
@@ -601,6 +635,9 @@
         }),
         faqs: fRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) {
           return { q: r[0], a: r[1] };
+        }),
+        usecases: uRows.filter(function (r) { return r[0] || r[1] || r[2]; }).map(function (r) {
+          return { name: r[0], who: r[1], prob: r[2] };
         })
       };
 

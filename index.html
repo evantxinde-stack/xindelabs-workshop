@@ -60,6 +60,48 @@
       </div>
     </section>
 
+    <!-- ============ 6 USE CASE HERMES AGENT ============ -->
+    <section class="section" id="usecase">
+      <div class="wrap">
+        <p class="eyebrow reveal"><span class="dot"></span>6 use case hermes agent</p>
+        <h2 class="h2 reveal mb-head">Satu agent, enam cara kerja.</h2>
+        <p class="lead reveal">Pilih 1 use case yang paling nyambung sama kebutuhan lo sebagai proyek utama sepanjang course — 5 lainnya tetap bisa lo pelajari sebagai referensi tambahan.</p>
+        <div class="usecase reveal" id="usecaseGrid">
+          <div class="ucard">
+            <div class="ucard__name">Hermes Personal Health Coach</div>
+            <div class="ucard__who">individu · wellness · bisnis kesehatan</div>
+            <div class="ucard__prob">Pengingat &amp; pemantauan kesehatan pribadi — jadwal jalan konsisten tanpa perlu dicatat manual.</div>
+          </div>
+          <div class="ucard">
+            <div class="ucard__name">Hermes Digital Team</div>
+            <div class="ucard__who">UMKM · startup kecil · bisnis jasa</div>
+            <div class="ucard__prob">Tim digital virtual: riset, follow-up, dan administrasi dibagi ke beberapa agent yang kerja bareng.</div>
+          </div>
+          <div class="ucard">
+            <div class="ucard__name">Hermes Automation</div>
+            <div class="ucard__who">pebisnis · UMKM · pengusaha jasa</div>
+            <div class="ucard__prob">Tugas repetitif yang makan waktu — jalan otomatis, lo tinggal review hasilnya.</div>
+          </div>
+          <div class="ucard">
+            <div class="ucard__name">Hermes Discord News</div>
+            <div class="ucard__who">komunitas · server owner · content creator</div>
+            <div class="ucard__prob">Berita &amp; tools AI terbaru dirangkum dan dikirim ke Discord — tanpa lo mantau manual.</div>
+          </div>
+          <div class="ucard">
+            <div class="ucard__name">Hermes Finance</div>
+            <div class="ucard__who">klinik · UMKM · pebisnis</div>
+            <div class="ucard__prob">Rekap keuangan otomatis: pemasukan, pengeluaran, dan laporan rutin tanpa rawan salah.</div>
+          </div>
+          <div class="ucard">
+            <div class="ucard__name">Hermes Content Assistant</div>
+            <div class="ucard__who">UMKM · personal brand · sales</div>
+            <div class="ucard__prob">Ide + draft konten jadi jauh lebih cepat — lo tinggal review, publish, konsisten.</div>
+          </div>
+        </div>
+        <p class="usecase__more reveal">masih banyak use case baru yang rilis tiap bulan — langsung kepake di course.</p>
+      </div>
+    </section>
+
     <!-- ============ VIDEO ============ -->
     <section class="section" id="video">
       <div class="wrap">
@@ -479,6 +521,13 @@
             return '<div class="faq__item"><button class="faq__q">' + f.q + '</button><div class="faq__a"><div>' + f.a + '</div></div></div>';
           }).join('');
           bindFaq();
+        }
+
+        if (Array.isArray(c.usecases) && c.usecases.length) {
+          var ugrid = document.getElementById('usecaseGrid');
+          ugrid.innerHTML = c.usecases.map(function (u) {
+            return '<div class="ucard"><div class="ucard__name">' + u.name + '</div><div class="ucard__who">' + u.who + '</div><div class="ucard__prob">' + u.prob + '</div></div>';
+          }).join('');
         }
 
         var fmt = new Intl.NumberFormat('id-ID');
