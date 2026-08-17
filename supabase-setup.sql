@@ -105,6 +105,13 @@ drop policy if exists "members read own" on public.members;
 create policy "members read own" on public.members for select
   using (auth.jwt() ->> 'email' = email);
 
+-- members: admin bisa baca semua member (dashboard)
+drop policy if exists "members read admin" on public.members;
+create policy "members read admin" on public.members for select
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
 -- admins: user cuma bisa baca apakah dirinya admin (by email)
 drop policy if exists "admins read self" on public.admins;
 create policy "admins read self" on public.admins for select

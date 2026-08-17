@@ -743,7 +743,13 @@
     function loadLeads(src) {
       if (!client) return;
       var panel = PANEL_OF[src];
-      client.from('leads').select('*').eq('source', DB_SOURCE[src]).order('created_at', { ascending: false }).then(function (r) {
+      var query = client.from('leads').select('*').order('created_at', { ascending: false });
+      if (src === 'komunitas') {
+        query = query.eq('source', 'komunitas');
+      } else {
+        query = query.neq('source', 'komunitas');
+      }
+      query.then(function (r) {
         if (r.error) {
           document.getElementById(bodyIdOf(panel)).innerHTML =
             '<tr><td colspan="7" class="l-meta">Gagal load leads: ' + esc(r.error.message || '') + '</td></tr>';
