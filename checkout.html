@@ -30,7 +30,11 @@
         <h1 class="form-title">Daftar Course</h1>
         <p class="form-sub">Isi data lo — link pembayaran langsung dikirim otomatis.</p>
 
-        <div class="notice notice--info">🔒 Data lo aman. Pembayaran diproses oleh <b>Mayar</b>, kami ga simpan data kartu.</div>
+        <div class="trust-grid">
+          <div class="trust-item"><span class="trust-icon">🔒</span><span>Data lo aman</span></div>
+          <div class="trust-item"><span class="trust-icon">💳</span><span>Diproses Mayar</span></div>
+          <div class="trust-item"><span class="trust-icon">🚫</span><span>Ga simpan data kartu</span></div>
+        </div>
 
         <form id="checkoutForm" novalidate>
           <!-- ============ Tier selector ============ -->
@@ -53,6 +57,17 @@
                 </label>
               </div>
             </div>
+          </div>
+
+          <!-- ============ Voucher ============ -->
+          <div class="field" data-field="voucher">
+            <label for="voucher">Kode Voucher</label>
+            <div class="voucher-row">
+              <input type="text" id="voucher" placeholder="cth: DISKON50" autocomplete="off" maxlength="30" style="text-transform:uppercase" />
+              <button type="button" class="btn btn--ghost btn--sm" id="applyVoucher">Gunakan</button>
+            </div>
+            <div class="hint" id="voucherHint">Punya kode voucher? Masukkan di atas untuk dapat diskon.</div>
+            <div class="voucher-result" id="voucherResult" style="display:none"></div>
           </div>
 
           <!-- ============ Lead form ============ -->
@@ -140,7 +155,12 @@
     var payAmount = document.getElementById('payAmount');
     var formError = document.getElementById('formError');
 
-    // ---------- Preselect tier dari URL (?tier=yearly|lifetime) ----------
+    // ---------- Voucher state ----------
+    var appliedVoucher = null;
+    var voucherResult = document.getElementById('voucherResult');
+    var voucherHint = document.getElementById('voucherHint');
+
+    // ---------- Preselect tier dari URL ----------
     (function () {
       var t = new URLSearchParams(location.search).get('tier');
       if (t === 'lifetime' || t === 'yearly') {
@@ -152,13 +172,29 @@
     function selectedTier() {
       return document.querySelector('input[name="tier"]:checked');
     }
+    function fmtRp(n) {
+      return 'Rp ' + Number(n).toLocaleString('id-ID');
+    }
+    function calcDiskon(tier, v) {
+      var base = cfg.PRICES[tier].harga;
+      if (!v) return 0;
+      if (v.type === 'percent') return Math.round(base * v.value / 100);
+      return Math.min(v.value, base);
+    }
+
     function updatePrice() {
       var tier = selectedTier().value;
-      var p = cfg.PRICES[tier];
-      payAmount.textContent = p.label;
+      var base = cfg.PRICES[tier].harga;
+      var diskon = calcDiskon(tier, appliedVoucher);
+      var final_ = base - diskon;
+      payAmount.textContent = fmtRp(final_);
     }
+
     document.querySelectorAll('input[name="tier"]').forEach(function (r) {
-      r.addEventListener('change', updatePrice);
+      r.addEventListener('change', function () {
+        if (appliedVoucher) checkVoucher();
+        updatePrice();
+      });
     });
 
     // ---------- Discord tutorial ----------
@@ -178,6 +214,73 @@
         });
       });
     });
+
+    // ---------- Voucher logic ----------
+    document.getElementById('applyVoucher').addEventListener('click', checkVoucher);
+    document.getElementById('voucher').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); checkVoucher(); }
+    });
+
+    function checkVoucher() {
+      var code = document.getElementById('voucher').value.trim().toUpperCase();
+      voucherResult.style.display = 'none';
+      voucherHint.style.display = 'block';
+      appliedVoucher = null;
+      if (!code) { updatePrice(); return; }
+
+      var tier = selectedTier().value;
+      if (!cfg.supabaseConfigured() || !window.supabase) {
+        showVoucherResult('Sistem belum siap, coba lagi.', true);
+        return;
+      }
+
+      var btn = document.getElementById('applyVoucher');
+      btn.disabled = true;
+      btn.textContent = 'Cek…';
+
+      var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      client.from('vouchers').select('code,type,value,tier,max_uses,used_count,active,expires_at')
+        .eq('code', code).eq('active', true).maybeSingle()
+        .then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Gunakan';
+          if (res.error || !res.data) {
+            showVoucherResult('Kode voucher tidak ditemukan atau sudah tidak aktif.', true);
+            updatePrice(); return;
+          }
+          var v = res.data;
+          if (v.tier !== 'all' && v.tier !== tier) {
+            showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (v.tier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
+            updatePrice(); return;
+          }
+          if (v.expires_at && new Date(v.expires_at) < new Date()) {
+            showVoucherResult('Voucher ini sudah kadaluarsa.', true);
+            updatePrice(); return;
+          }
+          if (v.max_uses !== null && v.used_count >= v.max_uses) {
+            showVoucherResult('Voucher ini sudah mencapai batas penggunaan.', true);
+            updatePrice(); return;
+          }
+          appliedVoucher = v;
+          var diskon = calcDiskon(tier, v);
+          var diskonLabel = v.type === 'percent' ? v.value + '%' : fmtRp(v.value);
+          showVoucherResult('✓ Voucher <b>' + v.code + '</b> aktif — diskon ' + diskonLabel + ' (' + fmtRp(diskon) + ')', false);
+          updatePrice();
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.textContent = 'Gunakan';
+          showVoucherResult('Gagal cek voucher, coba lagi.', true);
+          updatePrice();
+        });
+    }
+
+    function showVoucherResult(msg, isErr) {
+      voucherResult.innerHTML = msg;
+      voucherResult.className = 'voucher-result ' + (isErr ? 'voucher-result--err' : 'voucher-result--ok');
+      voucherResult.style.display = 'flex';
+      voucherHint.style.display = 'none';
+    }
 
     // ---------- Validasi ----------
     function validators() {
@@ -214,7 +317,7 @@
       });
     });
 
-    // ---------- Submit → POST n8n webhook (PRD §5 contract) ----------
+    // ---------- Submit → POST n8n webhook ----------
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!validate()) {
@@ -225,6 +328,10 @@
       formError.classList.remove('show');
 
       var tier = selectedTier().value;
+      var base = cfg.PRICES[tier].harga;
+      var diskon = calcDiskon(tier, appliedVoucher);
+      var hargaFinal = base - diskon;
+
       var payload = {
         nama: document.getElementById('nama').value.trim(),
         email: document.getElementById('email').value.trim(),
@@ -232,7 +339,10 @@
         discord: document.getElementById('discord').value.trim(),
         produk: cfg.PRODUCT_KEY,
         tier: tier,
-        harga: cfg.PRICES[tier].harga
+        harga: hargaFinal,
+        harga_awal: base,
+        diskon: diskon,
+        voucher_code: appliedVoucher ? appliedVoucher.code : ''
       };
 
       fbq('track', 'AddPaymentInfo');
@@ -255,7 +365,7 @@
         })
         .catch(function () {
           payBtn.disabled = false;
-          payBtn.textContent = 'Bayar & Daftar → ' + cfg.PRICES[selectedTier().value].label;
+          payBtn.textContent = 'Bayar & Daftar → ' + fmtRp(hargaFinal);
           formError.classList.add('show');
           formError.textContent = '⚠️ Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
         });

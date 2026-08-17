@@ -79,6 +79,7 @@
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
           <button type="button" class="a-menu" data-panel="lms">LMS Management</button>
+          <button type="button" class="a-menu" data-panel="vouchers">Vouchers</button>
         </aside>
 
         <main class="a-main">
@@ -360,6 +361,48 @@
               <div class="admin-tools">
                 <button type="button" class="btn btn--primary" id="saveModulesBtn">Simpan Modul</button>
                 <span class="hint" id="modulesSaveState">Belum ada perubahan.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: VOUCHERS ============ -->
+          <div id="panelVouchers" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Voucher Management</h2>
+              <p class="lead">Kelola kode voucher &amp; diskon checkout.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Voucher</h3>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshVouchers">↻ Refresh</button>
+                  <button type="button" class="btn btn--primary btn--sm" id="addVoucher">+ Tambah Voucher</button>
+                </div>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Kode</th>
+                      <th>Tipe</th>
+                      <th>Nilai</th>
+                      <th>Paket</th>
+                      <th>Terpakai</th>
+                      <th>Batas</th>
+                      <th>Aktif</th>
+                      <th>Kadaluarsa</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vouchersBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="vouchersEmpty" style="display:none">Belum ada voucher. Klik "+ Tambah Voucher" buat mulai.</p>
+              <div class="admin-tools">
+                <button type="button" class="btn btn--primary" id="saveVouchersBtn">Simpan Semua</button>
+                <span class="hint" id="vouchersSaveState">Belum ada perubahan.</span>
               </div>
             </div>
           </div>
@@ -665,7 +708,7 @@
     var currentPanel = 'content';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', vouchers: 'panelVouchers' };
       return document.getElementById(map[panel]);
     }
 
@@ -674,13 +717,14 @@
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas'].forEach(function (p) {
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'vouchers'].forEach(function (p) {
           panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
         });
         if (currentPanel === 'dashboard') loadDashboard();
         if (currentPanel === 'lms') loadLms();
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
+        if (currentPanel === 'vouchers') loadVouchers();
       });
     });
 
@@ -1246,6 +1290,144 @@
       document.getElementById('modulesSaveState').textContent = '';
       alert('Gagal simpan modul: ' + (err.message || 'terjadi kesalahan'));
     }
+
+    // ============ Voucher Management ============
+    var vouchersCache = null;
+
+    function loadVouchers() {
+      client.from('vouchers').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) return;
+        vouchersCache = r.data || [];
+        renderVouchers();
+      });
+    }
+
+    function renderVouchers() {
+      var body = document.getElementById('vouchersBody');
+      var empty = document.getElementById('vouchersEmpty');
+      if (!vouchersCache || !vouchersCache.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = vouchersCache.map(function (v) {
+        var typeLabel = v.type === 'percent' ? '%' : 'Rp';
+        var valLabel = v.type === 'percent' ? v.value + '%' : 'Rp ' + Number(v.value).toLocaleString('id-ID');
+        var tierLabel = v.tier === 'all' ? 'Semua' : v.tier === 'yearly' ? 'Tahunan' : 'Lifetime';
+        var expiry = v.expires_at ? new Date(v.expires_at).toLocaleDateString('id-ID') : '—';
+        var maxLabel = v.max_uses !== null ? v.max_uses : '∞';
+        return '<tr>' +
+          '<td><b style="font-family:var(--font-mono)">' + esc(v.code) + '</b></td>' +
+          '<td>' + esc(typeLabel) + '</td>' +
+          '<td>' + esc(valLabel) + '</td>' +
+          '<td>' + esc(tierLabel) + '</td>' +
+          '<td>' + v.used_count + '</td>' +
+          '<td>' + maxLabel + '</td>' +
+          '<td>' + (v.active ? '✓' : '—') + '</td>' +
+          '<td>' + expiry + '</td>' +
+          '<td><button type="button" class="btn btn--ghost btn--sm voucher-del" data-id="' + v.id + '">Hapus</button></td>' +
+        '</tr>';
+      }).join('');
+
+      body.querySelectorAll('.voucher-del').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.dataset.id;
+          vouchersCache = vouchersCache.filter(function (v) { return v.id !== id; });
+          renderVouchers();
+        });
+      });
+    }
+
+    document.getElementById('addVoucher').addEventListener('click', function () {
+      var code = prompt('Masukkan kode voucher (huruf besar, tanpa spasi):');
+      if (!code) return;
+      code = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!code) return;
+
+      var type = prompt('Tipe diskon?\n1 = Persentase (%)\n2 = Nominal (Rp)\n\nKetik 1 atau 2:');
+      if (type !== '1' && type !== '2') return;
+
+      var val = prompt(type === '1' ? 'Berapa persen diskonnya? (cth: 10)' : 'Berapa nominal diskonnya? (cth: 50000)');
+      if (!val || isNaN(val)) return;
+
+      var tier = prompt('Berlaku untuk paket apa?\nall = Semua paket\nyearly = Tahunan saja\nlifetime = Lifetime saja\n\nKetik all, yearly, atau lifetime:', 'all');
+      if (!tier || !['all', 'yearly', 'lifetime'].includes(tier)) return;
+
+      var maxUses = prompt('Batas penggunaan (kosongkan untuk unlimited):');
+      maxUses = maxUses ? parseInt(maxUses) : null;
+
+      var exp = prompt('Kadaluarsa kapan? (YYYY-MM-DD, kosongkan jika tidak ada):');
+      var expiresAt = exp ? exp + 'T23:59:59Z' : null;
+
+      if (!vouchersCache) vouchersCache = [];
+      vouchersCache.unshift({
+        id: 'new-' + Date.now(),
+        code: code,
+        type: type === '1' ? 'percent' : 'amount',
+        value: Number(val),
+        tier: tier,
+        max_uses: maxUses,
+        used_count: 0,
+        active: true,
+        expires_at: expiresAt
+      });
+      renderVouchers();
+    });
+
+    document.getElementById('refreshVouchers').addEventListener('click', loadVouchers);
+
+    document.getElementById('saveVouchersBtn').addEventListener('click', function () {
+      var btn = document.getElementById('saveVouchersBtn');
+      var stateEl = document.getElementById('vouchersSaveState');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      stateEl.textContent = 'Mengirim ke Supabase…';
+
+      // Delete all, then insert fresh
+      client.from('vouchers').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(function (delRes) {
+        if (delRes.error) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          stateEl.textContent = '';
+          alert('Gagal hapus voucher lama: ' + delRes.error.message);
+          return;
+        }
+
+        var rows = (vouchersCache || []).map(function (v) {
+          return {
+            code: v.code,
+            type: v.type,
+            value: v.value,
+            tier: v.tier,
+            max_uses: v.max_uses,
+            used_count: v.used_count || 0,
+            active: v.active !== false,
+            expires_at: v.expires_at
+          };
+        });
+
+        if (!rows.length) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+          loadVouchers();
+          return;
+        }
+
+        client.from('vouchers').insert(rows).then(function (insRes) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          if (insRes.error) {
+            stateEl.textContent = '';
+            alert('Gagal simpan voucher: ' + insRes.error.message);
+            return;
+          }
+          stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+          loadVouchers();
+        });
+      });
+    });
   </script>
 </body>
 </html>

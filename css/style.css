@@ -761,6 +761,60 @@ h1, h2, h3, .display {
 .tut-pane li { margin-bottom: 9px; }
 .tut-pane b { color: var(--text); font-family: var(--font-mono); }
 
+/* trust grid */
+.trust-grid {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.trust-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  justify-content: center;
+}
+.trust-icon { font-size: 14px; }
+
+/* voucher */
+.voucher-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.voucher-row input {
+  flex: 1;
+  min-width: 0;
+}
+.voucher-result {
+  margin-top: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.voucher-result--ok {
+  border: 1px solid rgba(0,255,136,.35);
+  color: var(--green);
+  background: rgba(0,255,136,.05);
+}
+.voucher-result--err {
+  border: 1px solid rgba(255,92,122,.4);
+  color: var(--danger);
+  background: rgba(255,92,122,.05);
+}
+
 /* notice */
 .notice {
   border: 1px solid var(--line);
@@ -1260,6 +1314,8 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .closing h2 { font-size: 30px; line-height: 1.15; }
 
   .tier-options { grid-template-columns: 1fr; }
+  .trust-grid { flex-direction: column; gap: 8px; }
+  .voucher-row { flex-direction: column; gap: 8px; }
   .footer__in { flex-direction: column; text-align: center; gap: 14px; }
   .form-card { padding: 32px 22px; }
 }

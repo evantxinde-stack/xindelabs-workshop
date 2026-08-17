@@ -75,6 +75,20 @@ create table if not exists public.member_progress (
   unique (email, module_id)
 );
 
+-- 8. Tabel vouchers (kode diskon checkout)
+create table if not exists public.vouchers (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  type text not null default 'percent',       -- 'percent' | 'amount'
+  value numeric not null default 0,           -- persentase (10 = 10%) atau nominal (50000 = Rp 50.000)
+  tier text not null default 'all',           -- 'yearly' | 'lifetime' | 'all'
+  max_uses integer,                           -- null = unlimited
+  used_count integer not null default 0,
+  active boolean not null default true,
+  expires_at timestamptz,
+  created_at timestamptz default now()
+);
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
@@ -84,6 +98,7 @@ alter table public.site_content enable row level security;
 alter table public.leads enable row level security;
 alter table public.modules enable row level security;
 alter table public.member_progress enable row level security;
+alter table public.vouchers enable row level security;
 
 -- members: user cuma bisa baca baris sendiri
 drop policy if exists "members read own" on public.members;
@@ -188,6 +203,33 @@ create policy "member_progress update own" on public.member_progress for update
   using (auth.jwt() ->> 'email' = email)
   with check (auth.jwt() ->> 'email' = email);
 
+-- vouchers: SEMUA orang bisa baca (validasi kode voucher di checkout)
+drop policy if exists "vouchers read all" on public.vouchers;
+create policy "vouchers read all" on public.vouchers for select
+  using (true);
+
+-- vouchers: cuma ADMIN yang bisa tulis/ubah/hapus
+drop policy if exists "vouchers write admin" on public.vouchers;
+create policy "vouchers write admin" on public.vouchers for insert
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "vouchers update admin" on public.vouchers;
+create policy "vouchers update admin" on public.vouchers for update
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "vouchers delete admin" on public.vouchers;
+create policy "vouchers delete admin" on public.vouchers for delete
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
 -- ============================================================
 -- SEED: konten default + admin pertama
 -- ============================================================
@@ -260,6 +302,10 @@ create trigger trg_modules_updated before update on public.modules
 
 drop trigger if exists trg_member_progress_updated on public.member_progress;
 create trigger trg_member_progress_updated before update on public.member_progress
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_vouchers_updated on public.vouchers;
+create trigger trg_vouchers_updated before update on public.vouchers
   for each row execute function public.set_updated_at();
 
 -- Index
