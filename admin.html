@@ -705,7 +705,7 @@
     });
 
     // ============ Sidebar: ganti panel ============
-    var currentPanel = 'content';
+    var currentPanel = 'dashboard';
 
     function panelEl(panel) {
       var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', vouchers: 'panelVouchers' };
@@ -835,7 +835,8 @@
         '</td>' +
         '<td data-label=""><button type="button" class="btn btn--ghost btn--sm lead-del">Hapus</button></td>';
 
-      tr.querySelector('.a-select.st-' + esc(l.status)).addEventListener('change', function (e) {
+      var statusSel = tr.querySelector('.a-select.st-' + esc(l.status || 'belum'));
+      if (statusSel) statusSel.addEventListener('change', function (e) {
         updateLead(l.id, { status: e.target.value }).then(function () {
           e.target.className = 'a-select st-' + e.target.value;
           refreshCounts();
@@ -844,9 +845,10 @@
       });
 
       var note = tr.querySelector('.a-note');
-      note.addEventListener('change', function () { updateLead(l.id, { notes: note.value.trim() }); });
+      if (note) note.addEventListener('change', function () { updateLead(l.id, { notes: note.value.trim() }); });
 
-      tr.querySelector('.lead-wa').addEventListener('click', function () {
+      var waBtn = tr.querySelector('.lead-wa');
+      if (waBtn) waBtn.addEventListener('click', function () {
         var tpl = (cfg.FOLLOWUP_TEMPLATES || [])[Number(tr.querySelector('.l-fu .a-select').value)];
         if (!tpl || !wa) return;
         var text = tpl.text.replace(/\{nama\}/g, l.name).replace(/\{nama_lo\}/g, 'Xinde Labs');
@@ -860,7 +862,8 @@
         }
       });
 
-      tr.querySelector('.lead-del').addEventListener('click', function () {
+      var delBtn = tr.querySelector('.lead-del');
+      if (delBtn) delBtn.addEventListener('click', function () {
         if (!confirm('Hapus lead "' + l.name + '"? Tindakan ini tidak bisa dibatalkan.')) return;
         client.from('leads').delete().eq('id', l.id).then(function (r) {
           if (r.error) { alert('Gagal hapus: ' + (r.error.message || '')); return; }

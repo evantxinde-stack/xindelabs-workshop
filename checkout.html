@@ -349,6 +349,22 @@
       payBtn.disabled = true;
       payBtn.textContent = 'Mengarahkan ke pembayaran…';
 
+      // Save lead to Supabase langsung (panel admin)
+      if (cfg.supabaseConfigured() && window.supabase) {
+        try {
+          var sc = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+          sc.from('leads').insert({
+            name: payload.nama,
+            email: payload.email,
+            whatsapp: payload.wa,
+            discord_id: payload.discord,
+            status: 'belum',
+            source: 'landing-daftar',
+            notes: 'tier:' + tier + ' harga:' + hargaFinal + (payload.voucher_code ? ' voucher:' + payload.voucher_code : '')
+          }).then(function () {});
+        } catch (e) {}
+      }
+
       fetch(cfg.N8N_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
