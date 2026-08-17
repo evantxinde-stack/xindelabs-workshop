@@ -79,6 +79,7 @@
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
           <button type="button" class="a-menu" data-panel="lms">LMS Management</button>
+          <button type="button" class="a-menu" data-panel="members">Members <span class="a-badge" id="countMenuMembers"></span></button>
           <button type="button" class="a-menu" data-panel="vouchers">Vouchers</button>
         </aside>
 
@@ -362,6 +363,43 @@
                 <button type="button" class="btn btn--primary" id="saveModulesBtn">Simpan Modul</button>
                 <span class="hint" id="modulesSaveState">Belum ada perubahan.</span>
               </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: MEMBERS ============ -->
+          <div id="panelMembers" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Member Management</h2>
+              <p class="lead">Daftar member course yang sudah bayar.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Member</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshMembers">↻ Refresh</button>
+              </div>
+              <div class="a-filters" id="filtersMembers">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntMemAll">0</span></button>
+                <button type="button" class="a-filter" data-status="paid">Paid <span class="cnt" id="cntMemPaid">0</span></button>
+                <button type="button" class="a-filter" data-status="pending">Pending <span class="cnt" id="cntMemPending">0</span></button>
+                <button type="button" class="a-filter" data-status="expired">Expired <span class="cnt" id="cntMemExpired">0</span></button>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Tier</th>
+                      <th>Paid Until</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="membersBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="membersEmpty" style="display:none">Belum ada member.</p>
             </div>
           </div>
 
@@ -708,7 +746,7 @@
     var currentPanel = 'dashboard';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', vouchers: 'panelVouchers' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers' };
       return document.getElementById(map[panel]);
     }
 
@@ -717,13 +755,14 @@
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'vouchers'].forEach(function (p) {
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'members', 'vouchers'].forEach(function (p) {
           panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
         });
         if (currentPanel === 'dashboard') loadDashboard();
         if (currentPanel === 'lms') loadLms();
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
+        if (currentPanel === 'members') loadMembers();
         if (currentPanel === 'vouchers') loadVouchers();
       });
     });
@@ -1299,6 +1338,66 @@
       document.getElementById('modulesSaveState').textContent = '';
       alert('Gagal simpan modul: ' + (err.message || 'terjadi kesalahan'));
     }
+
+    // ============ Member Management ============
+    var membersCache = null;
+    var memberFilter = 'all';
+
+    function loadMembers() {
+      if (!client) return;
+      client.from('members').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) return;
+        membersCache = r.data || [];
+        refreshMemberCounts();
+        renderMembers();
+      });
+    }
+
+    function refreshMemberCounts() {
+      var list = membersCache || [];
+      var counts = { all: list.length, paid: 0, pending: 0, expired: 0 };
+      list.forEach(function (m) { if (counts[m.status] !== undefined) counts[m.status]++; });
+      document.getElementById('cntMemAll').textContent = counts.all;
+      document.getElementById('cntMemPaid').textContent = counts.paid;
+      document.getElementById('cntMemPending').textContent = counts.pending;
+      document.getElementById('cntMemExpired').textContent = counts.expired;
+      var badge = document.getElementById('countMenuMembers');
+      if (badge) badge.textContent = counts.all;
+    }
+
+    function renderMembers() {
+      var body = document.getElementById('membersBody');
+      var empty = document.getElementById('membersEmpty');
+      var list = (membersCache || []).filter(function (m) {
+        return memberFilter === 'all' || m.status === memberFilter;
+      });
+      body.innerHTML = '';
+      list.forEach(function (m) {
+        var tr = document.createElement('tr');
+        var paidUntil = m.paid_until ? new Date(m.paid_until).toLocaleDateString('id-ID') : '—';
+        var created = m.created_at ? new Date(m.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        var tierLabel = m.tier === 'lifetime' ? 'Lifetime' : 'Tahunan';
+        var statusClass = 'st-' + (m.status || 'pending');
+        tr.innerHTML =
+          '<td data-label="Email"><div class="l-name">' + esc(m.email) + '</div><div class="l-meta">' + created + '</div></td>' +
+          '<td data-label="Status"><span class="a-select ' + statusClass + '" style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px">' + esc(m.status || 'pending') + '</span></td>' +
+          '<td data-label="Tier">' + esc(tierLabel) + '</td>' +
+          '<td data-label="Paid Until">' + paidUntil + '</td>' +
+          '<td data-label="Created">' + created + '</td>';
+        body.appendChild(tr);
+      });
+      empty.style.display = list.length ? 'none' : 'block';
+    }
+
+    document.getElementById('refreshMembers').addEventListener('click', loadMembers);
+    document.querySelectorAll('#filtersMembers .a-filter').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#filtersMembers .a-filter').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        memberFilter = btn.dataset.status;
+        renderMembers();
+      });
+    });
 
     // ============ Voucher Management ============
     var vouchersCache = null;
