@@ -362,7 +362,7 @@ h1, h2, h3, .display {
 /* ============================================================
    STATS (live proof)
    ============================================================ */
-.stats__grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+.stats__grid { display: grid; grid-template-columns: repeat(4, 1fr); }
 .stat { padding: 34px 28px; border-left: 1px solid var(--line); text-align: left; }
 .stat:first-child { border-left: 0; padding-left: 0; }
 .stat__num {
