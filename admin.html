@@ -842,7 +842,17 @@
           document.getElementById('saveState').textContent = '';
           return null;
         }
-        return client.from('site_content').upsert({ key: 'homepage', value: content });
+        return client.from('site_content').select('id').eq('key', 'homepage').maybeSingle();
+      }).then(function (r) {
+        if (!r) return null;
+        if (r.error) {
+          console.error('[save cms] select error:', r.error);
+          return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
+        }
+        if (r.data) {
+          return client.from('site_content').update({ value: content, updated_by: 'admin' }).eq('key', 'homepage');
+        }
+        return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
       }).then(function (r) {
         if (!r) return;
         btn.disabled = false;
