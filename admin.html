@@ -182,6 +182,17 @@
                     <input type="number" id="f_price_lifetime" step="1000" min="0" />
                   </div>
                 </div>
+                <div class="admin-grid2" style="margin-top:12px">
+                  <div class="field">
+                    <label for="f_promo_banner">Banner Promo — URL Gambar</label>
+                    <input type="url" id="f_promo_banner" placeholder="https://…" />
+                    <div class="hint">URL gambar banner promo yang tampil di section pricing &amp; checkout. Kosongkan untuk sembunyikan.</div>
+                  </div>
+                  <div class="field">
+                    <label for="f_promo_banner_alt">Alt Text Banner</label>
+                    <input type="text" id="f_promo_banner_alt" placeholder="Banner promo event" />
+                  </div>
+                </div>
               </div>
 
               <div class="admin-block">
@@ -649,6 +660,8 @@
         document.getElementById('f_video_caption').value = v.video_caption || d.video_caption || '';
         document.getElementById('f_price_yearly').value = v.price_yearly || cfg.PRICES.yearly.harga || '';
         document.getElementById('f_price_lifetime').value = v.price_lifetime || cfg.PRICES.lifetime.harga || '';
+        document.getElementById('f_promo_banner').value = v.promo_banner_url || '';
+        document.getElementById('f_promo_banner_alt').value = v.promo_banner_alt || '';
         document.getElementById('f_discord').value = v.discord_link || '';
         document.getElementById('f_wa').value = v.whatsapp_link || '';
         document.getElementById('f_ig').value = v.instagram_handle || '';
@@ -708,6 +721,8 @@
         video_caption: document.getElementById('f_video_caption').value.trim(),
         price_yearly: Number(document.getElementById('f_price_yearly').value) || 0,
         price_lifetime: Number(document.getElementById('f_price_lifetime').value) || 0,
+        promo_banner_url: document.getElementById('f_promo_banner').value.trim(),
+        promo_banner_alt: document.getElementById('f_promo_banner_alt').value.trim(),
         discord_link: document.getElementById('f_discord').value.trim(),
         whatsapp_link: document.getElementById('f_wa').value.trim(),
         instagram_handle: document.getElementById('f_ig').value.trim(),

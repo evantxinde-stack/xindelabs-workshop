@@ -301,6 +301,9 @@
             <a href="checkout.html?tier=lifetime" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
           </div>
         </div>
+        <div class="promo-banner reveal" id="promoBannerPricing" style="display:none">
+          <img id="promoBannerPricingImg" src="" alt="Banner promo" />
+        </div>
       </div>
     </section>
 
@@ -558,6 +561,16 @@
         if (c.instagram_handle) {
           var fi = document.getElementById('footerInstagram');
           if (fi) fi.href = 'https://instagram.com/' + String(c.instagram_handle).replace(/^@/, '');
+        }
+
+        if (c.promo_banner_url) {
+          var pb = document.getElementById('promoBannerPricing');
+          var pimg = document.getElementById('promoBannerPricingImg');
+          if (pb && pimg) {
+            pimg.src = c.promo_banner_url;
+            pimg.alt = c.promo_banner_alt || 'Banner promo';
+            pb.style.display = 'block';
+          }
         }
         }
       }

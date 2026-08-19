@@ -26,6 +26,9 @@
 
   <div class="page">
     <div class="auth-wrap">
+      <div class="promo-banner" id="promoBannerCheckout" style="display:none">
+        <img id="promoBannerCheckoutImg" src="" alt="Banner promo" />
+      </div>
       <div class="form-card form-card--wide">
         <h1 class="form-title">Daftar Course</h1>
         <p class="form-sub">Isi data lo — link pembayaran langsung dikirim otomatis.</p>
@@ -386,6 +389,23 @@
           formError.textContent = '⚠️ Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
         });
     });
+
+    // ============ Load promo banner from CMS ============
+    (function () {
+      var cfg = window.XINDE;
+      if (!cfg || !cfg.supabaseConfigured() || !window.supabase) return;
+      var c = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      c.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
+        var v = (r.data && r.data.value) ? r.data.value : {};
+        if (v.promo_banner_url) {
+          var wrap = document.getElementById('promoBannerCheckout');
+          var img = document.getElementById('promoBannerCheckoutImg');
+          img.src = v.promo_banner_url;
+          img.alt = v.promo_banner_alt || 'Banner promo';
+          wrap.style.display = 'block';
+        }
+      });
+    })();
   </script>
 </body>
 </html>
