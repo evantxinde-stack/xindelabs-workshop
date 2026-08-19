@@ -729,22 +729,33 @@
       var btn = document.getElementById('bannerPickBtn');
       btn.disabled = true;
       btn.textContent = 'Uploading…';
-      var ext = file.name.split('.').pop() || 'png';
-      var path = 'promo-banner-' + Date.now() + '.' + ext;
 
-      client.storage.from('banners').upload(path, file, { upsert: true, contentType: file.type }).then(function (r) {
+      client.auth.getSession().then(function (sess) {
+        if (!sess.data || !sess.data.session) {
+          btn.disabled = false;
+          btn.textContent = '📁 Pilih Gambar';
+          alert('Session expired. Login ulang.');
+          return;
+        }
+        var ext = file.name.split('.').pop() || 'png';
+        var path = 'promo-banner-' + Date.now() + '.' + ext;
+        return client.storage.from('banners').upload(path, file, { contentType: file.type });
+      }).then(function (r) {
+        if (!r) return;
         btn.disabled = false;
         btn.textContent = '📁 Pilih Gambar';
         if (r.error) {
           var msg = r.error.message || r.error.error || JSON.stringify(r.error);
+          console.error('[banner upload] error:', r.error);
           if (/bucket|not found|404/i.test(msg)) {
-            msg = 'Bucket "banners" belum dibuat.\n\nCara buka:\n1. Supabase Dashboard → Storage\n2. New Bucket → nama: banners → Public: ON → Create';
+            msg = 'Bucket "banners" belum dibuat.\n\nSupabase Dashboard → Storage → New Bucket → nama: banners → Public: ON → Create.';
+          } else if (/row level|RLS|permission|403/i.test(msg)) {
+            msg = 'RLS block. Jalankan SQL setup storage di supabase-setup.sql.';
           }
           alert('Gagal upload:\n' + msg);
-          console.error('[banner upload] error:', r.error);
           return;
         }
-        var url = client.storage.from('banners').getPublicUrl(path).data.publicUrl;
+        var url = client.storage.from('banners').getPublicUrl(r.data.path).data.publicUrl;
         document.getElementById('f_promo_banner').value = url;
         document.getElementById('bannerPreviewImg').src = url;
         document.getElementById('bannerPreview').style.display = 'block';
@@ -755,7 +766,7 @@
         btn.disabled = false;
         btn.textContent = '📁 Pilih Gambar';
         console.error('[banner upload] catch:', err);
-        alert('Upload error: ' + (err.message || err || 'unknown') + '\n\nCek console (F12) untuk detail.');
+        alert('Upload error: ' + (err.message || err || 'unknown') + '\n\nCek F12 → Console.');
       });
     });
     document.getElementById('bannerRemove').addEventListener('click', function () {
@@ -822,18 +833,37 @@
       btn.textContent = 'Menyimpan…';
       document.getElementById('saveState').textContent = 'Mengirim ke Supabase…';
 
-      client.from('site_content').upsert({ key: 'homepage', value: content }).then(function (r) {
+      client.auth.getSession().then(function (sess) {
+        if (!sess.data || !sess.data.session) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Konten';
+          err.textContent = '⚠️ Session expired. Login ulang.';
+          err.style.display = 'flex';
+          document.getElementById('saveState').textContent = '';
+          return null;
+        }
+        return client.from('site_content').upsert({ key: 'homepage', value: content });
+      }).then(function (r) {
+        if (!r) return;
         btn.disabled = false;
         btn.textContent = 'Simpan Konten';
         if (r.error) {
+          console.error('[save cms] error:', r.error);
           document.getElementById('saveState').textContent = '';
-          err.textContent = '⚠️ Gagal simpan: ' + (r.error.message || 'terjadi kesalahan');
+          err.textContent = '⚠️ Gagal simpan: ' + (r.error.message || r.error.hint || 'terjadi kesalahan') + '\n(F12 → Console untuk detail)';
           err.style.display = 'flex';
           return;
         }
         document.getElementById('saveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
         msg.textContent = '✅ Konten tersimpan — landing page sudah update.';
         msg.style.display = 'flex';
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten';
+        console.error('[save cms] catch:', e);
+        err.textContent = '⚠️ Error: ' + (e.message || e || 'unknown') + '\n(F12 → Console)';
+        err.style.display = 'flex';
+        document.getElementById('saveState').textContent = '';
       });
     });
 
