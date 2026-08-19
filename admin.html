@@ -731,7 +731,11 @@
         btn.disabled = false;
         btn.textContent = '📁 Pilih Gambar';
         if (r.error) {
-          alert('Gagal upload: ' + (r.error.message || 'coba lagi'));
+          var msg = r.error.message || 'coba lagi';
+          if (/bucket|not found|404/i.test(msg)) {
+            msg = 'Bucket "banners" belum dibuat. Buka Supabase Dashboard → Storage → New Bucket → nama: "banners" → Public: ON → Create.';
+          }
+          alert('Gagal upload: ' + msg);
           return;
         }
         var url = client.storage.from('banners').getPublicUrl(path).data.publicUrl;
