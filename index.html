@@ -592,18 +592,18 @@
       var c = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
       c.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
         var v = (r.data && r.data.value) ? r.data.value : {};
-        console.log('[BANNER] data:', v);
-        if (v.promo_banner_url) {
+        var url = v.promo_banner_url || '';
+        console.log('[BANNER] raw value:', JSON.stringify(v).substring(0, 500));
+        console.log('[BANNER] promo_banner_url:', url || '(kosong)');
+        if (url) {
           var pb = document.getElementById('promoBannerPricing');
           var pimg = document.getElementById('promoBannerPricingImg');
           if (pb && pimg) {
-            pimg.src = v.promo_banner_url;
+            pimg.src = url;
             pimg.alt = v.promo_banner_alt || 'Banner promo';
             pb.style.display = 'block';
-            console.log('[BANNER] displayed:', v.promo_banner_url);
+            console.log('[BANNER] displayed OK');
           }
-        } else {
-          console.log('[BANNER] no promo_banner_url in data');
         }
       }).catch(function (e) { console.log('[BANNER] error:', e); });
     })();
