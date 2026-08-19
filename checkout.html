@@ -394,17 +394,20 @@
     (function () {
       var cfg = window.XINDE;
       if (!cfg || !cfg.supabaseConfigured() || !window.supabase) return;
-      var c = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      c.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
-        var v = (r.data && r.data.value) ? r.data.value : {};
+      fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.homepage&select=value', {
+        headers: { 'apikey': cfg.SUPABASE_ANON_KEY }
+      }).then(function (r) { return r.json(); }).then(function (rows) {
+        var v = (rows && rows[0] && rows[0].value) ? rows[0].value : {};
         if (v.promo_banner_url) {
           var wrap = document.getElementById('promoBannerCheckout');
           var img = document.getElementById('promoBannerCheckoutImg');
-          img.src = v.promo_banner_url;
-          img.alt = v.promo_banner_alt || 'Banner promo';
-          wrap.style.display = 'block';
+          if (wrap && img) {
+            img.src = v.promo_banner_url;
+            img.alt = v.promo_banner_alt || 'Banner promo';
+            wrap.style.display = 'block';
+          }
         }
-      });
+      }).catch(function () {});
     })();
   </script>
 </body>

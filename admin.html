@@ -842,19 +842,57 @@
           document.getElementById('saveState').textContent = '';
           return null;
         }
-        return client.from('site_content').update({ value: content, updated_by: 'admin' }).eq('key', 'homepage');
+        var token = sess.data.session.access_token;
+        window.__adminToken = token;
+        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.homepage', {
+          method: 'PATCH',
+          headers: {
+            'apikey': cfg.SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ value: content, updated_by: 'admin' })
+        });
       }).then(function (r) {
         if (!r) return null;
-        if (r.error) {
-          console.error('[save cms] update error, trying insert:', r.error);
-          return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
-        }
-        if (r.data && r.data.length === 0) {
-          console.log('[save cms] update 0 rows, trying insert');
-          return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
+        if (!r.ok) {
+          console.error('[save cms] PATCH failed:', r.status);
+          return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
+            method: 'POST',
+            headers: {
+              'apikey': cfg.SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + window.__adminToken,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ key: 'homepage', value: content, updated_by: 'admin' })
+          });
         }
         return r;
       }).then(function (r) {
+        if (!r) return;
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten';
+        if (!r.ok) {
+          console.error('[save cms] final error:', r.status);
+          err.textContent = '⚠️ Gagal simpan: HTTP ' + r.status + '. Cek F12 → Console.';
+          err.style.display = 'flex';
+          document.getElementById('saveState').textContent = '';
+          return;
+        }
+        document.getElementById('saveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        msg.textContent = '✅ Konten tersimpan — landing page sudah update.';
+        msg.style.display = 'flex';
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten';
+        console.error('[save cms] catch:', e);
+        err.textContent = '⚠️ Error: ' + (e.message || 'unknown');
+        err.style.display = 'flex';
+        document.getElementById('saveState').textContent = '';
+      });
+    });
         if (!r) return;
         btn.disabled = false;
         btn.textContent = 'Simpan Konten';

@@ -478,19 +478,28 @@
 
     // ============ FAQ accordion ============
     function bindFaq() {
-      document.querySelectorAll('.faq__item').forEach(function (item) {
-        item.querySelector('.faq__q').addEventListener('click', function () {
-          var isOpen = item.classList.contains('open');
-          document.querySelectorAll('.faq__item.open').forEach(function (o) {
-            o.classList.remove('open');
-            o.querySelector('.faq__a').style.maxHeight = null;
-          });
-          if (!isOpen) {
-            item.classList.add('open');
-            item.querySelector('.faq__a').style.maxHeight = item.querySelector('.faq__a').scrollHeight + 'px';
-          }
+      var list = document.getElementById('faqList');
+      if (!list) return;
+      list.removeEventListener('click', list.__faqHandler);
+      list.__faqHandler = function (e) {
+        var btn = e.target.closest('.faq__q');
+        if (!btn) return;
+        var item = btn.closest('.faq__item');
+        if (!item) return;
+        var ans = item.querySelector('.faq__a');
+        if (!ans) return;
+        var isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq__item.open').forEach(function (o) {
+          o.classList.remove('open');
+          var a = o.querySelector('.faq__a');
+          if (a) a.style.maxHeight = null;
         });
-      });
+        if (!isOpen) {
+          item.classList.add('open');
+          ans.style.maxHeight = (ans.scrollHeight || ans.offsetHeight || 300) + 'px';
+        }
+      };
+      list.addEventListener('click', list.__faqHandler);
     }
     bindFaq();
 
@@ -588,12 +597,12 @@
     // ============ Load promo banner langsung dari Supabase ============
     (function () {
       var cfg = window.XINDE;
-      if (!cfg || !cfg.supabaseConfigured() || !window.supabase) return;
-      var c = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      c.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
-        var v = (r.data && r.data.value) ? r.data.value : {};
+      if (!cfg || !cfg.supabaseConfigured()) return;
+      fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.homepage&select=value', {
+        headers: { 'apikey': cfg.SUPABASE_ANON_KEY }
+      }).then(function (r) { return r.json(); }).then(function (rows) {
+        var v = (rows && rows[0] && rows[0].value) ? rows[0].value : {};
         var url = v.promo_banner_url || '';
-        console.log('[BANNER] raw value:', JSON.stringify(v).substring(0, 500));
         console.log('[BANNER] promo_banner_url:', url || '(kosong)');
         if (url) {
           var pb = document.getElementById('promoBannerPricing');
