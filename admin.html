@@ -842,17 +842,18 @@
           document.getElementById('saveState').textContent = '';
           return null;
         }
-        return client.from('site_content').select('id').eq('key', 'homepage').maybeSingle();
+        return client.from('site_content').update({ value: content, updated_by: 'admin' }).eq('key', 'homepage');
       }).then(function (r) {
         if (!r) return null;
         if (r.error) {
-          console.error('[save cms] select error:', r.error);
+          console.error('[save cms] update error, trying insert:', r.error);
           return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
         }
-        if (r.data) {
-          return client.from('site_content').update({ value: content, updated_by: 'admin' }).eq('key', 'homepage');
+        if (r.data && r.data.length === 0) {
+          console.log('[save cms] update 0 rows, trying insert');
+          return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
         }
-        return client.from('site_content').insert({ key: 'homepage', value: content, updated_by: 'admin' });
+        return r;
       }).then(function (r) {
         if (!r) return;
         btn.disabled = false;
