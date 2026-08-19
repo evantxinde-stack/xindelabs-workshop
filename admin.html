@@ -184,9 +184,19 @@
                 </div>
                 <div class="admin-grid2" style="margin-top:12px">
                   <div class="field">
-                    <label for="f_promo_banner">Banner Promo — URL Gambar</label>
-                    <input type="url" id="f_promo_banner" placeholder="https://…" />
-                    <div class="hint">URL gambar banner promo yang tampil di section pricing &amp; checkout. Kosongkan untuk sembunyikan.</div>
+                    <label>Banner Promo</label>
+                    <div class="banner-upload" id="bannerUploadWrap">
+                      <div class="banner-preview" id="bannerPreview" style="display:none">
+                        <img id="bannerPreviewImg" src="" alt="Preview banner" />
+                        <button type="button" class="btn btn--ghost btn--sm" id="bannerRemove">✕ Hapus</button>
+                      </div>
+                      <div class="banner-pick" id="bannerPick">
+                        <input type="file" id="f_promo_banner_file" accept="image/*" style="display:none" />
+                        <button type="button" class="btn btn--ghost btn--sm" id="bannerPickBtn">📁 Pilih Gambar</button>
+                        <div class="hint">JPG/PNG, max 2MB. Tampil di section pricing &amp; checkout.</div>
+                      </div>
+                    </div>
+                    <input type="hidden" id="f_promo_banner" />
                   </div>
                   <div class="field">
                     <label for="f_promo_banner_alt">Alt Text Banner</label>
@@ -662,6 +672,15 @@
         document.getElementById('f_price_lifetime').value = v.price_lifetime || cfg.PRICES.lifetime.harga || '';
         document.getElementById('f_promo_banner').value = v.promo_banner_url || '';
         document.getElementById('f_promo_banner_alt').value = v.promo_banner_alt || '';
+
+        if (v.promo_banner_url) {
+          document.getElementById('bannerPreviewImg').src = v.promo_banner_url;
+          document.getElementById('bannerPreview').style.display = 'block';
+          document.getElementById('bannerPick').style.display = 'none';
+        } else {
+          document.getElementById('bannerPreview').style.display = 'none';
+          document.getElementById('bannerPick').style.display = 'block';
+        }
         document.getElementById('f_discord').value = v.discord_link || '';
         document.getElementById('f_wa').value = v.whatsapp_link || '';
         document.getElementById('f_ig').value = v.instagram_handle || '';
@@ -685,6 +704,51 @@
         });
       });
     }
+
+    // ============ Banner upload ============
+    document.getElementById('bannerPickBtn').addEventListener('click', function () {
+      document.getElementById('f_promo_banner_file').click();
+    });
+    document.getElementById('f_promo_banner_file').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran gambar max 2MB.');
+        e.target.value = '';
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('File harus gambar (JPG/PNG).');
+        e.target.value = '';
+        return;
+      }
+      var btn = document.getElementById('bannerPickBtn');
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+      var ext = file.name.split('.').pop() || 'png';
+      var path = 'promo-banner-' + Date.now() + '.' + ext;
+      client.storage.from('banners').upload(path, file, { upsert: true, contentType: file.type }).then(function (r) {
+        btn.disabled = false;
+        btn.textContent = '📁 Pilih Gambar';
+        if (r.error) {
+          alert('Gagal upload: ' + (r.error.message || 'coba lagi'));
+          return;
+        }
+        var url = client.storage.from('banners').getPublicUrl(path).data.publicUrl;
+        document.getElementById('f_promo_banner').value = url;
+        document.getElementById('bannerPreviewImg').src = url;
+        document.getElementById('bannerPreview').style.display = 'block';
+        document.getElementById('bannerPick').style.display = 'none';
+        document.getElementById('f_promo_banner_file').value = '';
+      });
+    });
+    document.getElementById('bannerRemove').addEventListener('click', function () {
+      document.getElementById('f_promo_banner').value = '';
+      document.getElementById('bannerPreview').style.display = 'none';
+      document.getElementById('bannerPick').style.display = 'block';
+      document.getElementById('bannerPreviewImg').src = '';
+      document.getElementById('f_promo_banner_file').value = '';
+    });
 
     // ============ Kumpulkan + simpan ============
     function collectRows(containerId) {

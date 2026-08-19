@@ -323,3 +323,27 @@ create index if not exists idx_leads_status on public.leads (status);
 create index if not exists idx_leads_created on public.leads (created_at desc);
 create index if not exists idx_modules_sort on public.modules (sort);
 create index if not exists idx_member_progress_email on public.member_progress (email);
+
+-- ============================================================
+-- STORAGE: bucket 'banners' untuk promo banner upload
+-- ============================================================
+insert into storage.buckets (id, name, public)
+  values ('banners', 'banners', true)
+  on conflict (id) do update set public = true;
+
+-- Admin bisa upload/delete di bucket banners
+create policy "banners upload admin" on storage.objects for insert
+  with check (
+    bucket_id = 'banners'
+    and exists (select 1 from public.admins where email = auth.jwt() ->> 'email')
+  );
+
+create policy "banners delete admin" on storage.objects for delete
+  using (
+    bucket_id = 'banners'
+    and exists (select 1 from public.admins where email = auth.jwt() ->> 'email')
+  );
+
+-- Semua orang bisa baca banner (public bucket)
+create policy "banners read public" on storage.objects for select
+  using (bucket_id = 'banners');

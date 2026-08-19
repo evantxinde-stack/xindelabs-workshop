@@ -616,6 +616,39 @@ h1, h2, h3, .display {
   display: block;
   object-fit: cover;
 }
+.banner-upload { width: 100%; }
+.banner-preview {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--card);
+}
+.banner-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 180px;
+  object-fit: cover;
+}
+.banner-preview .btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.banner-pick {
+  border: 1px dashed rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
 
 /* ============================================================
    FAQ
