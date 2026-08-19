@@ -722,20 +722,26 @@
         e.target.value = '';
         return;
       }
+      if (!client) {
+        alert('Session expired. Silakan login ulang.');
+        return;
+      }
       var btn = document.getElementById('bannerPickBtn');
       btn.disabled = true;
       btn.textContent = 'Uploading…';
       var ext = file.name.split('.').pop() || 'png';
       var path = 'promo-banner-' + Date.now() + '.' + ext;
+
       client.storage.from('banners').upload(path, file, { upsert: true, contentType: file.type }).then(function (r) {
         btn.disabled = false;
         btn.textContent = '📁 Pilih Gambar';
         if (r.error) {
-          var msg = r.error.message || 'coba lagi';
+          var msg = r.error.message || r.error.error || JSON.stringify(r.error);
           if (/bucket|not found|404/i.test(msg)) {
-            msg = 'Bucket "banners" belum dibuat. Buka Supabase Dashboard → Storage → New Bucket → nama: "banners" → Public: ON → Create.';
+            msg = 'Bucket "banners" belum dibuat.\n\nCara buka:\n1. Supabase Dashboard → Storage\n2. New Bucket → nama: banners → Public: ON → Create';
           }
-          alert('Gagal upload: ' + msg);
+          alert('Gagal upload:\n' + msg);
+          console.error('[banner upload] error:', r.error);
           return;
         }
         var url = client.storage.from('banners').getPublicUrl(path).data.publicUrl;
@@ -744,6 +750,12 @@
         document.getElementById('bannerPreview').style.display = 'block';
         document.getElementById('bannerPick').style.display = 'none';
         document.getElementById('f_promo_banner_file').value = '';
+        console.log('[banner upload] success:', url);
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = '📁 Pilih Gambar';
+        console.error('[banner upload] catch:', err);
+        alert('Upload error: ' + (err.message || err || 'unknown') + '\n\nCek console (F12) untuk detail.');
       });
     });
     document.getElementById('bannerRemove').addEventListener('click', function () {
