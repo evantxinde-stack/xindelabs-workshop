@@ -117,21 +117,19 @@ drop policy if exists "admins read self" on public.admins;
 create policy "admins read self" on public.admins for select
   using (auth.jwt() ->> 'email' = email);
 
--- site_content: SEMUA orang bisa baca (konten publik landing page)
+-- site_content: cuma ADMIN yang bisa tulis/ubah
 drop policy if exists "content read all" on public.site_content;
+drop policy if exists "content write admin" on public.site_content;
+drop policy if exists "content update admin" on public.site_content;
+
 create policy "content read all" on public.site_content for select
   using (true);
 
--- site_content: cuma ADMIN yang bisa tulis/ubah
-drop policy if exists "content write admin" on public.site_content;
-create policy "content write admin" on public.site_content for insert
-  with check (exists (
-    select 1 from public.admins where email = auth.jwt() ->> 'email'
-  ));
-
-drop policy if exists "content update admin" on public.site_content;
-create policy "content update admin" on public.site_content for update
+create policy "content admin all" on public.site_content for all
   using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
