@@ -584,6 +584,29 @@
         apply(Object.assign({}, defaults, res.data.value || {}));
       }).catch(function () { apply(defaults); });
     })();
+
+    // ============ Load promo banner langsung dari Supabase ============
+    (function () {
+      var cfg = window.XINDE;
+      if (!cfg || !cfg.supabaseConfigured() || !window.supabase) return;
+      var c = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      c.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
+        var v = (r.data && r.data.value) ? r.data.value : {};
+        console.log('[BANNER] data:', v);
+        if (v.promo_banner_url) {
+          var pb = document.getElementById('promoBannerPricing');
+          var pimg = document.getElementById('promoBannerPricingImg');
+          if (pb && pimg) {
+            pimg.src = v.promo_banner_url;
+            pimg.alt = v.promo_banner_alt || 'Banner promo';
+            pb.style.display = 'block';
+            console.log('[BANNER] displayed:', v.promo_banner_url);
+          }
+        } else {
+          console.log('[BANNER] no promo_banner_url in data');
+        }
+      }).catch(function (e) { console.log('[BANNER] error:', e); });
+    })();
     // ============ Form Komunitas Gratis → tabel leads (source: komunitas) ============
     (function () {
       var form = document.getElementById('commForm');
