@@ -683,8 +683,32 @@ h1, h2, h3, .display {
   transition: transform .22s ease;
 }
 .faq__item.open .faq__q::after { transform: rotate(45deg); }
-.faq__a { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.faq__a { display: none; }
+.faq__item.open .faq__a { display: block; }
 .faq__a > div { padding: 0 4px 24px; color: var(--muted); font-size: 15px; max-width: 680px; }
+
+/* ============================================================
+   VOUCHER TIERS
+   ============================================================ */
+.voucher-tiers { margin-top: 36px; border: 1px solid var(--line); border-radius: 12px; padding: 24px; background: var(--card); }
+.voucher-tiers--sm { margin-bottom: 20px; }
+.voucher-tiers__title { font-family: var(--font-display); font-weight: 700; font-size: 18px; margin-bottom: 16px; text-align: center; }
+.voucher-tiers__table { display: flex; flex-direction: column; gap: 0; }
+.vtier { display: grid; grid-template-columns: 1.2fr 0.8fr 1fr 1.2fr; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.vtier:last-child { border-bottom: none; }
+.vtier--head { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.vtier__code { font-family: var(--font-mono); font-weight: 600; color: var(--green); }
+.vtier__slots { color: var(--muted); text-align: center; }
+.vtier__orig { color: var(--muted); text-align: right; }
+.vtier__disc { font-family: var(--font-mono); font-weight: 700; color: var(--text); text-align: right; }
+.vtier--hot .vtier__code { color: #ff6b35; }
+.vtier--hot .vtier__disc { color: #ff6b35; }
+.vtier--hot { background: rgba(255, 107, 53, 0.06); }
+.vtier--full .vtier__code { color: var(--muted); }
+.vtier--life .vtier__code { color: var(--gold); }
+.vtier--life .vtier__disc { color: var(--gold); }
+.vtier--life { background: rgba(255, 200, 50, 0.05); }
+.voucher-tiers__note { font-size: 13px; color: var(--muted); text-align: center; margin-top: 14px; }
 
 /* ============================================================
    CLOSING
@@ -1367,6 +1391,11 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .voucher-row { flex-direction: column; gap: 8px; }
   .footer__in { flex-direction: column; text-align: center; gap: 14px; }
   .form-card { padding: 32px 22px; }
+  .vtier { grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 12px; }
+  .vtier__orig { grid-column: 1; text-align: left; }
+  .vtier__disc { grid-column: 2; }
+  .vtier__slots { display: none; }
+  .voucher-tiers { padding: 18px; }
 }
 
 @media (min-width: 721px) and (max-width: 1000px) {

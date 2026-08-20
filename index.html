@@ -301,6 +301,57 @@
             <a href="checkout.html?tier=lifetime" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
           </div>
         </div>
+
+        <!-- Voucher discount tiers -->
+        <div class="voucher-tiers reveal">
+          <h3 class="voucher-tiers__title">Build Your Own Agent — Voucher Diskon</h3>
+          <div class="voucher-tiers__table">
+            <div class="vtier vtier--head">
+              <span class="vtier__code">Kode</span>
+              <span class="vtier__slots">Kuota</span>
+              <span class="vtier__orig">Harga</span>
+              <span class="vtier__disc">Harga Diskon</span>
+            </div>
+            <div class="vtier vtier--hot">
+              <span class="vtier__code">EARLYBIRD</span>
+              <span class="vtier__slots">5 orang</span>
+              <span class="vtier__orig"><s>Rp 599.000</s></span>
+              <span class="vtier__disc">Rp 199.000</span>
+            </div>
+            <div class="vtier">
+              <span class="vtier__code">FASE01</span>
+              <span class="vtier__slots">10 orang</span>
+              <span class="vtier__orig"><s>Rp 599.000</s></span>
+              <span class="vtier__disc">Rp 299.000</span>
+            </div>
+            <div class="vtier">
+              <span class="vtier__code">FASE02</span>
+              <span class="vtier__slots">20 orang</span>
+              <span class="vtier__orig"><s>Rp 599.000</s></span>
+              <span class="vtier__disc">Rp 399.000</span>
+            </div>
+            <div class="vtier">
+              <span class="vtier__code">FASE03</span>
+              <span class="vtier__slots">30 orang</span>
+              <span class="vtier__orig"><s>Rp 599.000</s></span>
+              <span class="vtier__disc">Rp 499.000</span>
+            </div>
+            <div class="vtier vtier--full">
+              <span class="vtier__code">FULL PRICE</span>
+              <span class="vtier__slots">—</span>
+              <span class="vtier__orig"></span>
+              <span class="vtier__disc">Rp 599.000</span>
+            </div>
+            <div class="vtier vtier--life">
+              <span class="vtier__code">LIFETIME50</span>
+              <span class="vtier__slots">2 orang</span>
+              <span class="vtier__orig"><s>Rp 999.000</s></span>
+              <span class="vtier__disc">Rp 599.000</span>
+            </div>
+          </div>
+          <p class="voucher-tiers__note">Masukkan kode voucher di halaman checkout untuk dapat harga diskon.</p>
+        </div>
+
         <div class="promo-banner" id="promoBannerPricing" style="display:none">
           <img id="promoBannerPricingImg" src="" alt="Banner promo" />
         </div>
@@ -312,7 +363,7 @@
       <div class="wrap">
         <p class="eyebrow reveal"><span class="dot"></span>faq</p>
         <h2 class="h2 reveal mb-head">Pertanyaan yang sering masuk.</h2>
-        <div class="faq reveal" id="faqList">
+        <div class="faq" id="faqList">
           <div class="faq__item">
             <button class="faq__q">Saya belum pernah ngoding. Bisa ikut?</button>
             <div class="faq__a"><div>Bisa. Course ini memang dibuat untuk sales person non-teknis. Semua pakai tools no-code (ChatGPT/Claude, Google Sheets, WhatsApp, n8n) yang tinggal disetel lewat panduan langkah demi langkah.</div></div>
@@ -480,26 +531,13 @@
     function bindFaq() {
       var list = document.getElementById('faqList');
       if (!list) return;
-      list.removeEventListener('click', list.__faqHandler);
-      list.__faqHandler = function (e) {
+      list.addEventListener('click', function (e) {
         var btn = e.target.closest('.faq__q');
         if (!btn) return;
         var item = btn.closest('.faq__item');
         if (!item) return;
-        var ans = item.querySelector('.faq__a');
-        if (!ans) return;
-        var isOpen = item.classList.contains('open');
-        document.querySelectorAll('.faq__item.open').forEach(function (o) {
-          o.classList.remove('open');
-          var a = o.querySelector('.faq__a');
-          if (a) a.style.maxHeight = null;
-        });
-        if (!isOpen) {
-          item.classList.add('open');
-          ans.style.maxHeight = (ans.scrollHeight || ans.offsetHeight || 300) + 'px';
-        }
-      };
-      list.addEventListener('click', list.__faqHandler);
+        item.classList.toggle('open');
+      });
     }
     bindFaq();
 
