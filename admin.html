@@ -893,28 +893,6 @@
         document.getElementById('saveState').textContent = '';
       });
     });
-        if (!r) return;
-        btn.disabled = false;
-        btn.textContent = 'Simpan Konten';
-        if (r.error) {
-          console.error('[save cms] error:', r.error);
-          document.getElementById('saveState').textContent = '';
-          err.textContent = '⚠️ Gagal simpan: ' + (r.error.message || r.error.hint || 'terjadi kesalahan') + '\n(F12 → Console untuk detail)';
-          err.style.display = 'flex';
-          return;
-        }
-        document.getElementById('saveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
-        msg.textContent = '✅ Konten tersimpan — landing page sudah update.';
-        msg.style.display = 'flex';
-      }).catch(function (e) {
-        btn.disabled = false;
-        btn.textContent = 'Simpan Konten';
-        console.error('[save cms] catch:', e);
-        err.textContent = '⚠️ Error: ' + (e.message || e || 'unknown') + '\n(F12 → Console)';
-        err.style.display = 'flex';
-        document.getElementById('saveState').textContent = '';
-      });
-    });
 
     // ============ Sidebar: ganti panel ============
     var currentPanel = 'dashboard';
