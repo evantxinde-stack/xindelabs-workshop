@@ -581,7 +581,6 @@
           list.innerHTML = c.faqs.map(function (f) {
             return '<div class="faq__item"><button class="faq__q">' + f.q + '</button><div class="faq__a"><div>' + f.a + '</div></div></div>';
           }).join('');
-          bindFaq();
         }
 
         if (Array.isArray(c.usecases) && c.usecases.length) {
