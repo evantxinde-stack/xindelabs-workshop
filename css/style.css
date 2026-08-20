@@ -609,12 +609,15 @@ h1, h2, h3, .display {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.08);
+  width: 100%;
+  max-width: 680px;
 }
 .promo-banner img {
   width: 100%;
   height: auto;
   display: block;
   object-fit: cover;
+  max-height: 320px;
 }
 .banner-upload { width: 100%; }
 .banner-preview {
@@ -740,7 +743,7 @@ h1, h2, h3, .display {
    FORMS (checkout / login / auth pages)
    ============================================================ */
 .page { padding-top: 68px; min-height: 100vh; display: flex; flex-direction: column; }
-.auth-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 60px 24px; }
+.auth-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; gap: 0; }
 .form-card {
   background: var(--bg-2);
   border: 1px solid var(--line);
@@ -820,7 +823,8 @@ h1, h2, h3, .display {
 .tutorial-toggle:hover { color: var(--text); }
 .tutorial-toggle::after { content: "+"; font-size: 18px; transition: transform .2s ease; }
 .tutorial.open .tutorial-toggle::after { transform: rotate(45deg); }
-.tutorial-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+.tutorial-body { display: none; }
+.tutorial.open .tutorial-body { display: block; }
 .tutorial-inner { padding: 0 18px 20px; }
 .tut-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tut-tab {
@@ -1390,12 +1394,27 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .trust-grid { flex-direction: column; gap: 8px; }
   .voucher-row { flex-direction: column; gap: 8px; }
   .footer__in { flex-direction: column; text-align: center; gap: 14px; }
-  .form-card { padding: 32px 22px; }
+  .form-card { padding: 28px 18px; max-width: 100%; box-sizing: border-box; }
+  .form-title { font-size: 22px; }
+  .form-sub { font-size: 14px; margin-bottom: 24px; }
+  .auth-wrap { padding: 32px 16px; align-items: stretch; justify-content: flex-start; }
+  .page { padding-top: 52px; }
   .vtier { grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 12px; }
-  .vtier__orig { grid-column: 1; text-align: left; }
-  .vtier__disc { grid-column: 2; }
+  .vtier--head { display: none; }
+  .vtier__code { font-size: 13px; }
+  .vtier__disc { font-size: 13px; }
+  .vtier__orig { grid-column: 1; text-align: left; font-size: 12px; }
+  .vtier__disc { grid-column: 2; text-align: right; }
   .vtier__slots { display: none; }
-  .voucher-tiers { padding: 18px; }
+  .voucher-tiers { padding: 16px; margin-top: 24px; }
+  .voucher-tiers__title { font-size: 15px; margin-bottom: 12px; }
+  .promo-banner { margin-top: 24px; }
+  .tier-opt label { padding: 14px 12px; }
+  .tier-price { font-size: 15px; }
+  .tier-period { font-size: 11.5px; }
+  .tutorial-toggle { font-size: 12px; padding: 14px 14px; }
+  .tutorial-inner { padding: 0 14px 16px; }
+  .btn--block { width: 100%; box-sizing: border-box; }
 }
 
 @media (min-width: 721px) and (max-width: 1000px) {

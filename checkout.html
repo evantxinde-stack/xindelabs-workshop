@@ -250,9 +250,7 @@
     // ---------- Discord tutorial ----------
     document.querySelector('.tutorial-toggle').addEventListener('click', function () {
       var t = document.getElementById('discordTutorial');
-      var open = t.classList.toggle('open');
-      var body = t.querySelector('.tutorial-body');
-      body.style.maxHeight = open ? body.scrollHeight + 'px' : null;
+      t.classList.toggle('open');
     });
     document.querySelectorAll('.tut-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
