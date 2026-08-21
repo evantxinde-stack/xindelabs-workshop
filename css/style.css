@@ -29,6 +29,7 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
+body { padding-bottom: 40px; }
 
 html { scroll-behavior: smooth; }
 
@@ -605,16 +606,16 @@ h1, h2, h3, .display {
    COUNTDOWN TIMER
    ============================================================ */
 .timer-sticky {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
   background: linear-gradient(90deg, #0a1a10 0%, #0d2218 50%, #0a1a10 100%);
-  border-bottom: 1px solid rgba(0,255,136,.2);
+  border-top: 1px solid rgba(0,255,136,.2);
   padding: 8px 16px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   font-family: var(--font-mono); font-size: 13px; color: var(--green);
   backdrop-filter: blur(10px);
-  animation: timerSlideDown .4s ease;
+  animation: timerSlideUp .4s ease;
 }
-@keyframes timerSlideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+@keyframes timerSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .timer-sticky__label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
 .timer-sticky__dot {
   width: 6px; height: 6px; border-radius: 50%; background: var(--green);
@@ -803,7 +804,7 @@ h1, h2, h3, .display {
 /* ============================================================
    FORMS (checkout / login / auth pages)
    ============================================================ */
-.page { padding-top: 102px; min-height: 100vh; display: flex; flex-direction: column; }
+.page { padding-top: 68px; min-height: 100vh; display: flex; flex-direction: column; }
 .auth-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; gap: 0; }
 .form-card {
   background: var(--bg-2);
@@ -1384,10 +1385,11 @@ html.js .reveal.d3 { transition-delay: .24s; }
     background: rgba(4, 11, 8, 0.97);
     border-bottom: 1px solid var(--line);
     padding: 16px 22px 24px; gap: 4px;
+    z-index: 105;
   }
   .nav__links.open { display: flex; }
   .nav__links .nav__link { padding: 12px 4px; font-size: 15px; border-bottom: 1px solid var(--line); }
-  .hamburger { display: inline-flex; }
+  .hamburger { display: inline-flex; position: relative; z-index: 110; }
   .nav__cta-desktop { display: none; }
 
   .hero { padding: 128px 0 72px; }
@@ -1459,7 +1461,7 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .form-title { font-size: 22px; }
   .form-sub { font-size: 14px; margin-bottom: 24px; }
   .auth-wrap { padding: 32px 16px; align-items: stretch; justify-content: flex-start; }
-  .page { padding-top: 86px; }
+  .page { padding-top: 62px; }
   .vtier { grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 12px; }
   .vtier--head { display: none; }
   .vtier__code { font-size: 13px; }
