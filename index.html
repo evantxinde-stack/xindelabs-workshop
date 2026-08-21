@@ -16,6 +16,23 @@
 </head>
 <body>
 
+  <!-- ============ COUNTDOWN TIMER (sticky) ============ -->
+  <div class="timer-sticky" id="timerSticky" style="display:none">
+    <span class="timer-sticky__dot"></span>
+    <span class="timer-sticky__label">Promo berakhir dalam</span>
+    <span class="timer__countdown">--:--:--</span>
+  </div>
+
+  <!-- ============ SALES NOTIFICATION ============ -->
+  <div class="sales-notif" id="salesNotif">
+    <div class="notif__icon">🛒</div>
+    <div class="notif__body">
+      <span class="notif__name">—</span>
+      <span class="notif__city">—</span>
+      <span class="notif__time">—</span>
+    </div>
+  </div>
+
   <!-- ============ NAV ============ -->
   <header class="nav" id="nav">
     <div class="nav__in">
@@ -300,6 +317,13 @@
             </ul>
             <a href="checkout.html?tier=lifetime" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>
           </div>
+        </div>
+
+        <!-- Inline countdown timer -->
+        <div class="timer-inline reveal" id="timerInline" style="display:none">
+          <span class="timer-inline__icon">⏰</span>
+          <span class="timer-inline__label">Promo berakhir dalam</span>
+          <span class="timer__countdown">--:--:--</span>
         </div>
 
         <!-- Voucher discount tiers -->
@@ -698,6 +722,14 @@
         }, done, fail);
       });
     })();
+
+    // ============ Adjust nav top for sticky timer ============
+    (function () {
+      var nav = document.getElementById('nav');
+      if (nav) nav.style.top = '34px';
+    })();
   </script>
+  <script src="js/countdown.js"></script>
+  <script src="js/notif.js"></script>
 </body>
 </html>

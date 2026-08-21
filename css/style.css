@@ -602,6 +602,67 @@ h1, h2, h3, .display {
 .pcard__list svg { color: var(--green); flex-shrink: 0; }
 
 /* ============================================================
+   COUNTDOWN TIMER
+   ============================================================ */
+.timer-sticky {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+  background: linear-gradient(90deg, #0a1a10 0%, #0d2218 50%, #0a1a10 100%);
+  border-bottom: 1px solid rgba(0,255,136,.2);
+  padding: 8px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 13px; color: var(--green);
+  backdrop-filter: blur(10px);
+  animation: timerSlideDown .4s ease;
+}
+@keyframes timerSlideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+.timer-sticky__label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+.timer-sticky__dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green);
+  animation: timerPulse 1.5s ease infinite; flex-shrink: 0;
+}
+@keyframes timerPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.timer__countdown { font-weight: 700; font-size: 15px; letter-spacing: .06em; }
+
+.timer-inline {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px 20px; margin: 28px auto 0; max-width: 420px;
+  border: 1px solid rgba(0,255,136,.15); border-radius: 12px;
+  background: rgba(0,255,136,.04);
+  font-family: var(--font-mono); font-size: 13px; color: var(--text);
+}
+.timer-inline__icon { font-size: 18px; flex-shrink: 0; }
+.timer-inline__label { color: var(--muted); font-size: 12px; }
+.timer-inline .timer__countdown { color: var(--green); font-weight: 700; font-size: 16px; }
+
+/* ============================================================
+   SALES NOTIFICATION POPUP
+   ============================================================ */
+.sales-notif {
+  position: fixed; bottom: 24px; left: 24px; z-index: 998;
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-radius: 12px;
+  background: rgba(10, 26, 16, 0.95);
+  border: 1px solid rgba(0,255,136,.15);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
+  font-family: var(--font-mono); font-size: 13px;
+  transform: translateX(-120%);
+  transition: transform .4s cubic-bezier(.22,1,.36,1);
+  max-width: 320px;
+}
+.sales-notif.show { transform: translateX(0); }
+.notif__icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(0,255,136,.12); color: var(--green);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
+}
+.notif__body { display: flex; flex-direction: column; gap: 2px; }
+.notif__name { color: var(--text); font-weight: 600; }
+.notif__city { color: var(--muted); font-size: 12px; }
+.notif__time { color: rgba(0,255,136,.5); font-size: 11px; }
+
+/* ============================================================
    PROMO BANNER
    ============================================================ */
 .promo-banner {
@@ -742,7 +803,7 @@ h1, h2, h3, .display {
 /* ============================================================
    FORMS (checkout / login / auth pages)
    ============================================================ */
-.page { padding-top: 68px; min-height: 100vh; display: flex; flex-direction: column; }
+.page { padding-top: 102px; min-height: 100vh; display: flex; flex-direction: column; }
 .auth-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 24px; gap: 0; }
 .form-card {
   background: var(--bg-2);
@@ -1398,7 +1459,7 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .form-title { font-size: 22px; }
   .form-sub { font-size: 14px; margin-bottom: 24px; }
   .auth-wrap { padding: 32px 16px; align-items: stretch; justify-content: flex-start; }
-  .page { padding-top: 52px; }
+  .page { padding-top: 86px; }
   .vtier { grid-template-columns: 1fr 1fr; gap: 4px; padding: 10px 12px; }
   .vtier--head { display: none; }
   .vtier__code { font-size: 13px; }
@@ -1415,6 +1476,12 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .tutorial-toggle { font-size: 12px; padding: 14px 14px; }
   .tutorial-inner { padding: 0 14px 16px; }
   .btn--block { width: 100%; box-sizing: border-box; }
+  .timer-sticky { font-size: 11px; padding: 6px 12px; gap: 6px; }
+  .timer-sticky__label { display: none; }
+  .timer-sticky .timer__countdown { font-size: 13px; }
+  .timer-inline { padding: 12px 16px; margin: 20px 0 0; font-size: 12px; }
+  .timer-inline .timer__countdown { font-size: 14px; }
+  .sales-notif { left: 12px; right: 12px; bottom: 16px; max-width: 100%; }
 }
 
 @media (min-width: 721px) and (max-width: 1000px) {
