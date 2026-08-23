@@ -29,7 +29,8 @@
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { padding-bottom: 40px; }
+body { padding-bottom: 40px; -webkit-tap-highlight-color: transparent; }
+a, button, label, .faq__q, .tier-opt label, .tutorial-toggle, .tut-tab { touch-action: manipulation; }
 
 html { scroll-behavior: smooth; }
 
@@ -126,7 +127,9 @@ h1, h2, h3, .display {
   transition: all .2s ease;
   white-space: nowrap;
   position: relative;
+  -webkit-tap-highlight-color: rgba(0,255,136,0.15);
 }
+.btn:active { transform: scale(0.97); }
 .btn--primary {
   background: var(--green);
   color: #02150b;
@@ -195,6 +198,7 @@ h1, h2, h3, .display {
   align-items: center;
   gap: 7px;
   transition: color .18s ease;
+  -webkit-tap-highlight-color: rgba(0,255,136,0.15);
 }
 .nav__link:hover { color: var(--text); }
 .nav__link .pdot { display: inline-flex; align-items: center; }
@@ -217,7 +221,9 @@ h1, h2, h3, .display {
   cursor: pointer;
   align-items: center;
   justify-content: center;
+  -webkit-tap-highlight-color: rgba(0,255,136,0.15);
 }
+.hamburger:active { background: rgba(0,255,136,0.1); }
 
 /* ============================================================
    HERO
@@ -606,7 +612,7 @@ h1, h2, h3, .display {
    COUNTDOWN TIMER
    ============================================================ */
 .timer-sticky {
-  position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
   background: linear-gradient(90deg, #0a1a10 0%, #0d2218 50%, #0a1a10 100%);
   border-top: 1px solid rgba(0,255,136,.2);
   padding: 8px 16px;
@@ -614,7 +620,6 @@ h1, h2, h3, .display {
   font-family: var(--font-mono); font-size: 13px; color: var(--green);
   backdrop-filter: blur(10px);
   animation: timerSlideUp .4s ease;
-  pointer-events: none;
 }
 @keyframes timerSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .timer-sticky__label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
@@ -640,7 +645,7 @@ h1, h2, h3, .display {
    SALES NOTIFICATION POPUP
    ============================================================ */
 .sales-notif {
-  position: fixed; bottom: 24px; left: 24px; z-index: 60;
+  position: fixed; bottom: 24px; left: 24px; z-index: 998;
   display: flex; align-items: center; gap: 12px;
   padding: 14px 18px; border-radius: 12px;
   background: rgba(10, 26, 16, 0.95);
@@ -651,8 +656,9 @@ h1, h2, h3, .display {
   transform: translateX(-120%);
   transition: transform .4s cubic-bezier(.22,1,.36,1);
   max-width: 320px;
+  pointer-events: none;
 }
-.sales-notif.show { transform: translateX(0); }
+.sales-notif.show { transform: translateX(0); pointer-events: auto; }
 .notif__icon {
   width: 36px; height: 36px; border-radius: 50%;
   background: rgba(0,255,136,.12); color: var(--green);
@@ -1389,7 +1395,7 @@ html.js .reveal.d3 { transition-delay: .24s; }
     z-index: 105;
   }
   .nav__links.open { display: flex; }
-  .nav__links .nav__link { padding: 12px 4px; font-size: 15px; border-bottom: 1px solid var(--line); }
+  .nav__links .nav__link { padding: 14px 8px; font-size: 15px; border-bottom: 1px solid var(--line); min-height: 48px; display: flex; align-items: center; }
   .hamburger { display: inline-flex; position: relative; z-index: 110; }
   .nav__cta-desktop { display: none; }
 
@@ -1484,7 +1490,7 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .timer-sticky .timer__countdown { font-size: 13px; }
   .timer-inline { padding: 12px 16px; margin: 20px 0 0; font-size: 12px; }
   .timer-inline .timer__countdown { font-size: 14px; }
-  .sales-notif { left: 12px; right: 12px; bottom: 16px; max-width: 100%; z-index: 60; }
+  .sales-notif { left: 12px; right: 12px; bottom: 16px; max-width: 100%; }
 }
 
 @media (min-width: 721px) and (max-width: 1000px) {
