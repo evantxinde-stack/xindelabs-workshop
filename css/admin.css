@@ -284,6 +284,8 @@ body.admin #saveMsg, body.admin #saveErr { max-width: 760px; }
 }
 .a-table td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .a-table tr:hover td { background: rgba(0, 255, 136, 0.02); }
+.a-actions { white-space: nowrap; }
+.a-actions .btn { margin-right: 6px; margin-bottom: 4px; }
 .l-name { font-weight: 600; color: var(--text); }
 .l-meta { font-size: 12px; color: var(--muted-dim); }
 a.l-wa { color: var(--green); text-decoration: none; }

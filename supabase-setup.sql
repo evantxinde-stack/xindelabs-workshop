@@ -25,7 +25,7 @@ create table if not exists public.admins (
 -- 3. Tabel CMS (konten landing page — key-value)
 create table if not exists public.site_content (
   id uuid primary key default gen_random_uuid(),
-  key text not null unique,        -- 'homepage', 'pricing', dll
+  key text not null unique,        -- 'homepage' (landing utama) atau 'lp_<slug>' (landing custom)
   value jsonb not null default '{}'::jsonb,
   updated_at timestamptz default now(),
   updated_by text

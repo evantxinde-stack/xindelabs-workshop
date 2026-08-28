@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Landing — Xinde Labs</title>
+  <meta name="description" id="pageDesc" content="" />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#040b08" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body>
+
+  <!-- ============ COUNTDOWN TIMER (sticky) ============ -->
+  <div class="timer-sticky" id="timerSticky" style="display:none">
+    <span class="timer-sticky__dot"></span>
+    <span class="timer-sticky__label">Promo berakhir dalam</span>
+    <span class="timer__countdown">--:--:--</span>
+  </div>
+
+  <!-- ============ SALES NOTIFICATION ============ -->
+  <div class="sales-notif" id="salesNotif">
+    <div class="notif__icon">🛒</div>
+    <div class="notif__body">
+      <span class="notif__name">—</span>
+      <span class="notif__city">—</span>
+      <span class="notif__time">—</span>
+    </div>
+  </div>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav">
+    <div class="nav__in">
+      <a href="index.html" class="wordmark" id="navBrand">xindelabs<span>.</span></a>
+      <div class="nav__right">
+        <a href="checkout.html" class="btn btn--primary btn--sm" id="navCta">Daftar Course</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="lpRoot"></main>
+
+  <footer class="footer">
+    <div class="footer__in">
+      <span class="footer__copy">© <span id="year">2026</span> Xinde Labs</span>
+      <div class="footer__links" id="footerLinks">
+        <a href="login.html">Login</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/landing-pages.js"></script>
+  <script>
+    window.__LP_MODE = true;
+    var cfg = window.XINDE;
+    var defaults = cfg.DEFAULT_CONTENT;
+
+    // ============ Render helpers ============
+    function escHtml(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function buildPage(c) {
+      var accent = (c.meta && c.meta.accent) || '#00ff88';
+      var root = document.getElementById('lpRoot');
+      var checkoutHref = 'checkout.html?slug=' + encodeURIComponent((c.meta && c.meta.slug) || 'utama');
+
+      // Page title
+      if (c.meta && c.meta.page_title) {
+        document.title = c.meta.page_title;
+        var d = document.getElementById('pageDesc');
+        if (d) d.setAttribute('content', c.hero_subtitle || c.hero_title || '');
+      }
+      if (accent) {
+        var st = document.createElement('style');
+        st.textContent = ':root{--green:' + accent + '}.hl{color:' + accent + '}';
+        document.head.appendChild(st);
+      }
+
+      var faqs = (c.faqs || defaults.faqs || []).map(function (f) {
+        return '<div class="faq__item"><button class="faq__q">' + escHtml(f.q) + '</button><div class="faq__a"><div>' + escHtml(f.a) + '</div></div></div>';
+      }).join('');
+
+      var testimonials = (c.testimonials || defaults.testimonials || []).map(function (t) {
+        return '<article class="tcard"><div class="tbubble">' + escHtml(t.quote) + '</div><div class="tcard__by">member · ' + escHtml(t.name) + '</div></article>';
+      }).join('');
+
+      var fmt = new Intl.NumberFormat('id-ID');
+      var py = Number(c.price_yearly) || cfg.PRICES.yearly.harga;
+      var pl = Number(c.price_lifetime) || cfg.PRICES.lifetime.harga;
+
+      root.innerHTML =
+        // HERO
+        '<section class="hero">' +
+          '<div class="hero__glow" aria-hidden="true"></div>' +
+          '<div class="hero__gridline" aria-hidden="true"></div>' +
+          '<div class="wrap hero__in">' +
+            '<p class="eyebrow"><span class="dot dot--pulse"></span>' + escHtml((c.meta && c.meta.eyebrow) || 'untuk sales person · tanpa coding') + '</p>' +
+            '<h1>' + (c.hero_title || defaults.hero_title) + '</h1>' +
+            '<p class="hero__sub">' + (c.hero_subtitle || defaults.hero_subtitle) + '</p>' +
+            '<div class="hero__cta">' +
+              '<a href="' + checkoutHref + '" class="btn btn--primary">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+            '</div>' +
+            '<p class="hero__anchor">mulai <b>Rp ' + fmt.format(py) + '/tahun</b> · akses 24/7 dari HP</p>' +
+          '</div>' +
+        '</section>' +
+
+        // INLINE TIMER
+        '<div class="wrap">' +
+          '<div class="timer-inline" id="timerInline" style="display:none">' +
+            '<span class="timer-inline__icon">⏰</span>' +
+            '<span class="timer-inline__label">Promo berakhir dalam</span>' +
+            '<span class="timer__countdown">--:--:--</span>' +
+          '</div>' +
+        '</div>' +
+
+        // TESTIMONIALS
+        '<section class="section"><div class="wrap">' +
+          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>apa kata mereka</p>' +
+          '<h2 class="h2 reveal" style="text-align:center">Udah mulai, hasilnya keliatan.</h2>' +
+          '<div class="tgrid reveal">' + testimonials + '</div>' +
+        '</div></section>' +
+
+        // PRICING
+        '<section class="section pricing"><div class="wrap">' +
+          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>pricing</p>' +
+          '<h2 class="h2 reveal" style="text-align:center">Pilih cara lo mulai.</h2>' +
+          '<div class="pricing__grid reveal">' +
+            '<div class="pcard">' +
+              '<div class="pcard__tier">Tahunan</div>' +
+              '<div class="pcard__title">Akses 1 tahun</div>' +
+              '<div class="pcard__price">Rp ' + fmt.format(py) + '<small>/tahun</small></div>' +
+              '<div class="pcard__anchor">≈ Rp 1.600/hari — lebih murah dari segelas kopi</div>' +
+              '<a href="' + checkoutHref + '" class="btn btn--ghost btn--block">Pilih Tahunan</a>' +
+            '</div>' +
+            '<div class="pcard pcard--best">' +
+              '<span class="pcard__badge">TERBAIK · SELAMANYA</span>' +
+              '<div class="pcard__tier">Lifetime · sekali bayar</div>' +
+              '<div class="pcard__title">Akses selamanya</div>' +
+              '<div class="pcard__price">Rp ' + fmt.format(pl) + '<small>sekali</small></div>' +
+              '<div class="pcard__anchor">Ga perlu mikir renew — update use-case terus masuk</div>' +
+              '<a href="' + checkoutHref + '" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+            '</div>' +
+          '</div>' +
+        '</div></section>' +
+
+        // FAQ
+        '<section class="section" id="faq"><div class="wrap">' +
+          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>paling sering ditanya</p>' +
+          '<h2 class="h2 reveal" style="text-align:center">Masih ragu? Ini jawabannya.</h2>' +
+          '<div class="faq reveal" id="faqList">' + faqs + '</div>' +
+        '</div></section>' +
+
+        // CLOSING
+        '<section class="closing">' +
+          '<div class="closing__glow" aria-hidden="true"></div>' +
+          '<div class="wrap reveal">' +
+            '<h2>Berhenti kerjain semuanya sendiri.<br /><span class="hl">Hermes Agent lo yang follow-up, riset, dan closing.</span></h2>' +
+            '<a href="' + checkoutHref + '" class="btn btn--primary btn--block" style="max-width:360px">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+          '</div>' +
+        '</section>';
+
+      // Reveal observer
+      var rev = root.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window && rev.length) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+        }, { threshold: 0.1 });
+        rev.forEach(function (el) { io.observe(el); });
+      }
+
+      // FAQ accordion
+      var list = document.getElementById('faqList');
+      if (list) {
+        list.addEventListener('click', function (e) {
+          var btn = e.target.closest('.faq__q');
+          if (!btn) return;
+          var item = btn.closest('.faq__item');
+          if (item) item.classList.toggle('open');
+        });
+      }
+    }
+
+    // ============ Load landing by slug ============
+    function slugFromLocation() {
+      var q = new URLSearchParams(location.search).get('slug');
+      if (q) return q;
+      var h = String(location.hostname).split('.')[0];
+      if (h && h !== 'www' && h !== 'xindelabs-workshop' && h !== 'localhost') return h;
+      return 'utama';
+    }
+
+    function loadLanding() {
+      var slug = slugFromLocation();
+      LandingPages.get(slug).then(function (c) {
+        if (c) { buildPage(Object.assign({}, defaults, c)); return; }
+        buildPage(defaults);
+      }).catch(function (e) {
+        console.error('[page] load error', e);
+        buildPage(defaults);
+      });
+    }
+
+    loadLanding();
+  </script>
+  <script src="js/countdown.js"></script>
+  <script src="js/notif.js"></script>
+</body>
+</html>
