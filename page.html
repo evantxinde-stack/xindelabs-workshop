@@ -71,13 +71,14 @@
     function buildPage(c) {
       var accent = (c.meta && c.meta.accent) || '#00ff88';
       var root = document.getElementById('lpRoot');
-      var checkoutHref = 'checkout.html?slug=' + encodeURIComponent((c.meta && c.meta.slug) || 'utama');
+      var slug = (c.meta && c.meta.slug) || 'utama';
+      var checkoutHref = 'checkout.html?slug=' + encodeURIComponent(slug);
 
       // Page title
       if (c.meta && c.meta.page_title) {
         document.title = c.meta.page_title;
         var d = document.getElementById('pageDesc');
-        if (d) d.setAttribute('content', c.hero_subtitle || c.hero_title || '');
+        if (d) d.setAttribute('content', '');
       }
       if (accent) {
         var st = document.createElement('style');
@@ -85,88 +86,17 @@
         document.head.appendChild(st);
       }
 
-      var faqs = (c.faqs || defaults.faqs || []).map(function (f) {
-        return '<div class="faq__item"><button class="faq__q">' + escHtml(f.q) + '</button><div class="faq__a"><div>' + escHtml(f.a) + '</div></div></div>';
-      }).join('');
-
-      var testimonials = (c.testimonials || defaults.testimonials || []).map(function (t) {
-        return '<article class="tcard"><div class="tbubble">' + escHtml(t.quote) + '</div><div class="tcard__by">member · ' + escHtml(t.name) + '</div></article>';
-      }).join('');
-
       var fmt = new Intl.NumberFormat('id-ID');
-      var py = Number(c.price_yearly) || cfg.PRICES.yearly.harga;
-      var pl = Number(c.price_lifetime) || cfg.PRICES.lifetime.harga;
+      var ctx = { accent: accent, slug: slug, checkoutHref: checkoutHref, fmt: fmt, defaults: defaults };
 
-      root.innerHTML =
-        // HERO
-        '<section class="hero">' +
-          '<div class="hero__glow" aria-hidden="true"></div>' +
-          '<div class="hero__gridline" aria-hidden="true"></div>' +
-          '<div class="wrap hero__in">' +
-            '<p class="eyebrow"><span class="dot dot--pulse"></span>' + escHtml((c.meta && c.meta.eyebrow) || 'untuk sales person · tanpa coding') + '</p>' +
-            '<h1>' + (c.hero_title || defaults.hero_title) + '</h1>' +
-            '<p class="hero__sub">' + (c.hero_subtitle || defaults.hero_subtitle) + '</p>' +
-            '<div class="hero__cta">' +
-              '<a href="' + checkoutHref + '" class="btn btn--primary">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
-            '</div>' +
-            '<p class="hero__anchor">mulai <b>Rp ' + fmt.format(py) + '/tahun</b> · akses 24/7 dari HP</p>' +
-          '</div>' +
-        '</section>' +
-
-        // INLINE TIMER
-        '<div class="wrap">' +
-          '<div class="timer-inline" id="timerInline" style="display:none">' +
-            '<span class="timer-inline__icon">⏰</span>' +
-            '<span class="timer-inline__label">Promo berakhir dalam</span>' +
-            '<span class="timer__countdown">--:--:--</span>' +
-          '</div>' +
-        '</div>' +
-
-        // TESTIMONIALS
-        '<section class="section"><div class="wrap">' +
-          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>apa kata mereka</p>' +
-          '<h2 class="h2 reveal" style="text-align:center">Udah mulai, hasilnya keliatan.</h2>' +
-          '<div class="tgrid reveal">' + testimonials + '</div>' +
-        '</div></section>' +
-
-        // PRICING
-        '<section class="section pricing"><div class="wrap">' +
-          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>pricing</p>' +
-          '<h2 class="h2 reveal" style="text-align:center">Pilih cara lo mulai.</h2>' +
-          '<div class="pricing__grid reveal">' +
-            '<div class="pcard">' +
-              '<div class="pcard__tier">Tahunan</div>' +
-              '<div class="pcard__title">Akses 1 tahun</div>' +
-              '<div class="pcard__price">Rp ' + fmt.format(py) + '<small>/tahun</small></div>' +
-              '<div class="pcard__anchor">≈ Rp 1.600/hari — lebih murah dari segelas kopi</div>' +
-              '<a href="' + checkoutHref + '" class="btn btn--ghost btn--block">Pilih Tahunan</a>' +
-            '</div>' +
-            '<div class="pcard pcard--best">' +
-              '<span class="pcard__badge">TERBAIK · SELAMANYA</span>' +
-              '<div class="pcard__tier">Lifetime · sekali bayar</div>' +
-              '<div class="pcard__title">Akses selamanya</div>' +
-              '<div class="pcard__price">Rp ' + fmt.format(pl) + '<small>sekali</small></div>' +
-              '<div class="pcard__anchor">Ga perlu mikir renew — update use-case terus masuk</div>' +
-              '<a href="' + checkoutHref + '" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
-            '</div>' +
-          '</div>' +
-        '</div></section>' +
-
-        // FAQ
-        '<section class="section" id="faq"><div class="wrap">' +
-          '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>paling sering ditanya</p>' +
-          '<h2 class="h2 reveal" style="text-align:center">Masih ragu? Ini jawabannya.</h2>' +
-          '<div class="faq reveal" id="faqList">' + faqs + '</div>' +
-        '</div></section>' +
-
-        // CLOSING
-        '<section class="closing">' +
-          '<div class="closing__glow" aria-hidden="true"></div>' +
-          '<div class="wrap reveal">' +
-            '<h2>Berhenti kerjain semuanya sendiri.<br /><span class="hl">Hermes Agent lo yang follow-up, riset, dan closing.</span></h2>' +
-            '<a href="' + checkoutHref + '" class="btn btn--primary btn--block" style="max-width:360px">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
-          '</div>' +
-        '</section>';
+      // Jika konten berbasis sections → render per-section; kalau tidak, fallback konten lama
+      if (Array.isArray(c.sections) && c.sections.length) {
+        root.innerHTML = c.sections.map(function (s, i) {
+          return renderSection(s, ctx) + (s.type === 'hero' && i === 0 ? inlineTimerHtml() : '');
+        }).join('');
+      } else {
+        root.innerHTML = buildLegacy(c, ctx);
+      }
 
       // Reveal observer
       var rev = root.querySelectorAll('.reveal');
@@ -177,16 +107,166 @@
         rev.forEach(function (el) { io.observe(el); });
       }
 
-      // FAQ accordion
-      var list = document.getElementById('faqList');
-      if (list) {
-        list.addEventListener('click', function (e) {
-          var btn = e.target.closest('.faq__q');
-          if (!btn) return;
-          var item = btn.closest('.faq__item');
-          if (item) item.classList.toggle('open');
+      // FAQ accordion (event delegation di root)
+      root.addEventListener('click', function (e) {
+        var btn = e.target.closest('.faq__q');
+        if (!btn) return;
+        var item = btn.closest('.faq__item');
+        if (item) item.classList.toggle('open');
+      });
+    }
+
+    // Parse list item string "angka|label\n..." → array {n,l}
+    function parseStats(input) {
+      if (Array.isArray(input)) {
+        return input.map(function (s2) {
+          if (typeof s2 === 'string') return trimStat(s2);
+          return { n: s2 && s2.n, l: s2 && s2.l };
         });
       }
+      return String(input || '').split(/\r?\n/).map(trimStat).filter(function (s) { return s.n; });
+    }
+    function trimStat(line) {
+      var parts = String(line || '').split('|');
+      return { n: (parts[0] || '').trim(), l: (parts[1] || '').trim() };
+    }
+
+    // ---------- Render section by type ----------
+    function renderSection(s, ctx) {
+      if (!s || !s.type) return '';
+      var d = s.data || {};
+      var h = escHtml;
+      var rev = ' reveal';
+      switch (s.type) {
+        case 'hero': return renderHero(d, ctx);
+        case 'text': return sectionOpenWrap() +
+            '<p class="eyebrow eyebrow--center' + rev + '"><span class="dot"></span>' + h(d.eyebrow || '') + '</p>' +
+            '<h2 class="h2' + rev + '" style="text-align:center;max-width:760px;margin-left:auto;margin-right:auto">' + (d.heading || '') + '</h2>' +
+            (d.body ? '<div class="sec-text' + rev + '" style="text-align:center;max-width:640px;margin:0 auto">' + d.body + '</div>' : '') +
+            sectionCloseWrap();
+        case 'image': return sectionOpenWrap() +
+            '<div class="sec-media' + rev + '">' +
+              (d.src ? '<img src="' + h(d.src) + '" alt="' + h(d.alt || '') + '" loading="lazy" />' : '') +
+              (d.caption ? '<p class="sec-media__cap">' + h(d.caption) + '</p>' : '') +
+            '</div>' + sectionCloseWrap();
+        case 'youtube': return sectionOpenWrap() +
+            '<div class="sec-media sec-media--video' + rev + '">' +
+              '<div class="video__frame"><iframe src="https://www.youtube.com/embed/' + h(d.video_id || '') + '" title="' + h(d.title || 'YouTube video') + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>' +
+              (d.title ? '<p class="sec-media__cap">' + h(d.title) + '</p>' : '') +
+            '</div>' + sectionCloseWrap();
+        case 'cta': return '<section class="closing"><div class="closing__glow" aria-hidden="true"></div><div class="wrap reveal">' +
+            '<h2>' + (d.title || '') + '</h2>' +
+            (d.subtitle ? '<p class="sec-cta__sub">' + h(d.subtitle) + '</p>' : '') +
+            '<a href="' + (d.btn_link && d.btn_link !== '#checkout' ? h(d.btn_link) : ctx.checkoutHref) + '" class="btn btn--primary btn--block" style="max-width:360px">' + h(d.btn_text || 'Daftar Course') + ' <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+          '</div></section>';
+        case 'pricing': return renderPricing(d, ctx);
+        case 'testimonial': return sectionOpenWrap() +
+            '<p class="eyebrow eyebrow--center' + rev + '"><span class="dot"></span>' + h(d.eyebrow || 'testimonial') + '</p>' +
+            '<h2 class="h2' + rev + '" style="text-align:center">' + (d.heading || '') + '</h2>' +
+            '<div class="tgrid' + rev + '"><article class="tcard"><div class="tbubble">' + h(d.quote || '') + '</div><div class="tcard__by">member · ' + h(d.name || '') + '</div></article></div>' +
+            sectionCloseWrap();
+        case 'faq': return sectionOpenWrap() +
+            '<p class="eyebrow eyebrow--center' + rev + '"><span class="dot"></span>' + h(d.eyebrow || 'faq') + '</p>' +
+            '<h2 class="h2' + rev + '" style="text-align:center">' + (d.heading || '') + '</h2>' +
+            '<div class="faq' + rev + '">' +
+              (d.q != null ? '<div class="faq__item"><button class="faq__q">' + h(d.q) + '</button><div class="faq__a"><div>' + h(d.a || '') + '</div></div></div>' :
+               Array.isArray(d.items) ? d.items.map(function (f) {
+                return '<div class="faq__item"><button class="faq__q">' + h(f.q || '') + '</button><div class="faq__a"><div>' + h(f.a || '') + '</div></div></div>';
+              }).join('') : '') +
+            '</div>' + sectionCloseWrap();
+        case 'stats': return sectionOpenWrap() +
+            (d.heading ? '<h2 class="h2' + rev + '" style="text-align:center">' + h(d.heading) + '</h2>' : '') +
+            '<div class="stats__grid' + rev + '">' +
+              parseStats(d.items).map(function (s2) {
+                return '<div class="stat"><div class="stat__num">' + h(s2.n) + '</div>' + (s2.l ? '<div class="stat__lbl">' + h(s2.l) + '</div>' : '') + '</div>';
+              }).join('') +
+            '</div>' + sectionCloseWrap();
+        case 'divider': return '<div class="sec-divider"><hr /></div>';
+        case 'embed': return '<div class="sec-embed"><div class="wrap">' + (d.html || '') + '</div></div>';
+        default: return '';
+      }
+    }
+
+    function sectionOpenWrap() {
+      return '<section class="section"><div class="wrap">';
+    }
+    function sectionCloseWrap() {
+      return '</div></section>';
+    }
+    function inlineTimerHtml() {
+      return '<div class="wrap"><div class="timer-inline" id="timerInline" style="display:none">' +
+        '<span class="timer-inline__icon">⏰</span><span class="timer-inline__label">Promo berakhir dalam</span><span class="timer__countdown">--:--:--</span></div></div>';
+    }
+
+    function renderHero(d, ctx) {
+      var h = escHtml, fmt = ctx.fmt;
+      var py = Number(d.yearly_price) || cfg.PRICES.yearly.harga;
+      return '<section class="hero">' +
+        '<div class="hero__glow" aria-hidden="true"></div>' +
+        '<div class="hero__gridline" aria-hidden="true"></div>' +
+        '<div class="wrap hero__in">' +
+          '<p class="eyebrow"><span class="dot dot--pulse"></span>' + h(d.eyebrow || 'untuk sales person · tanpa coding') + '</p>' +
+          '<h1>' + (d.title || '') + '</h1>' +
+          (d.subtitle ? '<p class="hero__sub">' + h(d.subtitle) + '</p>' : '') +
+          '<div class="hero__cta">' +
+            '<a href="' + (d.cta_link && d.cta_link !== '#checkout' ? h(d.cta_link) : ctx.checkoutHref) + '" class="btn btn--primary">' + h(d.cta_text || 'Daftar Course') + ' <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+          '</div>' +
+          '<p class="hero__anchor">mulai <b>Rp ' + fmt.format(py) + '/tahun</b> · akses 24/7 dari HP</p>' +
+        '</div></section>';
+    }
+
+    function renderPricing(d, ctx) {
+      var h = escHtml, fmt = ctx.fmt;
+      var py = Number(d.yearly_price) || cfg.PRICES.yearly.harga;
+      var pl = Number(d.lifetime_price) || cfg.PRICES.lifetime.harga;
+      var rev = ' reveal';
+      var yearlyLabel = d.yearly_label || 'Akses 1 tahun';
+      var lifetimeLabel = d.lifetime_label || 'Akses selamanya';
+      return '<section class="section pricing"><div class="wrap">' +
+        '<p class="eyebrow eyebrow--center' + rev + '"><span class="dot"></span>pricing</p>' +
+        '<h2 class="h2' + rev + '" style="text-align:center">Pilih cara lo mulai.</h2>' +
+        '<div class="pricing__grid' + rev + '">' +
+          '<div class="pcard"><div class="pcard__tier">' + h(d.yearly_tier || 'Tahunan') + '</div>' +
+            '<div class="pcard__title">' + h(yearlyLabel) + '</div>' +
+            '<div class="pcard__price">Rp ' + fmt.format(py) + '<small>/tahun</small></div>' +
+            '<div class="pcard__anchor">' + h(d.yearly_anchor || '≈ Rp 1.600/hari — lebih murah dari segelas kopi') + '</div>' +
+            '<a href="' + h(d.yearly_link || ctx.checkoutHref) + '" class="btn btn--ghost btn--block">Pilih Tahunan</a>' +
+          '</div>' +
+          '<div class="pcard pcard--best"><span class="pcard__badge">TERBAIK · SELAMANYA</span>' +
+            '<div class="pcard__tier">' + h(d.lifetime_tier || 'Lifetime · sekali bayar') + '</div>' +
+            '<div class="pcard__title">' + h(lifetimeLabel) + '</div>' +
+            '<div class="pcard__price">Rp ' + fmt.format(pl) + '<small>sekali</small></div>' +
+            '<div class="pcard__anchor">' + h(d.lifetime_anchor || 'Ga perlu mikir renew — update use-case terus masuk') + '</div>' +
+            '<a href="' + h(d.lifetime_link || ctx.checkoutHref) + '" class="btn btn--primary btn--block">Pilih Lifetime <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+          '</div>' +
+        '</div></div></section>';
+    }
+
+    // ---------- Legacy fallback (konten lama tanpa sections) ----------
+    function buildLegacy(c, ctx) {
+      var h = escHtml, fmt = ctx.fmt;
+      var open = sectionOpenWrap();
+      var close = sectionCloseWrap();
+      var html = renderHero({ eyebrow: (c.meta && c.meta.eyebrow) || '', title: c.hero_title, subtitle: c.hero_subtitle }, ctx);
+      html += inlineTimerHtml();
+      html += open +
+        '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>apa kata mereka</p>' +
+        '<h2 class="h2 reveal" style="text-align:center">Udah mulai, hasilnya keliatan.</h2>' +
+        '<div class="tgrid reveal">' + (c.testimonials || defaults.testimonials || []).map(function (t) {
+          return '<article class="tcard"><div class="tbubble">' + h(t.quote) + '</div><div class="tcard__by">member · ' + h(t.name) + '</div></article>';
+        }).join('') + '</div>' + close;
+      html += renderPricing({ yearly_price: c.price_yearly, lifetime_price: c.price_lifetime }, ctx);
+      html += open +
+        '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>paling sering ditanya</p>' +
+        '<h2 class="h2 reveal" style="text-align:center">Masih ragu? Ini jawabannya.</h2>' +
+        '<div class="faq reveal">' + (c.faqs || defaults.faqs || []).map(function (f) {
+          return '<div class="faq__item"><button class="faq__q">' + h(f.q) + '</button><div class="faq__a"><div>' + h(f.a) + '</div></div></div>';
+        }).join('') + '</div>' + close;
+      html += '<section class="closing"><div class="closing__glow" aria-hidden="true"></div><div class="wrap reveal">' +
+        '<h2>Berhenti kerjain semuanya sendiri.<br /><span class="hl">Hermes Agent lo yang follow-up, riset, dan closing.</span></h2>' +
+        '<a href="' + ctx.checkoutHref + '" class="btn btn--primary btn--block" style="max-width:360px">Daftar Course <span class="arw" aria-hidden="true"><span class="arw__glyph">→</span></span></a>' +
+        '</div></section>';
+      return html;
     }
 
     // ============ Load landing by slug ============

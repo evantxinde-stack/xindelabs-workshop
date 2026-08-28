@@ -501,7 +501,7 @@
               <p class="hint" style="margin-top:10px">Subdomain: saat publish ke Vercel, map subdomain ke halaman ini (misal <code>promo1.example.com</code> → <code>page.html</code>). Akses juga bisa lewat <code>?slug=…</code>.</p>
             </div>
 
-            <!-- ============ Editor landing page ============ -->
+            <!-- ============ Editor landing page (section builder) ============ -->
             <div id="lpEditorWrap" style="display:none; margin-top:28px">
               <div class="a-card">
                 <div class="a-card__head">
@@ -509,7 +509,7 @@
                   <button type="button" class="btn btn--ghost btn--sm" id="lpEditorBack">← Kembali</button>
                 </div>
 
-                <form id="lpForm">
+                <div id="lpMetaBlock">
                   <div class="admin-block">
                     <div class="admin-block__head"><label>Identitas Landing</label></div>
                     <div class="admin-grid2">
@@ -529,67 +529,37 @@
                         <input type="text" id="lp_page_title" placeholder="cth: Bangun Agent Sales Property" />
                       </div>
                       <div class="field">
-                        <label for="lp_eyebrow">Eyebrow Hero</label>
-                        <input type="text" id="lp_eyebrow" placeholder="cth: khusus agen property" />
-                      </div>
-                    </div>
-                    <div class="admin-grid2" style="margin-top:0">
-                      <div class="field">
                         <label for="lp_accent">Warna Aksen (hex)</label>
                         <input type="text" id="lp_accent" placeholder="#00ff88" />
                         <div class="hint">Warna tombol &amp; teks hijau. Default #00ff88.</div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  <div class="admin-block">
-                    <div class="admin-block__head"><label>Hero</label></div>
-                    <div class="field">
-                      <label for="lp_hero_title">Hero Title</label>
-                      <textarea id="lp_hero_title" rows="2"></textarea>
-                      <div class="hint">Boleh HTML — pakai &lt;span class='hl'&gt;…&lt;/span&gt; buat frasa aksen.</div>
-                    </div>
-                    <div class="field">
-                      <label for="lp_hero_subtitle">Hero Subtitle</label>
-                      <textarea id="lp_hero_subtitle" rows="3"></textarea>
-                    </div>
+                <!-- ===== Section palette (buat nambah section) ===== -->
+                <div class="admin-block">
+                  <div class="admin-block__head"><label>Tambahkan Bagian (Section)</label></div>
+                  <div class="lp-palette" id="lpPalette"></div>
+                </div>
+
+                <!-- ===== Kumpulan section ===== -->
+                <div class="admin-block">
+                  <div class="admin-block__head">
+                    <label>Susunan Landing (drag untuk urut, klik untuk edit)</label>
                   </div>
+                  <div id="lpSections" class="lp-sections"></div>
+                  <p class="a-empty" id="lpSectionsEmpty" style="display:none">Belum ada section. Klik tipe di atas buat mulai.</p>
+                </div>
 
-                  <div class="admin-block">
-                    <div class="admin-block__head"><label>Pricing</label></div>
-                    <div class="admin-grid2">
-                      <div class="field">
-                        <label for="lp_price_yearly">Harga Tahunan (Rp)</label>
-                        <input type="number" id="lp_price_yearly" step="1000" min="0" />
-                      </div>
-                      <div class="field">
-                        <label for="lp_price_lifetime">Harga Lifetime (Rp)</label>
-                        <input type="number" id="lp_price_lifetime" step="1000" min="0" />
-                      </div>
-                    </div>
-                  </div>
+                <div class="notice notice--warn form-error" id="lpFormError" style="display:none"></div>
+                <div class="notice notice--ok" id="lpFormMsg" style="display:none"></div>
 
-                  <div class="admin-block">
-                    <div class="admin-block__head"><label>Testimoni</label></div>
-                    <div id="lpTestimonialRows"></div>
-                    <button type="button" class="btn btn--ghost btn--sm" id="lpAddTestimonial">+ Tambah Testimoni</button>
-                  </div>
-
-                  <div class="admin-block">
-                    <div class="admin-block__head"><label>FAQ</label></div>
-                    <div id="lpFaqRows"></div>
-                    <button type="button" class="btn btn--ghost btn--sm" id="lpAddFaq">+ Tambah FAQ</button>
-                  </div>
-
-                  <div class="notice notice--warn form-error" id="lpFormError" style="display:none"></div>
-                  <div class="notice notice--ok" id="lpFormMsg" style="display:none"></div>
-
-                  <div class="admin-tools">
-                    <button type="submit" class="btn btn--primary" id="lpFormSave">Simpan Landing</button>
-                    <button type="button" class="btn btn--ghost" id="lpFormPreview" style="display:none">Buka Preview</button>
-                    <span class="hint" id="lpFormState"></span>
-                  </div>
-                </form>
+                <div class="admin-tools">
+                  <button type="button" class="btn btn--primary" id="lpSaveBtn">Simpan Landing</button>
+                  <button type="button" class="btn btn--ghost" id="lpFormPreview" style="display:none">Buka Preview</button>
+                  <span class="hint" id="lpFormState"></span>
+                </div>
               </div>
             </div>
           </div>
@@ -1819,37 +1789,12 @@
       });
     });
 
-    // ============ LANDING PAGE MANAGEMENT ============
+    // ============ LANDING PAGE MANAGEMENT (section builder) ============
     var lpCache = null;          // list cache
     var lpEditingKey = null;     // current editing site_content key
+    var lpSections = [];         // working array of sections while editing
 
-    function lpRowItem(v) {
-      v = v || {};
-      var wrap = document.createElement('div');
-      wrap.className = 'admin-row';
-      wrap.innerHTML =
-        '<div class="admin-row__main">' +
-          '<div class="field"><label>Nama</label><input type="text" placeholder="Nama testimoni" value="' + esc(v.name || '') + '" /></div>' +
-          '<div class="field" style="margin-bottom:0"><label>Quote</label><textarea rows="3">' + esc(v.quote || '') + '</textarea></div>' +
-        '</div>' +
-        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
-      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
-      return wrap;
-    }
-    function lpFaqRowItem(f) {
-      f = f || {};
-      var wrap = document.createElement('div');
-      wrap.className = 'admin-row';
-      wrap.innerHTML =
-        '<div class="admin-row__main">' +
-          '<div class="field"><label>Pertanyaan</label><input type="text" value="' + esc(f.q || '') + '" /></div>' +
-          '<div class="field" style="margin-bottom:0"><label>Jawaban</label><textarea rows="2">' + esc(f.a || '') + '</textarea></div>' +
-        '</div>' +
-        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
-      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
-      return wrap;
-    }
-
+    // ---------- List landing pages ----------
     function renderLandingPages() {
       var body = document.getElementById('landingPagesBody');
       var empty = document.getElementById('landingPagesEmpty');
@@ -1887,144 +1832,288 @@
       });
     }
 
-    // Collect rows helper for lp form
-    function lpCollectRows(id) {
-      return Array.prototype.map.call(document.getElementById(id).querySelectorAll('.admin-row'), function (row) {
-        return Array.prototype.map.call(row.querySelectorAll('input, textarea'), function (inp) { return inp.value; });
+    document.getElementById('refreshLandingPages').addEventListener('click', loadLandingPages);
+
+    // ---------- Palette (tipe section) ----------
+    function renderPalette() {
+      var pal = document.getElementById('lpPalette');
+      pal.innerHTML = Object.keys(LandingPages.SECTION_TYPES).map(function (t) {
+        var meta = LandingPages.sectionTypeMeta(t);
+        return '<button type="button" class="lp-palette__item" data-add="' + t + '">' +
+          '<span class="lp-palette__icon">' + meta.icon + '</span>' +
+          '<span class="lp-palette__label">' + meta.label + '</span>' +
+        '</button>';
+      }).join('');
+      pal.querySelectorAll('[data-add]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          lpSections.push(LandingPages.newSection(b.dataset.add));
+          renderSections();
+          scrollToSection(lpSections[lpSections.length - 1].id);
+        });
       });
     }
 
-    function lpTestimonialRows() { return lpCollectRows('lpTestimonialRows'); }
-    function lpFaqRows() { return lpCollectRows('lpFaqRows'); }
+    function scrollToSection(idOrEl) {
+      var el = (typeof idOrEl === 'string') ? document.getElementById(idOrEl) : idOrEl;
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
+    // ---------- Render list section ----------
+    function renderSections() {
+      var list = document.getElementById('lpSections');
+      var empty = document.getElementById('lpSectionsEmpty');
+      if (!lpSections.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = lpSections.map(function (s, idx) {
+        var meta = LandingPages.sectionTypeMeta(s.type);
+        var summary = sectionSummary(s);
+        return '<div class="lp-sec" id="' + esc(s.id) + '" draggable="true" data-idx="' + idx + '">' +
+          '<div class="lp-sec__head">' +
+            '<span class="lp-sec__grip" title="Drag untuk urut">⋮⋮</span>' +
+            '<span class="lp-sec__icon">' + meta.icon + '</span>' +
+            '<span class="lp-sec__title">' + meta.label + '</span>' +
+            '<span class="lp-sec__summary">' + esc(summary) + '</span>' +
+            '<span class="lp-sec__pos">#' + (idx + 1) + '</span>' +
+            '<span class="lp-sec__tools">' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-up="' + idx + '" title="Naik">↑</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-down="' + idx + '" title="Turun">↓</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-open="' + esc(s.id) + '" title="Edit field">✎</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-dupsec="' + idx + '" title="Gandakan">⧉</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-delsec="' + idx + '" title="Hapus">✕</button>' +
+            '</span>' +
+          '</div>' +
+          '<div class="lp-sec__fields" id="secfields-' + esc(s.id) + '" style="display:none"></div>' +
+        '</div>';
+      }).join('');
+
+      // event: up/down/dup/delete
+      list.querySelectorAll('[data-up]').forEach(function (b) {
+        b.addEventListener('click', function () { moveSection(Number(b.dataset.up), -1); });
+      });
+      list.querySelectorAll('[data-down]').forEach(function (b) {
+        b.addEventListener('click', function () { moveSection(Number(b.dataset.down), 1); });
+      });
+      list.querySelectorAll('[data-open]').forEach(function (b) {
+        b.addEventListener('click', function () { toggleSectionFields(b.dataset.open); });
+      });
+      list.querySelectorAll('[data-dupsec]').forEach(function (b) {
+        b.addEventListener('click', function () { duplicateSection(Number(b.dataset.dupsec)); });
+      });
+      list.querySelectorAll('[data-delsec]').forEach(function (b) {
+        b.addEventListener('click', function () { removeSection(Number(b.dataset.delsec)); });
+      });
+
+      // drag & drop reorder (native draggable)
+      bindSectionDrag(list);
+    }
+
+    function sectionSummary(s) {
+      var d = s.data || {};
+      var map = {
+        hero: d.title || d.cta_text,
+        text: d.heading || d.body,
+        image: d.src || d.alt,
+        youtube: d.video_id ? 'Video: ' + d.video_id : '',
+        cta: d.title || d.btn_text,
+        pricing: (d.yearly_price ? 'Rp ' + d.yearly_price : '') + (d.lifetime_price ? ' · Rp ' + d.lifetime_price : ''),
+        testimonial: d.name ? (d.name + ': ' + (d.quote || '')) : d.quote,
+        faq: d.q,
+        stats: d.items,
+        divider: '—',
+        embed: 'HTML'
+      };
+      return map[s.type] || '';
+    }
+
+    function moveSection(idx, delta) {
+      var newIdx = idx + delta;
+      if (newIdx < 0 || newIdx >= lpSections.length) return;
+      var temp = lpSections[idx];
+      lpSections[idx] = lpSections[newIdx];
+      lpSections[newIdx] = temp;
+      renderSections();
+    }
+
+    function removeSection(idx) {
+      lpSections.splice(idx, 1);
+      renderSections();
+    }
+
+    function duplicateSection(idx) {
+      var copy = JSON.parse(JSON.stringify(lpSections[idx]));
+      copy.id = (copy.type || 'sec') + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      lpSections.splice(idx + 1, 0, copy);
+      renderSections();
+    }
+
+    // Drag & drop reorder (HTML5 native)
+    function bindSectionDrag(container) {
+      var items = container.querySelectorAll('.lp-sec');
+      var dragEl = null;
+      Array.prototype.forEach.call(items, function (item) {
+        item.addEventListener('dragstart', function (ev) {
+          dragEl = item;
+          item.classList.add('dragging');
+          ev.dataTransfer.effectAllowed = 'move';
+          try { ev.dataTransfer.setData('text/plain', item.dataset.idx); } catch (e) {}
+        });
+        item.addEventListener('dragend', function () {
+          item.classList.remove('dragging');
+          Array.prototype.forEach.call(container.querySelectorAll('.drag-over'), function (o) { o.classList.remove('drag-over'); });
+        });
+        item.addEventListener('dragover', function (ev) {
+          ev.preventDefault();
+          ev.dataTransfer.dropEffect = 'move';
+          item.classList.add('drag-over');
+        });
+        item.addEventListener('dragleave', function () { item.classList.remove('drag-over'); });
+        item.addEventListener('drop', function (ev) {
+          ev.preventDefault();
+          item.classList.remove('drag-over');
+          if (!dragEl || dragEl === item) return;
+          var from = Number(dragEl.dataset.idx);
+          var to = Number(item.dataset.idx);
+          if (isNaN(from) || isNaN(to)) return;
+          var moved = lpSections.splice(from, 1)[0];
+          lpSections.splice(to, 0, moved);
+          renderSections();
+        });
+      });
+    }
+
+    // ---------- Field editor per section ----------
+    function buildSectionFields(s) {
+      var box = document.getElementById('secfields-' + s.id);
+      if (!box) return;
+      var meta = LandingPages.sectionTypeMeta(s.type);
+      var d = s.data || {};
+      var html = '<div class="lp-fields">';
+      if (!meta.fields.length) {
+        html += '<div class="hint">Section ini tidak punya pengaturan lanjutan.</div>';
+      }
+      meta.fields.forEach(function (f) {
+        var val = d[f.key] != null ? d[f.key] : '';
+        var label = '<label>' + f.label + '</label>';
+        if (f.type === 'textarea') {
+          html += '<div class="field lp-field">' + label + '<textarea rows="' + (f.multiline ? 4 : f.key === 'body' || f.key === 'html' ? 4 : 2) + '" data-fk="' + f.key + '">' + esc(val) + '</textarea></div>';
+        } else if (f.type === 'select') {
+          var opts = (f.options || []).map(function (o) {
+            return '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>';
+          }).join('');
+          html += '<div class="field lp-field">' + label + '<select data-fk="' + f.key + '">' + opts + '</select></div>';
+        } else if (f.type === 'number') {
+          html += '<div class="field lp-field">' + label + '<input type="number" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+        } else {
+          html += '<div class="field lp-field">' + label + '<input type="text" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+        }
+      });
+      html += '</div>';
+      box.innerHTML = html;
+
+      box.querySelectorAll('[data-fk]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          var fk = inp.dataset.fk;
+          var nv = (inp.tagName === 'SELECT') ? inp.value :
+                   (inp.type === 'number') ? Number(inp.value) :
+                   inp.value;
+          s.data[fk] = nv;
+          var summary = sectionSummary(s);
+          var secEl = document.getElementById(s.id);
+          var sumEl = secEl && secEl.querySelector('.lp-sec__summary');
+          if (sumEl) sumEl.textContent = summary;
+        });
+      });
+    }
+
+    function toggleSectionFields(id) {
+      var box = document.getElementById('secfields-' + id);
+      if (!box) return;
+      var show = box.style.display === 'none';
+      box.style.display = show ? 'block' : 'none';
+      if (show) {
+        var s = lpSections.filter(function (x) { return x.id === id; })[0];
+        if (s) buildSectionFields(s);
+      }
+    }
+
+    // ---------- Open editor ----------
     function openLpEditor(key) {
       lpEditingKey = key;
       document.getElementById('lpEditorWrap').style.display = 'block';
       document.getElementById('lpEditorTitle').textContent = key === 'homepage' ? 'Edit Landing Utama' : 'Edit Landing: ' + key.replace(/^lp_/, '');
 
-      var empty = {
-        hero_title: '',
-        hero_subtitle: '',
-        price_yearly: cfg.PRICES.yearly.harga,
-        price_lifetime: cfg.PRICES.lifetime.harga,
-        testimonials: [],
-        faqs: [],
-        meta: { is_custom: key !== 'homepage' }
-      };
+      document.getElementById('lpFormError').style.display = 'none';
+      document.getElementById('lpFormMsg').style.display = 'none';
+      document.getElementById('lpFormState').textContent = '';
 
       LandingPages.get(key === 'homepage' ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
-        var v = c || empty;
+        var v = c || {};
         var m = v.meta || {};
         document.getElementById('lp_title').value = m.title || '';
         document.getElementById('lp_slug').value = (key === 'homepage') ? '' : key.replace(/^lp_/, '');
         document.getElementById('lp_page_title').value = m.page_title || '';
-        document.getElementById('lp_eyebrow').value = m.eyebrow || '';
         document.getElementById('lp_accent').value = m.accent || '#00ff88';
-        document.getElementById('lp_hero_title').value = v.hero_title || '';
-        document.getElementById('lp_hero_subtitle').value = v.hero_subtitle || '';
-        document.getElementById('lp_price_yearly').value = v.price_yearly || cfg.PRICES.yearly.harga;
-        document.getElementById('lp_price_lifetime').value = v.price_lifetime || cfg.PRICES.lifetime.harga;
 
-        var tr = document.getElementById('lpTestimonialRows');
-        tr.innerHTML = '';
-        (Array.isArray(v.testimonials) ? v.testimonials : []).forEach(function (t) { tr.appendChild(lpRowItem(t)); });
+        // Sections: pakai value.sections kalau ada; kalau belum, konversi dari konten lama
+        lpSections = normalizeSections(v);
 
-        var fr = document.getElementById('lpFaqRows');
-        fr.innerHTML = '';
-        (Array.isArray(v.faqs) ? v.faqs : []).forEach(function (f) { fr.appendChild(lpFaqRowItem(f)); });
-
-        // Preview link
         var pv = document.getElementById('lpFormPreview');
         pv.style.display = 'inline-flex';
         var slug = (key === 'homepage') ? 'utama' : key.replace(/^lp_/, '');
         pv.onclick = function () { window.open('page.html?slug=' + encodeURIComponent(slug), '_blank'); };
 
-        document.getElementById('lpFormError').style.display = 'none';
-        document.getElementById('lpFormMsg').style.display = 'none';
-        document.getElementById('lpFormState').textContent = '';
+        renderPalette();
+        renderSections();
+        scrollToSection(document.getElementById('lpEditorWrap'));
       });
     }
 
-    document.getElementById('refreshLandingPages').addEventListener('click', loadLandingPages);
-
-    document.getElementById('createLandingPage').addEventListener('click', function () {
-      var slug = prompt('Slug / subdomain landing baru (huruf kecil, angka, tanpa spasi).\nContoh: "property" → diakses lewat page.html?slug=property atau subdomain property.…');
-      if (!slug) return;
-      slug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-      if (!slug) { alert('Slug tidak valid.'); return; }
-      var key = LandingPages.keyOf(slug);
-      var defaultContent = {
-        hero_title: cfg.DEFAULT_CONTENT.hero_title,
-        hero_subtitle: cfg.DEFAULT_CONTENT.hero_subtitle,
-        price_yearly: cfg.PRICES.yearly.harga,
-        price_lifetime: cfg.PRICES.lifetime.harga,
-        testimonials: (cfg.DEFAULT_CONTENT.testimonials || []).slice(0, 3),
-        faqs: (cfg.DEFAULT_CONTENT.faqs || []).slice(0, 4),
-        meta: { slug: slug, title: slug, is_custom: true, accent: '#00ff88' }
-      };
-      document.getElementById('lpFormError').style.display = 'none';
-      document.getElementById('lpFormMsg').style.display = 'none';
-      openLpEditor(key);
-      document.getElementById('lp_title').value = slug;
-    });
-
-    document.body.addEventListener('click', function (e) {
-      var ed = e.target.closest('[data-edit]');
-      if (ed) { openLpEditor(ed.dataset.edit); return; }
-      var dup = e.target.closest('[data-dup]');
-      if (dup) { duplicateLanding(dup.dataset.dup); return; }
-      var del = e.target.closest('[data-del]');
-      if (del) deleteLanding(del.dataset.del);
-    });
-
-    function buildLpPayload() {
-      var slugRaw = document.getElementById('lp_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-      var isMain = (lpEditingKey === 'homepage');
-      var key = isMain ? 'homepage' : LandingPages.keyOf(slugRaw || (lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : ''));
-      var tRows = lpTestimonialRows();
-      var fRows = lpFaqRows();
-      var content = {
-        hero_title: document.getElementById('lp_hero_title').value.trim(),
-        hero_subtitle: document.getElementById('lp_hero_subtitle').value.trim(),
-        price_yearly: Number(document.getElementById('lp_price_yearly').value) || 0,
-        price_lifetime: Number(document.getElementById('lp_price_lifetime').value) || 0,
-        testimonials: tRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) { return { name: r[0], quote: r[1] }; }),
-        faqs: fRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) { return { q: r[0], a: r[1] }; }),
-        meta: {
-          slug: isMain ? 'utama' : slugRaw,
-          title: document.getElementById('lp_title').value.trim() || slugRaw,
-          page_title: document.getElementById('lp_page_title').value.trim(),
-          eyebrow: document.getElementById('lp_eyebrow').value.trim(),
-          accent: document.getElementById('lp_accent').value.trim() || '#00ff88',
-          is_custom: !isMain
-        }
-      };
-      return { key: key, content: content };
+    // Konversi konten lama ke sections kalau belum ada value.sections
+    function normalizeSections(v) {
+      if (Array.isArray(v.sections) && v.sections.length) return JSON.parse(JSON.stringify(v.sections));
+      var secs = [];
+      var helpers = codeToHelpers();
+      // hero dari konten lama
+      if (v.hero_title || v.hero_subtitle || (v.meta && v.meta.eyebrow)) {
+        secs.push({ id: helpers.uid('hero'), type: 'hero', data: {
+          eyebrow: (v.meta && v.meta.eyebrow) || 'untuk sales person · tanpa coding',
+          title: v.hero_title || '',
+          subtitle: v.hero_subtitle || '',
+          cta_text: 'Daftar Course →',
+          cta_link: 'checkout.html'
+        }});
+      }
+      secs.push({ id: helpers.uid('divider'), type: 'divider', data: {} });
+      (Array.isArray(v.testimonials) ? v.testimonials : []).forEach(function (t) {
+        secs.push({ id: helpers.uid('testimonial'), type: 'testimonial', data: { quote: t.quote || '', name: t.name || '' } });
+      });
+      if ((v.price_yearly && v.price_yearly !== cfg.PRICES.yearly.harga) || (v.price_lifetime && v.price_lifetime !== cfg.PRICES.lifetime.harga)) {
+        secs.push({ id: helpers.uid('pricing'), type: 'pricing', data: {
+          yearly_label: 'Tahunan', yearly_price: v.price_yearly || cfg.PRICES.yearly.harga,
+          lifetime_label: 'Lifetime', lifetime_price: v.price_lifetime || cfg.PRICES.lifetime.harga
+        }});
+      }
+      (Array.isArray(v.faqs) ? v.faqs : []).forEach(function (f) {
+        secs.push({ id: helpers.uid('faq'), type: 'faq', data: { q: f.q || '', a: f.a || '' } });
+      });
+      return secs;
     }
 
-    document.getElementById('lpAddTestimonial').addEventListener('click', function () {
-      document.getElementById('lpTestimonialRows').appendChild(lpRowItem());
-    });
-    document.getElementById('lpAddFaq').addEventListener('click', function () {
-      document.getElementById('lpFaqRows').appendChild(lpFaqRowItem());
-    });
-    document.getElementById('lpEditorBack').addEventListener('click', function () {
-      document.getElementById('lpEditorWrap').style.display = 'none';
-      loadLandingPages();
-    });
+    function codeToHelpers() {
+      var c = 0;
+      return { uid: function (t) { return t + '_' + Date.now() + '_' + (c++); } };
+    }
 
-    document.getElementById('lpForm').addEventListener('submit', function (e) {
-      e.preventDefault();
+    // ---------- Save ----------
+    document.getElementById('lpSaveBtn').addEventListener('click', function () {
       var err = document.getElementById('lpFormError');
       var msg = document.getElementById('lpFormMsg');
       err.style.display = 'none';
       msg.style.display = 'none';
-
-      if (!document.getElementById('lp_hero_title').value.trim()) {
-        err.textContent = '⚠️ Hero title wajib diisi.';
-        err.style.display = 'flex';
-        return;
-      }
 
       var slugRaw = document.getElementById('lp_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
       if (lpEditingKey !== 'homepage' && !slugRaw) {
@@ -2032,9 +2121,21 @@
         err.style.display = 'flex';
         return;
       }
+      var isMain = (lpEditingKey === 'homepage');
+      var key = isMain ? 'homepage' : LandingPages.keyOf(slugRaw || (lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : ''));
 
-      var payload = buildLpPayload();
-      var btn = document.getElementById('lpFormSave');
+      var content = {
+        sections: lpSections,
+        meta: {
+          slug: isMain ? 'utama' : slugRaw,
+          title: document.getElementById('lp_title').value.trim() || slugRaw,
+          page_title: document.getElementById('lp_page_title').value.trim(),
+          accent: document.getElementById('lp_accent').value.trim() || '#00ff88',
+          is_custom: !isMain
+        }
+      };
+
+      var btn = document.getElementById('lpSaveBtn');
       var stateEl = document.getElementById('lpFormState');
       btn.disabled = true;
       btn.textContent = 'Menyimpan…';
@@ -2051,10 +2152,10 @@
         }
         var token = sess.data.session.access_token;
         window.__adminToken = token;
-        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(payload.key), {
+        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(key), {
           method: 'PATCH',
           headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ value: payload.content, updated_by: 'admin' })
+          body: JSON.stringify({ value: content, updated_by: 'admin' })
         });
       }).then(function (r) {
         if (!r) return null;
@@ -2062,7 +2163,7 @@
         return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
           method: 'POST',
           headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.__adminToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ key: payload.key, value: payload.content, updated_by: 'admin' })
+          body: JSON.stringify({ key: key, value: content, updated_by: 'admin' })
         });
       }).then(function (r) {
         if (!r) return;
@@ -2075,7 +2176,7 @@
           return;
         }
         stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
-        msg.textContent = '✅ Landing tersimpan. ' + (lpEditingKey !== 'homepage' ? ('Akses: ' + LandingPages.accessUrl(payload.key)) : '');
+        msg.textContent = '✅ Landing tersimpan. ' + (!isMain ? ('Akses: ' + LandingPages.accessUrl(key)) : '');
         msg.style.display = 'flex';
         loadLandingPages();
       }).catch(function (e2) {
@@ -2088,12 +2189,36 @@
       });
     });
 
+    document.getElementById('createLandingPage').addEventListener('click', function () {
+      var slug = prompt('Slug / subdomain landing baru (huruf kecil, angka, tanpa spasi).\nContoh: "property" → diakses lewat page.html?slug=property atau subdomain property.…');
+      if (!slug) return;
+      slug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (!slug) { alert('Slug tidak valid.'); return; }
+      openLpEditor(LandingPages.keyOf(slug));
+      document.getElementById('lp_title').value = slug;
+      document.getElementById('lp_slug').value = slug;
+    });
+
+    document.body.addEventListener('click', function (e) {
+      var ed = e.target.closest('[data-edit]');
+      if (ed) { openLpEditor(ed.dataset.edit); return; }
+      var dup = e.target.closest('[data-dup]');
+      if (dup) { duplicateLanding(dup.dataset.dup); return; }
+      var del = e.target.closest('[data-del]');
+      if (del) deleteLanding(del.dataset.del);
+    });
+
+    document.getElementById('lpEditorBack').addEventListener('click', function () {
+      document.getElementById('lpEditorWrap').style.display = 'none';
+      loadLandingPages();
+    });
+
     function duplicateLanding(key) {
       LandingPages.get(key === 'homepage' ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
         if (!c) { alert('Landing tidak ditemukan.'); return; }
         var base = key === 'homepage' ? 'utama' : key.replace(/^lp_/, '');
         var newSlug = base + '-copy';
-        var check = LandingPages.get(newSlug).then(function (existing) {
+        LandingPages.get(newSlug).then(function (existing) {
           var finalSlug = existing ? newSlug + '-' + Math.floor(Date.now() / 1000) : newSlug;
           var content = Object.assign({}, c);
           content.meta = Object.assign({}, c.meta || {}, { slug: finalSlug, title: (c.meta && c.meta.title ? c.meta.title : base) + ' (copy)', is_custom: true });
