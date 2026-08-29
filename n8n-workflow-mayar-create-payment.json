@@ -112,7 +112,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// \ud83d\uddc4\ufe0f Siapkan data leads (disimpan SEBELUM user bayar \u2014 untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    notes: 'invoice: ' + (payment.reference || '') + ' \u00b7 tier: ' + (payment.tierLabel || ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjYwNDIyOSwiZXhwIjoyMTAyMTgwMjI5fQ.UBxJl-T16_ggpFoteFf05hfzENpbgf1rB71sawQhl1M'\n  }\n};"
+        "jsCode": "// \ud83d\uddc4\ufe0f Siapkan data leads (disimpan SEBELUM user bayar \u2014 untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    apps_script_endpoint: 'https://script.google.com/macros/s/AKfycbwMmCBIuMsi42s26xEhZr6_57nDLjlxFxym08v3301fnIM3cktrJXADA8WSuzu_wrsT/exec',\n    apps_script_payload: {\n      action: 'lead',\n      nama: customer.nama || payment.nama || '',\n      email: customer.email || payment.email || '',\n      wa: customer.wa || payment.wa || '',\n      discord: customer.discord || payment.discord || '',\n      harga: payment.amount || 0\n    },\n    notes: 'invoice: ' + (payment.reference || '') + ' \u00b7 tier: ' + (payment.tierLabel || ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjYwNDIyOSwiZXhwIjoyMTAyMTgwMjI5fQ.UBxJl-T16_ggpFoteFf05hfzENpbgf1rB71sawQhl1M'\n  }\n};"
       },
       "id": "code-prep-lead",
       "name": "Code: Siapkan Data Leads",
@@ -162,6 +162,37 @@
       "typeVersion": 4.2,
       "position": [
         780,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.apps_script_endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.apps_script_payload) }}",
+        "options": {
+          "timeout": 20000,
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "http-apps-script-lead",
+      "name": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
         180
       ],
       "onError": "continueRegularOutput"
@@ -233,6 +264,11 @@
         [
           {
             "node": "HTTP: Simpan Leads (Supabase)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
             "type": "main",
             "index": 0
           }
