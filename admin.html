@@ -215,15 +215,15 @@
                     <div class="hint">Format lokal (WIB). Kosongkan = pakai waktu default yang sudah ditentukan. Setelah lewat, timer otomatis hilang.</div>
                   </div>
                   <div class="field">
-                    <label for="f_countdown_off">Matikan Countdown</label>
+                    <label for="f_countdown_on">Tampilkan Countdown</label>
                     <div style="display:flex;align-items:center;gap:10px">
-                      <label class="switch" title="Nyalakan / matikan countdown">
-                        <input type="checkbox" id="f_countdown_off" />
+                      <label class="switch" title="Tampilkan / sembunyikan countdown">
+                        <input type="checkbox" id="f_countdown_on" value="1" />
                         <span class="switch__slider"></span>
                       </label>
-                      <span class="hint" style="margin:0">Aktif = timer tampil</span>
+                      <span class="hint" style="margin:0" id="f_countdown_on_hint">Hidup</span>
                     </div>
-                    <div class="hint">Nonaktifkan bila tidak mau menampilkan countdown promo sama sekali.</div>
+                    <div class="hint">Biarkan hidup (hijau) agar timer promo tampil. Matikan bila tidak mau menampilkan countdown.</div>
                   </div>
                 </div>
               </div>
@@ -795,10 +795,13 @@
         document.getElementById('f_promo_banner_alt').value = v.promo_banner_alt || '';
 
         var cut = v.promo_countdown_until;
-        var off = (cut === 'OFF');
-        document.getElementById('f_countdown_off').checked = off;
+        var isOff = (cut === 'OFF' || cut === 'off');
+        var onEl = document.getElementById('f_countdown_on');
+        onEl.checked = !isOff;
+        var onHint = document.getElementById('f_countdown_on_hint');
+        if (onHint) onHint.textContent = isOff ? 'Mati' : 'Hidup';
         var co = document.getElementById('f_countdown_until');
-        if (!off && cut && !/OFF/i.test(cut)) {
+        if (!isOff && cut && !/OFF/i.test(cut)) {
           var dt = new Date(cut);
           if (!isNaN(dt.getTime())) {
             var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
@@ -952,13 +955,18 @@
         promo_banner_url: document.getElementById('f_promo_banner').value.trim(),
         promo_banner_alt: document.getElementById('f_promo_banner_alt').value.trim(),
         promo_countdown_until: (function () {
-          if (document.getElementById('f_countdown_off').checked) return 'OFF';
+          if (!document.getElementById('f_countdown_on').checked) return 'OFF';
           var raw = document.getElementById('f_countdown_until').value.trim();
-          if (!raw) return '';
           // datetime-local → "YYYY-MM-DDTHH:mm"; tambahkan detik + offset WIB
-          var m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.exec(raw);
-          if (m) return m[1] + ':00+07:00';
-          return raw;
+          if (raw) {
+            var m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.exec(raw);
+            return m ? m[1] + ':00+07:00' : raw;
+          }
+          // Tidak ada tanggal dipilih → default +30 hari (WIB) supaya timer tetap tampil
+          var d = new Date(Date.now() + 30 * 86400000);
+          var p2n = function (n) { return (n < 10 ? '0' : '') + n; };
+          return d.getFullYear() + '-' + p2n(d.getMonth() + 1) + '-' + p2n(d.getDate()) +
+                 'T' + p2n(d.getHours()) + ':' + p2n(d.getMinutes()) + ':00+07:00';
         })(),
         discord_link: document.getElementById('f_discord').value.trim(),
         whatsapp_link: document.getElementById('f_wa').value.trim(),
