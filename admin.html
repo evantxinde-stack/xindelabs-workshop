@@ -207,6 +207,28 @@
               </div>
 
               <div class="admin-block">
+                <div class="admin-block__head"><label>Promo Countdown</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_countdown_until">Waktu Berakhir Promo</label>
+                    <input type="datetime-local" id="f_countdown_until" />
+                    <div class="hint">Format lokal (WIB). Kosongkan = pakai waktu default yang sudah ditentukan. Setelah lewat, timer otomatis hilang.</div>
+                  </div>
+                  <div class="field">
+                    <label for="f_countdown_off">Matikan Countdown</label>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <label class="switch" title="Nyalakan / matikan countdown">
+                        <input type="checkbox" id="f_countdown_off" />
+                        <span class="switch__slider"></span>
+                      </label>
+                      <span class="hint" style="margin:0">Aktif = timer tampil</span>
+                    </div>
+                    <div class="hint">Nonaktifkan bila tidak mau menampilkan countdown promo sama sekali.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-block">
                 <div class="admin-block__head"><label>Link Komunitas</label></div>
                 <div class="admin-grid3">
                   <div class="field">
@@ -772,6 +794,22 @@
         document.getElementById('f_promo_banner').value = v.promo_banner_url || '';
         document.getElementById('f_promo_banner_alt').value = v.promo_banner_alt || '';
 
+        var cut = v.promo_countdown_until;
+        var off = (cut === 'OFF');
+        document.getElementById('f_countdown_off').checked = off;
+        var co = document.getElementById('f_countdown_until');
+        if (!off && cut && !/OFF/i.test(cut)) {
+          var dt = new Date(cut);
+          if (!isNaN(dt.getTime())) {
+            var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+            co.value = dt.getFullYear() + '-' + p2(dt.getMonth() + 1) + '-' + p2(dt.getDate()) + 'T' + p2(dt.getHours()) + ':' + p2(dt.getMinutes());
+          } else {
+            co.value = '';
+          }
+        } else {
+          co.value = '';
+        }
+
         if (v.promo_banner_url) {
           document.getElementById('bannerPreviewImg').src = v.promo_banner_url;
           document.getElementById('bannerPreview').style.display = 'block';
@@ -913,6 +951,15 @@
         price_lifetime: Number(document.getElementById('f_price_lifetime').value) || 0,
         promo_banner_url: document.getElementById('f_promo_banner').value.trim(),
         promo_banner_alt: document.getElementById('f_promo_banner_alt').value.trim(),
+        promo_countdown_until: (function () {
+          if (document.getElementById('f_countdown_off').checked) return 'OFF';
+          var raw = document.getElementById('f_countdown_until').value.trim();
+          if (!raw) return '';
+          // datetime-local → "YYYY-MM-DDTHH:mm"; tambahkan detik + offset WIB
+          var m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.exec(raw);
+          if (m) return m[1] + ':00+07:00';
+          return raw;
+        })(),
         discord_link: document.getElementById('f_discord').value.trim(),
         whatsapp_link: document.getElementById('f_wa').value.trim(),
         instagram_handle: document.getElementById('f_ig').value.trim(),
