@@ -114,7 +114,7 @@ window.LandingPages = (function () {
       label: 'Video YouTube',
       icon: '▶️',
       fields: [
-        { key: 'video_id', label: 'YouTube Video ID', type: 'text' },
+        { key: 'video_id', label: 'YouTube Link atau Video ID', type: 'text', placeholder: 'cth: https://youtu.be/abc123 atau abc123' },
         { key: 'caption', label: 'Caption', type: 'text' }
       ]
     },
@@ -202,11 +202,25 @@ window.LandingPages = (function () {
     return SECTION_TYPES[type] || { label: type, icon: '🗂️', fields: [] };
   }
 
+  // Ekstrak YouTube video ID dari link penuh ATAU ID mentah.
+  // Contoh: "https://youtu.be/abc123", ".../watch?v=abc123",
+  // "shorts/abc123", "embed/abc123", atau "abc123" langsung.
+  function youtubeId(value) {
+    var raw = String(value == null ? '' : value).trim();
+    if (!raw) return '';
+    var m = /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(raw);
+    if (m) return m[1];
+    // Sudah berupa ID mentah (alphanumeric + dash/underscore, >= 6)
+    if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) return raw;
+    return '';
+  }
+
   return {
     keyOf: keyOf, metaOf: metaOf, listAll: listAll, get: get, accessUrl: accessUrl,
     SECTION_TYPES: SECTION_TYPES,
     sectionDefaults: sectionDefaults,
     newSection: newSection,
-    sectionTypeMeta: sectionTypeMeta
+    sectionTypeMeta: sectionTypeMeta,
+    youtubeId: youtubeId
   };
 })();

@@ -513,6 +513,15 @@
     var cfg = window.XINDE;
     var currentVideoId = cfg.VIDEO_YOUTUBE_ID;
 
+    function youtubeId(value) {
+      var raw = String(value == null ? '' : value).trim();
+      if (!raw) return '';
+      var m = /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(raw);
+      if (m) return m[1];
+      if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) return raw;
+      return '';
+    }
+
     // ============ Helper form leads ============
     function normPhone(p) {
       var d = String(p).replace(/[^\d]/g, '');
@@ -588,9 +597,12 @@
         if (c.hero_title && heroTitle) heroTitle.innerHTML = c.hero_title;
         if (c.hero_subtitle && heroSub) heroSub.innerHTML = c.hero_subtitle;
         if (c.video_caption && cap) cap.textContent = c.video_caption;
-        if (c.video_youtube_id && !/^youtube/i.test(c.video_youtube_id) && /^[A-Za-z0-9_-]{6,}$/.test(c.video_youtube_id)) {
-          currentVideoId = c.video_youtube_id;
-          document.getElementById('videoThumbImg').src = 'https://i.ytimg.com/vi/' + c.video_youtube_id + '/hqdefault.jpg';
+        if (c.video_youtube_id) {
+          var vid = youtubeId(c.video_youtube_id);
+          if (vid) {
+            currentVideoId = vid;
+            document.getElementById('videoThumbImg').src = 'https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg';
+          }
         }
 
         if (Array.isArray(c.testimonials) && c.testimonials.length) {

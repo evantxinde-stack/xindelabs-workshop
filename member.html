@@ -128,6 +128,14 @@
     // ============ Utils ============
     function levelClass(lv) { return 'lv-' + String(lv || 'beginner').replace('_', '-'); }
     function levelLabel(lv) { return lv === 'level-up' ? 'level-up' : (lv || 'beginner'); }
+    function youtubeId(value) {
+      var raw = String(value == null ? '' : value).trim();
+      if (!raw) return '';
+      var m = /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(raw);
+      if (m) return m[1];
+      if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) return raw;
+      return '';
+    }
     function durationLabel(d) {
       d = d || '';
       return /^\d+$/.test(String(d)) ? d + ' menit' : d;
@@ -262,7 +270,7 @@
       } else {
         textBox.style.display = 'none';
         iframe.style.display = '';
-        iframe.src = m.video_id ? 'https://www.youtube.com/embed/' + m.video_id + '?autoplay=1&rel=0' : '';
+        iframe.src = youtubeId(m.video_id) ? 'https://www.youtube.com/embed/' + youtubeId(m.video_id) + '?autoplay=1&rel=0' : '';
       }
 
       document.getElementById('prevBtn').disabled = i === 0;

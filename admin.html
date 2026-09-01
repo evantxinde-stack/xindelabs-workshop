@@ -161,8 +161,9 @@
                 <div class="admin-block__head"><label>Video Intro</label></div>
                 <div class="admin-grid2">
                   <div class="field">
-                    <label for="f_video_id">YouTube Video ID</label>
-                    <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE" />
+                    <label for="f_video_id">YouTube Video ID / Link</label>
+                    <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE atau https://youtu.be/M7lc1UVf-VE" />
+                    <div class="hint">Boleh isi link penuh YouTube atau cukup ID-nya saja.</div>
                   </div>
                   <div class="field">
                     <label for="f_video_caption">Caption Video</label>
@@ -1509,7 +1510,7 @@
               '<option value="text"' + (m.type === 'text' ? ' selected' : '') + '>Teks</option>' +
             '</select></div>' +
           '</div>' +
-          '<div class="field m-video-field"><label>Video ID YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE" value="' + esc(m.video_id || '') + '" /></div>' +
+          '<div class="field m-video-field"><label>Link / ID Video YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE atau https://youtu.be/…" value="' + esc(m.video_id || '') + '" /></div>' +
           '<div class="field m-text-field" style="display:none"><label>Isi Teks Modul</label><textarea class="m-text" rows="7" placeholder="Tulis konten modul di sini (bisa multi-paragraf)…">' + esc(m.content || '') + '</textarea></div>' +
           '<div class="field" style="margin-bottom:0"><label>Judul Modul</label><input class="m-title" type="text" placeholder="Judul modul…" value="' + esc(m.title || '') + '" /></div>' +
         '</div>' +
@@ -2063,7 +2064,7 @@
         } else if (f.type === 'number') {
           html += '<div class="field lp-field">' + label + '<input type="number" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
         } else {
-          html += '<div class="field lp-field">' + label + '<input type="text" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+          html += '<div class="field lp-field">' + label + '<input type="text" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
         }
       });
       html += '</div>';

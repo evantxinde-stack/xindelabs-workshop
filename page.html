@@ -151,7 +151,7 @@
             '</div>' + sectionCloseWrap();
         case 'youtube': return sectionOpenWrap() +
             '<div class="sec-media sec-media--video' + rev + '">' +
-              '<div class="video__frame"><iframe src="https://www.youtube.com/embed/' + h(d.video_id || '') + '" title="' + h(d.title || 'YouTube video') + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>' +
+              '<div class="video__frame"><iframe src="https://www.youtube.com/embed/' + h(LandingPages.youtubeId(d.video_id)) + '" title="' + h(d.title || 'YouTube video') + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>' +
               (d.title ? '<p class="sec-media__cap">' + h(d.title) + '</p>' : '') +
             '</div>' + sectionCloseWrap();
         case 'cta': return '<section class="closing"><div class="closing__glow" aria-hidden="true"></div><div class="wrap reveal">' +
