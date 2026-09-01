@@ -658,11 +658,12 @@
         }
 
       if (!cfg.supabaseConfigured()) { apply(defaults); return; }
-      if (!window.supabase) { apply(defaults); return; }
-      var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      client.from('site_content').select('value').eq('key', 'homepage').single().then(function (res) {
-        if (res.error || !res.data) return apply(defaults);
-        apply(Object.assign({}, defaults, res.data.value || {}));
+      fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.homepage&select=value', {
+        headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + cfg.SUPABASE_ANON_KEY }
+      }).then(function (r) { return r.json(); }).then(function (rows) {
+        var v = (rows && rows[0] && rows[0].value) ? rows[0].value : null;
+        if (!v) { apply(defaults); return; }
+        apply(Object.assign({}, defaults, v));
       }).catch(function () { apply(defaults); });
     })();
 

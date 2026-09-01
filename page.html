@@ -249,6 +249,18 @@
       var close = sectionCloseWrap();
       var html = renderHero({ eyebrow: (c.meta && c.meta.eyebrow) || '', title: c.hero_title, subtitle: c.hero_subtitle }, ctx);
       html += inlineTimerHtml();
+
+      // Video intro dari CMS (boleh link penuh atau ID)
+      var vid = c.video_youtube_id ? LandingPages.youtubeId(c.video_youtube_id) : '';
+      if (vid) {
+        html += '<section class="section" id="video"><div class="wrap">' +
+          (c.video_caption ? '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>' + h(c.video_caption) + '</p>' : '') +
+          '<div class="sec-media sec-media--video reveal">' +
+            '<div class="video__frame"><iframe src="https://www.youtube.com/embed/' + h(vid) + '" title="Video intro" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>' +
+          '</div>' +
+        '</div></section>';
+      }
+
       html += open +
         '<p class="eyebrow eyebrow--center reveal"><span class="dot"></span>apa kata mereka</p>' +
         '<h2 class="h2 reveal" style="text-align:center">Udah mulai, hasilnya keliatan.</h2>' +
