@@ -1,27 +1,32 @@
 /* ============================================================
-   LANDING PAGES — multi-page management
+   LANDING PAGES — multi-page management + data access
+   Skema tipe section / renderer dipindah ke js/lp-render.js
+   (window.LPRender) supaya page.html, index.html, dan admin
+   memakai satu sumber yang sama.
    Setiap landing page disimpan di site_content dengan key:
    - 'homepage'          → landing utama (default)
    - 'lp_<slug>'         → landing custom (subdomain/URL)
-   value = { ...content biasa, meta: { slug, title, page_title, subdomain, accent, is_custom } }
+   value = { ...content biasa, meta: { slug, title, page_title, subdomain, accent, is_custom,
+            nav, footer } }
    ============================================================ */
 window.LandingPages = (function () {
   var cfg = window.XINDE;
+  var R = window.LPRender;
 
   function metaOf(key, value) {
     var m = (value && value.meta) || {};
     var isCustom = m.is_custom || key.indexOf('lp_') === 0;
     var slug = m.slug || (isCustom ? key.replace(/^lp_/, '') : 'utama');
-    return {
+    return Object.assign({}, R ? R.mergeMeta(null) : {}, m, {
       slug: slug,
       is_custom: isCustom,
       title: m.title || (isCustom ? slug : 'Landing Utama'),
       page_title: m.page_title || '',
-      subdomain: m.subdomain || '',
       accent: m.accent || '#00ff88',
-      accent_label: m.accent_label || 'hijau',
-      created_at: m.created_at || ''
-    };
+      created_at: m.created_at || '',
+      nav: Object.assign({}, (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.meta && cfg.DEFAULT_LANDING.meta.nav) || {}, m.nav || {}),
+      footer: Object.assign({}, (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.meta && cfg.DEFAULT_LANDING.meta.footer) || {}, m.footer || {})
+    });
   }
 
   function keyOf(slug) {
@@ -71,156 +76,20 @@ window.LandingPages = (function () {
     return base + '//' + location.host + '/page.html?slug=' + encodeURIComponent(slug);
   }
 
-  /* ============================================================
-     SECTION-BASED BUILDER
-     Tiap landing page bisa punya value.sections: array of section.
-     Section types: hero, text, image, youtube, cta, pricing,
-                    testimonial, faq, stats, divider, embed
-     ============================================================ */
-
-  // Definisi tipe section + field yang bisa diedit
-  var SECTION_TYPES = {
-    hero: {
-      label: 'Hero',
-      icon: '🏠',
-      fields: [
-        { key: 'eyebrow', label: 'Eyebrow', type: 'text' },
-        { key: 'title', label: 'Judul (boleh HTML)', type: 'textarea' },
-        { key: 'subtitle', label: 'Subjudul', type: 'textarea' },
-        { key: 'cta_text', label: 'Text Tombol CTA', type: 'text' },
-        { key: 'cta_link', label: 'Link Tombol CTA', type: 'text' }
-      ]
-    },
-    text: {
-      label: 'Teks',
-      icon: '✍️',
-      fields: [
-        { key: 'heading', label: 'Heading', type: 'text' },
-        { key: 'body', label: 'Isi (boleh HTML)', type: 'textarea' },
-        { key: 'align', label: 'Perataan', type: 'select', options: ['left', 'center', 'right'] }
-      ]
-    },
-    image: {
-      label: 'Gambar',
-      icon: '🖼️',
-      fields: [
-        { key: 'src', label: 'URL Gambar', type: 'text' },
-        { key: 'alt', label: 'Alt Text', type: 'text' },
-        { key: 'caption', label: 'Caption', type: 'text' },
-        { key: 'max_width', label: 'Max Width (px)', type: 'number' }
-      ]
-    },
-    youtube: {
-      label: 'Video YouTube',
-      icon: '▶️',
-      fields: [
-        { key: 'video_id', label: 'YouTube Link atau Video ID', type: 'text', placeholder: 'cth: https://youtu.be/abc123 atau abc123' },
-        { key: 'caption', label: 'Caption', type: 'text' }
-      ]
-    },
-    cta: {
-      label: 'CTA',
-      icon: '🎯',
-      fields: [
-        { key: 'title', label: 'Judul', type: 'text' },
-        { key: 'subtitle', label: 'Subjudul', type: 'text' },
-        { key: 'btn_text', label: 'Text Tombol', type: 'text' },
-        { key: 'btn_link', label: 'Link Tombol', type: 'text' }
-      ]
-    },
-    pricing: {
-      label: 'Pricing',
-      icon: '💰',
-      fields: [
-        { key: 'yearly_label', label: 'Label Paket Tahunan', type: 'text' },
-        { key: 'yearly_price', label: 'Harga Tahunan (Rp)', type: 'number' },
-        { key: 'lifetime_label', label: 'Label Paket Lifetime', type: 'text' },
-        { key: 'lifetime_price', label: 'Harga Lifetime (Rp)', type: 'number' }
-      ]
-    },
-    testimonial: {
-      label: 'Testimoni',
-      icon: '💬',
-      fields: [
-        { key: 'quote', label: 'Kutipan', type: 'textarea' },
-        { key: 'name', label: 'Nama / Peran', type: 'text' }
-      ]
-    },
-    faq: {
-      label: 'FAQ',
-      icon: '❓',
-      fields: [
-        { key: 'q', label: 'Pertanyaan', type: 'text' },
-        { key: 'a', label: 'Jawaban', type: 'textarea' }
-      ]
-    },
-    stats: {
-      label: 'Statistik',
-      icon: '📊',
-      fields: [
-        { key: 'items', label: 'Statistik (satu per baris, format: angka|label)', type: 'textarea', multiline: true }
-      ]
-    },
-    divider: {
-      label: 'Pemisah',
-      icon: '➖',
-      fields: []
-    },
-    embed: {
-      label: 'Embed (HTML bebas)',
-      icon: '🧩',
-      fields: [
-        { key: 'html', label: 'HTML / iframe / script', type: 'textarea' }
-      ]
-    }
-  };
-
-  // Template defaults per tipe section
-  function sectionDefaults(type) {
-    var d = {
-      hero: { eyebrow: 'untuk sales person · tanpa coding', title: 'Bangun Karyawan Super Pintar — <span class="hl">Bantu semua kerjaan lo 24/7 No Baper</span>', subtitle: 'Bukan cuma ChatGPT. Agent lo yang follow-up, riset, dan closing — tanpa coding.', cta_text: 'Daftar Course →', cta_link: '#checkout' },
-      text: { heading: '', body: 'Tulis konten lo di sini.', align: 'left' },
-      image: { src: '', alt: '', caption: '', max_width: '' },
-      youtube: { video_id: '', caption: '' },
-      cta: { title: 'Siap mulai?', subtitle: 'Daftar sekarang, garansi 7 hari.', btn_text: 'Daftar Course →', btn_link: '#checkout' },
-      pricing: { yearly_label: 'Tahunan', yearly_price: 599000, lifetime_label: 'Lifetime', lifetime_price: 999000 },
-      testimonial: { quote: '', name: '' },
-      faq: { q: '', a: '' },
-      stats: { items: '500|member aktif\n40|prospek berhasil ditutup' },
-      divider: {},
-      embed: { html: '' }
-    };
-    return JSON.parse(JSON.stringify(d[type] || {}));
-  }
-
-  function newSection(type) {
-    var uid = (type + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000));
-    return { id: uid, type: type, data: sectionDefaults(type) };
-  }
-
-  function sectionTypeMeta(type) {
-    return SECTION_TYPES[type] || { label: type, icon: '🗂️', fields: [] };
-  }
-
-  // Ekstrak YouTube video ID dari link penuh ATAU ID mentah.
-  // Contoh: "https://youtu.be/abc123", ".../watch?v=abc123",
-  // "shorts/abc123", "embed/abc123", atau "abc123" langsung.
-  function youtubeId(value) {
-    var raw = String(value == null ? '' : value).trim();
-    if (!raw) return '';
-    var m = /(?:youtube\.com\/(?:watch\?.*v=|shorts\/|embed\/|live\/|v\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(raw);
-    if (m) return m[1];
-    // Sudah berupa ID mentah (alphanumeric + dash/underscore, >= 6)
-    if (/^[A-Za-z0-9_-]{6,}$/.test(raw)) return raw;
-    return '';
+  // Untuk preview mode: URL halaman yang bisa menerima draft via postMessage
+  function previewUrl(key) {
+    if (key === 'homepage') return 'index.html?preview=1';
+    var slug = key.replace(/^lp_/, '');
+    return 'page.html?slug=' + encodeURIComponent(slug) + '&preview=1';
   }
 
   return {
-    keyOf: keyOf, metaOf: metaOf, listAll: listAll, get: get, accessUrl: accessUrl,
-    SECTION_TYPES: SECTION_TYPES,
-    sectionDefaults: sectionDefaults,
-    newSection: newSection,
-    sectionTypeMeta: sectionTypeMeta,
-    youtubeId: youtubeId
+    keyOf: keyOf, metaOf: metaOf, listAll: listAll, get: get, accessUrl: accessUrl, previewUrl: previewUrl,
+    // Delegasi ke LPRender (backward-compat untuk admin yang lama)
+    SECTION_TYPES: R.TYPES,
+    sectionDefaults: R.sectionDefaults,
+    newSection: R.newSection,
+    sectionTypeMeta: R.sectionTypeMeta,
+    youtubeId: R.youtubeId
   };
 })();

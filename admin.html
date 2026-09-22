@@ -553,10 +553,78 @@
                       </div>
                       <div class="field">
                         <label for="lp_accent">Warna Aksen (hex)</label>
-                        <input type="text" id="lp_accent" placeholder="#00ff88" />
+                        <input type="color" id="lp_accent" value="#00ff88" style="height:44px;padding:4px" title="Pilih warna aksen" />
                         <div class="hint">Warna tombol &amp; teks hijau. Default #00ff88.</div>
                       </div>
                     </div>
+                    <div class="admin-grid2" style="margin-top:0">
+                      <div class="field">
+                        <label for="lp_page_desc">Meta Description</label>
+                        <textarea id="lp_page_desc" rows="2" placeholder="Deskripsi untuk Google/Sosmed (SEO), opsional"></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="admin-block">
+                    <div class="admin-block__head"><label>Navigasi (Navbar)</label></div>
+                    <div class="admin-grid3">
+                      <div class="field">
+                        <label for="lp_nav_logo">Logo (teks)</label>
+                        <input type="text" id="lp_nav_logo" placeholder="xindelabs" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_nav_logo_dot">Titik Logo</label>
+                        <input type="text" id="lp_nav_logo_dot" placeholder="." style="width:70px" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_home_href">Link Logo</label>
+                        <input type="text" id="lp_home_href" placeholder="index.html" />
+                      </div>
+                    </div>
+                    <div class="admin-grid2" style="margin-top:12px">
+                      <div class="field">
+                        <label for="lp_nav_cta_text">Text Tombol CTA Navbar</label>
+                        <input type="text" id="lp_nav_cta_text" placeholder="Daftar Course" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_nav_cta_href">Link Tombol CTA Navbar</label>
+                        <input type="text" id="lp_nav_cta_href" placeholder="checkout.html" />
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>Link Navbar</label>
+                      <div id="lpNavLinks"></div>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpAddNavLink" style="margin-top:8px">+ Tambah Link</button>
+                    </div>
+                  </div>
+
+                  <div class="admin-block">
+                    <div class="admin-block__head"><label>Footer</label></div>
+                    <div class="field">
+                      <label for="lp_footer_copy">Teks Footer</label>
+                      <input type="text" id="lp_footer_copy" placeholder="© 2026 Xinde Labs · …" />
+                    </div>
+                    <div class="field">
+                      <label>Link Footer</label>
+                      <div id="lpFooterLinks"></div>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpAddFooterLink" style="margin-top:8px">+ Tambah Link</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ===== LIVE PREVIEW ===== -->
+                <div class="admin-block lp-preview-block">
+                  <div class="admin-block__head">
+                    <label>👁️ Live Preview</label>
+                    <div class="lp-preview__tools">
+                      <button type="button" class="lp-dev is-active" data-w="390" title="Mobile">📱</button>
+                      <button type="button" class="lp-dev" data-w="768" title="Tablet">💻</button>
+                      <button type="button" class="lp-dev" data-w="1000" title="Desktop">🖥️</button>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpPreviewReload" title="Muat ulang preview">↻</button>
+                    </div>
+                  </div>
+                  <div class="lp-preview__wrap" id="lpPreviewWrap">
+                    <iframe id="lpPreviewFrame" title="Live preview landing" src="about:blank"></iframe>
                   </div>
                 </div>
 
@@ -598,6 +666,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/lp-render.js"></script>
   <script src="js/landing-pages.js"></script>
   <script>
     var cfg = window.XINDE;
@@ -1845,10 +1914,16 @@
       });
     });
 
-    // ============ LANDING PAGE MANAGEMENT (section builder) ============
+    // ============ LANDING PAGE MANAGEMENT (section builder + live preview) ============
     var lpCache = null;          // list cache
     var lpEditingKey = null;     // current editing site_content key
     var lpSections = [];         // working array of sections while editing
+    var lpPreviewTimer = null;   // debounce push draft ke iframe preview
+    var lpMetaDraft = {          // working meta (nav/footer))
+      title: '', slug: '', page_title: '', page_desc: '', accent: '#00ff88',
+      nav: { logo: '', logo_dot: '.', home_href: 'index.html', cta: { text: '', href: '' }, links: [] },
+      footer: { copy: '', links: [] }
+    };
 
     // ---------- List landing pages ----------
     function renderLandingPages() {
@@ -1905,6 +1980,7 @@
           lpSections.push(LandingPages.newSection(b.dataset.add));
           renderSections();
           scrollToSection(lpSections[lpSections.length - 1].id);
+          pushPreview();
         });
       });
     }
@@ -1938,15 +2014,16 @@
               '<button type="button" class="btn btn--ghost btn--sm" data-up="' + idx + '" title="Naik">↑</button>' +
               '<button type="button" class="btn btn--ghost btn--sm" data-down="' + idx + '" title="Turun">↓</button>' +
               '<button type="button" class="btn btn--ghost btn--sm" data-open="' + esc(s.id) + '" title="Edit field">✎</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-openstyle="' + esc(s.id) + '" title="Edit style">🎨</button>' +
               '<button type="button" class="btn btn--ghost btn--sm" data-dupsec="' + idx + '" title="Gandakan">⧉</button>' +
               '<button type="button" class="btn btn--ghost btn--sm" data-delsec="' + idx + '" title="Hapus">✕</button>' +
             '</span>' +
           '</div>' +
           '<div class="lp-sec__fields" id="secfields-' + esc(s.id) + '" style="display:none"></div>' +
+          '<div class="lp-sec__style" id="secstyle-' + esc(s.id) + '" style="display:none"></div>' +
         '</div>';
       }).join('');
 
-      // event: up/down/dup/delete
       list.querySelectorAll('[data-up]').forEach(function (b) {
         b.addEventListener('click', function () { moveSection(Number(b.dataset.up), -1); });
       });
@@ -1954,7 +2031,10 @@
         b.addEventListener('click', function () { moveSection(Number(b.dataset.down), 1); });
       });
       list.querySelectorAll('[data-open]').forEach(function (b) {
-        b.addEventListener('click', function () { toggleSectionFields(b.dataset.open); });
+        b.addEventListener('click', function () { toggleSectionPanel(b.dataset.open, true); });
+      });
+      list.querySelectorAll('[data-openstyle]').forEach(function (b) {
+        b.addEventListener('click', function () { toggleSectionPanel(b.dataset.openstyle, false); });
       });
       list.querySelectorAll('[data-dupsec]').forEach(function (b) {
         b.addEventListener('click', function () { duplicateSection(Number(b.dataset.dupsec)); });
@@ -1962,27 +2042,32 @@
       list.querySelectorAll('[data-delsec]').forEach(function (b) {
         b.addEventListener('click', function () { removeSection(Number(b.dataset.delsec)); });
       });
-
-      // drag & drop reorder (native draggable)
       bindSectionDrag(list);
     }
 
     function sectionSummary(s) {
       var d = s.data || {};
-      var map = {
+      var stab = {
         hero: d.title || d.cta_text,
         text: d.heading || d.body,
         image: d.src || d.alt,
         youtube: d.video_id ? 'Video: ' + d.video_id : '',
+        video_row: d.heading || d.video_id || d.profile_name,
         cta: d.title || d.btn_text,
-        pricing: (d.yearly_price ? 'Rp ' + d.yearly_price : '') + (d.lifetime_price ? ' · Rp ' + d.lifetime_price : ''),
-        testimonial: d.name ? (d.name + ': ' + (d.quote || '')) : d.quote,
-        faq: d.q,
-        stats: d.items,
+        pricing: (d.yearly_price ? 'Rp ' + d.yearly_price : '') + (d.lifetime_price ? ' · Rp ' + d.lifetime_price : '') + (d.yearly_tier || ''),
+        stats: (d.items || []).length + ' item',
+        terminal: (d.items || []).length + ' modul',
+        rows: (d.items || []).length + ' baris',
+        cards: (d.items || []).length + ' kartu',
+        testimonials: (d.items || []).length + ' testimoni',
+        split: d.heading || d.image,
+        voucher: (d.items || []).length + ' voucher',
+        faq: (d.items || []).length + ' FAQ',
+        comm: d.title || d.btn_text,
         divider: '—',
         embed: 'HTML'
       };
-      return map[s.type] || '';
+      return stab[s.type] || '';
     }
 
     function moveSection(idx, delta) {
@@ -1992,11 +2077,13 @@
       lpSections[idx] = lpSections[newIdx];
       lpSections[newIdx] = temp;
       renderSections();
+      pushPreview();
     }
 
     function removeSection(idx) {
       lpSections.splice(idx, 1);
       renderSections();
+      pushPreview();
     }
 
     function duplicateSection(idx) {
@@ -2004,6 +2091,7 @@
       copy.id = (copy.type || 'sec') + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
       lpSections.splice(idx + 1, 0, copy);
       renderSections();
+      pushPreview();
     }
 
     // Drag & drop reorder (HTML5 native)
@@ -2037,64 +2125,319 @@
           var moved = lpSections.splice(from, 1)[0];
           lpSections.splice(to, 0, moved);
           renderSections();
+          pushPreview();
         });
       });
     }
 
     // ---------- Field editor per section ----------
+    var sfCurrent = null; // penanda: fieldControl(list) butuh id section — di-set buildSectionFields
+    function fieldControl(f, val, depth) {
+      depth = depth || 0;
+      var label = '<label>' + f.label + '</label>';
+      var cls = 'field lp-field lp-depth-' + depth;
+      if (f.type === 'textarea') {
+        return '<div class="' + cls + '">' + label + '<textarea rows="' + (f.key === 'body' || f.key === 'html' || f.key === 'success_text' ? 5 : 2) + '" data-fk="' + f.key + '">' + esc(val) + '</textarea></div>';
+      }
+      if (f.type === 'select') {
+        var opts = (f.options || []).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (String(val) === String(o) ? ' selected' : '') + '>' + esc(o) + '</option>';
+        }).join('');
+        return '<div class="' + cls + '">' + label + '<select data-fk="' + f.key + '">' + opts + '</select></div>';
+      }
+      if (f.type === 'number') {
+        return '<div class="' + cls + '">' + label + '<input type="number" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'color') {
+        return '<div class="' + cls + '">' + label + '<input type="color" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'url') {
+        return '<div class="' + cls + '">' + label + '<input type="url" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'toggle') {
+        return '<div class="' + cls + ' lp-toggle">' + label +
+          '<label class="switch"><input type="checkbox" data-fk="' + f.key + '"' + (val ? ' checked' : '') + ' /><span class="switch__slider"></span></label>' +
+        '</div>';
+      }
+      if (f.type === 'list') {
+        return '<div class="' + cls + '">' + label +
+          '<div class="lp-list" data-list="' + f.key + '">' +
+            ((val && val.length) ? val.map(function (item, i) { return listItemHtml(f, item, i, depth); }).join('') : '') +
+          '</div>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list-add" data-addlist="' + esc(sfCurrent && sfCurrent.id || '') + '" data-fk="' + f.key + '" style="margin-top:8px">' + (f.addLabel || '+ Tambah') + '</button>' +
+        '</div>';
+      }
+      return '<div class="' + cls + '">' + label + '<input type="text" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
+    }
+
+    function listItemHtml(f, item, i, depth) {
+      var subs = (f.sub || []).map(function (sf) {
+        var v = item[sf.key] != null ? item[sf.key] : '';
+        return '<div class="lp-list__field lp-depth-' + (depth + 1) + '">' + fieldControl(sf, v, depth + 1) + '</div>';
+      }).join('');
+      return '<div class="lp-list__item">' +
+        '<div class="lp-list__item-bar"><span>#' + (i + 1) + '</span>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__up" title="Naik">↑</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__down" title="Turun">↓</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__del" title="Hapus">✕</button>' +
+        '</div>' +
+        '<div class="lp-list__body">' + subs + '</div>' +
+      '</div>';
+    }
+
     function buildSectionFields(s) {
       var box = document.getElementById('secfields-' + s.id);
       if (!box) return;
+      sfCurrent = s;
       var meta = LandingPages.sectionTypeMeta(s.type);
       var d = s.data || {};
-      var html = '<div class="lp-fields">';
-      if (!meta.fields.length) {
-        html += '<div class="hint">Section ini tidak punya pengaturan lanjutan.</div>';
-      }
+      var html = '<div class="lp-fields"><div class="admin-row__head"><label>Anchor (opsional, untuk #link)</label><input type="text" data-anchor="' + esc(s.id) + '" value="' + esc(s.anchor || '') + '" placeholder="cth: video, pricing, faq" /></div>';
+      if (!meta.fields.length) html += '<div class="hint">Section ini tidak punya pengaturan lanjutan.</div>';
       meta.fields.forEach(function (f) {
         var val = d[f.key] != null ? d[f.key] : '';
-        var label = '<label>' + f.label + '</label>';
-        if (f.type === 'textarea') {
-          html += '<div class="field lp-field">' + label + '<textarea rows="' + (f.multiline ? 4 : f.key === 'body' || f.key === 'html' ? 4 : 2) + '" data-fk="' + f.key + '">' + esc(val) + '</textarea></div>';
-        } else if (f.type === 'select') {
-          var opts = (f.options || []).map(function (o) {
-            return '<option value="' + o + '"' + (val === o ? ' selected' : '') + '>' + o + '</option>';
-          }).join('');
-          html += '<div class="field lp-field">' + label + '<select data-fk="' + f.key + '">' + opts + '</select></div>';
-        } else if (f.type === 'number') {
-          html += '<div class="field lp-field">' + label + '<input type="number" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
-        } else {
-          html += '<div class="field lp-field">' + label + '<input type="text" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
-        }
+        html += fieldControl(f, val, 0);
       });
       html += '</div>';
       box.innerHTML = html;
 
+      // anchor
+      var anchorInp = box.querySelector('[data-anchor]');
+      if (anchorInp) anchorInp.addEventListener('input', function () { s.anchor = anchorInp.value.trim(); pushPreview(); });
+
+      // simple fields
       box.querySelectorAll('[data-fk]').forEach(function (inp) {
-        inp.addEventListener('input', function () {
-          var fk = inp.dataset.fk;
-          var nv = (inp.tagName === 'SELECT') ? inp.value :
-                   (inp.type === 'number') ? Number(inp.value) :
-                   inp.value;
-          s.data[fk] = nv;
-          var summary = sectionSummary(s);
-          var secEl = document.getElementById(s.id);
-          var sumEl = secEl && secEl.querySelector('.lp-sec__summary');
-          if (sumEl) sumEl.textContent = summary;
+        if (inp.closest('.lp-list') && inp.type !== 'checkbox') { bindListItemInput(inp); return; }
+        bindFieldInput(inp, s);
+      });
+      // toggles in list
+      box.querySelectorAll('.lp-list input[type="checkbox"][data-fk]').forEach(function (cb) { cb.addEventListener('change', function () { collectList(s, cb.dataset.fk); pushPreview(); }); });
+      // list add
+      box.querySelectorAll('[data-addlist]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var fk = b.dataset.fk;
+          s.data[fk] = s.data[fk] || [];
+          var f = meta.fields.filter(function (x) { return x.key === fk; })[0];
+          var item = {};
+          (f.sub || []).forEach(function (sf) { item[sf.key] = sf.type === 'toggle' ? false : ''; });
+          s.data[fk].push(item);
+          buildSectionFields(s);
+          pushPreview();
+        });
+      });
+      // list reorder/delete (delegasi di dalam box)
+      box.querySelectorAll('.lp-list__up, .lp-list__down, .lp-list__del').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var itemEl = b.closest('.lp-list__item');
+          var listEl = itemEl.parentElement;
+          var fk = listEl.dataset.list;
+          var idx = Array.prototype.indexOf.call(listEl.children, itemEl);
+          var arr = s.data[fk] || [];
+          if (b.classList.contains('lp-list__del')) {
+            arr.splice(idx, 1);
+          } else {
+            var n = b.classList.contains('lp-list__up') ? idx - 1 : idx + 1;
+            if (n < 0 || n >= arr.length) return;
+            var tmp = arr[idx];
+            arr[idx] = arr[n];
+            arr[n] = tmp;
+          }
+          buildSectionFields(s);
+          pushPreview();
         });
       });
     }
 
-    function toggleSectionFields(id) {
-      var box = document.getElementById('secfields-' + id);
+    function bindFieldInput(inp, s) {
+      inp.addEventListener('input', function () {
+        var fk = inp.dataset.fk;
+        if (inp.type === 'checkbox') {
+          s.data[fk] = inp.checked;
+        } else if (inp.tagName === 'SELECT') {
+          s.data[fk] = inp.value;
+        } else if (inp.type === 'number') {
+          s.data[fk] = inp.value === '' ? '' : Number(inp.value);
+        } else {
+          s.data[fk] = inp.value;
+        }
+        var secEl = document.getElementById(s.id);
+        var sumEl = secEl && secEl.querySelector('.lp-sec__summary');
+        if (sumEl) sumEl.textContent = sectionSummary(s);
+        pushPreview();
+      });
+      inp.addEventListener('change', function () {
+        if (inp.type === 'checkbox' || inp.tagName === 'SELECT') pushPreview();
+      });
+    }
+
+    // list item field input → langsung update objek (tanpa re-render)
+    function bindListItemInput(inp) {
+      var itemEl = inp.closest('.lp-list__item');
+      var listEl = inp.closest('.lp-list');
+      var s = sfCurrent;
+      if (!s || !itemEl || !listEl) return;
+      inp.addEventListener('input', function () {
+        var fk = inp.dataset.fk;
+        var listKey = listEl.dataset.list;
+        var idx = Array.prototype.indexOf.call(listEl.querySelectorAll('.lp-list__item'), itemEl);
+        if (!s.data[listKey]) s.data[listKey] = [];
+        var item = s.data[listKey][idx];
+        if (!item) return;
+        if (inp.type === 'checkbox') item[fk] = inp.checked;
+        else if (inp.type === 'number') item[fk] = inp.value === '' ? '' : Number(inp.value);
+        else item[fk] = inp.value;
+        pushPreview();
+      });
+      inp.addEventListener('change', function () { if (inp.type === 'checkbox') pushPreview(); });
+    }
+
+    function collectList(s, fk) {
+      var box = document.getElementById('secfields-' + s.id);
+      if (!box) return;
+      var listEl = box.querySelector('.lp-list[data-list="' + fk + '"]');
+      if (!listEl) return;
+      var out = Array.prototype.map.call(listEl.querySelectorAll('.lp-list__item'), function (item) {
+        var obj = {};
+        item.querySelectorAll('[data-fk]').forEach(function (inp) {
+          var k = inp.dataset.fk;
+          obj[k] = inp.type === 'checkbox' ? inp.checked : (inp.type === 'number' ? (inp.value === '' ? '' : Number(inp.value)) : inp.value);
+        });
+        return obj;
+      });
+      s.data[fk] = out;
+    }
+
+    function buildSectionStyle(s) {
+      var box = document.getElementById('secstyle-' + s.id);
+      if (!box) return;
+      if (!s.style) s.style = LPRender.defaultStyles();
+      var html = '<div class="lp-fields lp-style-fields"><div class="hint">Padding, warna, perataan, dan visibilitas bagian ini.</div>';
+      LPRender.STYLE_FIELDS.forEach(function (f) {
+        var val = s.style[f.key] != null ? s.style[f.key] : '';
+        html += fieldControl(f, val, 0);
+      });
+      html += '</div>';
+      box.innerHTML = html;
+      box.querySelectorAll('[data-fk]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          var fk = inp.dataset.fk;
+          if (inp.type === 'checkbox') s.style[fk] = inp.checked;
+          else if (inp.type === 'number') s.style[fk] = inp.value === '' ? '' : Number(inp.value);
+          else s.style[fk] = inp.value;
+          pushPreview();
+        });
+      });
+    }
+
+    function toggleSectionPanel(id, isFields) {
+      var key = isFields ? 'secfields-' : 'secstyle-';
+      var otherKey = isFields ? 'secstyle-' : 'secfields-';
+      var box = document.getElementById(key + id);
+      var other = document.getElementById(otherKey + id);
       if (!box) return;
       var show = box.style.display === 'none';
       box.style.display = show ? 'block' : 'none';
+      if (other) other.style.display = 'none';
       if (show) {
         var s = lpSections.filter(function (x) { return x.id === id; })[0];
-        if (s) buildSectionFields(s);
+        if (!s) return;
+        if (isFields) buildSectionFields(s);
+        else buildSectionStyle(s);
       }
     }
+
+    // ---------- Meta: nav & footer links (repeater rows) ----------
+    function metaLinksRow(key) {
+      var container = document.getElementById(key === 'nav' ? 'lpNavLinks' : 'lpFooterLinks');
+      var items = key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links;
+      container.innerHTML = items.map(function (l, i) {
+        return '<div class="lp-linkrow">' +
+          '<input type="text" class="lp-link-label" value="' + esc(l.label || '') + '" placeholder="Label (cth: Course)" />' +
+          '<input type="text" class="lp-link-href" value="' + esc(l.href || '') + '" placeholder="href (cth: #modules atau checkout.html)" />' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-link-del" title="Hapus">✕</button>' +
+        '</div>';
+      }).join('');
+      container.querySelectorAll('.lp-link-label').forEach(function (inp, i) {
+        inp.addEventListener('input', function () { (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links)[i].label = inp.value.trim(); pushPreview(); });
+      });
+      container.querySelectorAll('.lp-link-href').forEach(function (inp, i) {
+        inp.addEventListener('input', function () { (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links)[i].href = inp.value.trim(); pushPreview(); });
+      });
+      container.querySelectorAll('.lp-link-del').forEach(function (b, i) {
+        b.addEventListener('click', function () {
+          (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links).splice(i, 1);
+          metaLinksRow(key);
+          pushPreview();
+        });
+      });
+    }
+
+    function bindMetaInputs() {
+      [['lp_title', function (v) { lpMetaDraft.title = v; }],
+       ['lp_page_title', function (v) { lpMetaDraft.page_title = v; }],
+       ['lp_page_desc', function (v) { lpMetaDraft.page_desc = v; }],
+       ['lp_accent', function (v) { lpMetaDraft.accent = v; }],
+       ['lp_nav_logo', function (v) { lpMetaDraft.nav.logo = v; }],
+       ['lp_nav_logo_dot', function (v) { lpMetaDraft.nav.logo_dot = v; }],
+       ['lp_home_href', function (v) { lpMetaDraft.nav.home_href = v; }],
+       ['lp_nav_cta_text', function (v) { lpMetaDraft.nav.cta.text = v; }],
+       ['lp_nav_cta_href', function (v) { lpMetaDraft.nav.cta.href = v; }],
+       ['lp_footer_copy', function (v) { lpMetaDraft.footer.copy = v; }]
+      ].forEach(function (pair) {
+        var el = document.getElementById(pair[0]);
+        if (el) el.addEventListener('input', function () { pair[1](el.value.trim()); pushPreview(); });
+      });
+      document.getElementById('lpAddNavLink').addEventListener('click', function () { lpMetaDraft.nav.links.push({ label: '', href: '' }); metaLinksRow('nav'); pushPreview(); });
+      document.getElementById('lpAddFooterLink').addEventListener('click', function () { lpMetaDraft.footer.links.push({ label: '', href: '' }); metaLinksRow('footer'); pushPreview(); });
+    }
+    bindMetaInputs();
+
+    // ---------- LIVE PREVIEW (iframe + postMessage) ----------
+    function previewUrl() {
+      if (lpEditingKey === 'homepage') return 'index.html?preview=1';
+      var slug = lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : 'utama';
+      return 'page.html?slug=' + encodeURIComponent(slug) + '&preview=1';
+    }
+
+    function loadPreviewFrame() {
+      var frame = document.getElementById('lpPreviewFrame');
+      frame.src = previewUrl();
+    }
+
+    function builtDraft() {
+      return { meta: lpMetaDraft, sections: lpSections };
+    }
+
+    function pushPreview() {
+      if (!lpEditingKey) return;
+      clearTimeout(lpPreviewTimer);
+      lpPreviewTimer = setTimeout(function () {
+        var frame = document.getElementById('lpPreviewFrame');
+        if (!frame || !frame.contentWindow) return;
+        try {
+          frame.contentWindow.postMessage({ type: 'lp-draft', content: builtDraft() }, '*');
+        } catch (e) {}
+      }, 350);
+    }
+
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'lp-ready') pushPreview();
+    });
+
+    document.getElementById('lpPreviewReload').addEventListener('click', function () {
+      loadPreviewFrame();
+    });
+
+    document.querySelectorAll('.lp-dev').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.lp-dev').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        var w = Number(b.dataset.w) || 1000;
+        var wrap = document.getElementById('lpPreviewWrap');
+        wrap.style.maxWidth = w + 'px';
+      });
+    });
+    var lpDevDefault = document.querySelector('.lp-dev[data-w="1000"]');
+    if (lpDevDefault) lpDevDefault.click();
 
     // ---------- Open editor ----------
     function openLpEditor(key) {
@@ -2106,65 +2449,90 @@
       document.getElementById('lpFormMsg').style.display = 'none';
       document.getElementById('lpFormState').textContent = '';
 
-      LandingPages.get(key === 'homepage' ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
+      var isMain = key === 'homepage';
+      LandingPages.get(isMain ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
         var v = c || {};
         var m = v.meta || {};
-        document.getElementById('lp_title').value = m.title || '';
-        document.getElementById('lp_slug').value = (key === 'homepage') ? '' : key.replace(/^lp_/, '');
-        document.getElementById('lp_page_title').value = m.page_title || '';
-        document.getElementById('lp_accent').value = m.accent || '#00ff88';
+        var def = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.meta) || {};
+        var nav = Object.assign({}, def.nav || {}, m.nav || {});
+        var footer = Object.assign({}, def.footer || {}, m.footer || {});
+        // working meta draft
+        lpMetaDraft = {
+          title: m.title || (isMain ? (def.title || '') : key.replace(/^lp_/, '')),
+          slug: isMain ? 'utama' : (m.slug || key.replace(/^lp_/, '')),
+          page_title: m.page_title || '',
+          page_desc: m.page_desc || '',
+          accent: m.accent || def.accent || '#00ff88',
+          nav: {
+            logo: nav.logo || '', logo_dot: (nav.logo_dot != null ? nav.logo_dot : '.'),
+            home_href: nav.home_href || 'index.html',
+            cta: Object.assign({ text: '', href: '' }, nav.cta || {}),
+            links: (nav.links || []).map(function (l) { return { label: l.label || '', href: l.href || '' }; })
+          },
+          footer: {
+            copy: footer.copy || '',
+            links: (footer.links || []).map(function (l) { return { label: l.label || '', href: l.href || '' }; })
+          }
+        };
 
-        // Sections: pakai value.sections kalau ada; kalau belum, konversi dari konten lama
-        lpSections = normalizeSections(v);
+        document.getElementById('lp_title').value = lpMetaDraft.title;
+        document.getElementById('lp_slug').value = isMain ? '' : lpMetaDraft.slug;
+        document.getElementById('lp_page_title').value = lpMetaDraft.page_title;
+        document.getElementById('lp_page_desc').value = lpMetaDraft.page_desc;
+        document.getElementById('lp_accent').value = lpMetaDraft.accent;
+        document.getElementById('lp_nav_logo').value = lpMetaDraft.nav.logo;
+        document.getElementById('lp_nav_logo_dot').value = lpMetaDraft.nav.logo_dot;
+        document.getElementById('lp_home_href').value = lpMetaDraft.nav.home_href;
+        document.getElementById('lp_nav_cta_text').value = lpMetaDraft.nav.cta.text;
+        document.getElementById('lp_nav_cta_href').value = lpMetaDraft.nav.cta.href;
+        document.getElementById('lp_footer_copy').value = lpMetaDraft.footer.copy;
+        metaLinksRow('nav');
+        metaLinksRow('footer');
+
+        // Sections: pakai value.sections kalau ada; kalau belum, konversi dari konten lama / default
+        lpSections = normalizeSections(v, isMain);
 
         var pv = document.getElementById('lpFormPreview');
         pv.style.display = 'inline-flex';
-        var slug = (key === 'homepage') ? 'utama' : key.replace(/^lp_/, '');
+        var slug = isMain ? 'utama' : key.replace(/^lp_/, '');
         pv.onclick = function () { window.open('page.html?slug=' + encodeURIComponent(slug), '_blank'); };
 
         renderPalette();
         renderSections();
+        loadPreviewFrame();
         scrollToSection(document.getElementById('lpEditorWrap'));
       });
     }
 
     // Konversi konten lama ke sections kalau belum ada value.sections
-    function normalizeSections(v) {
-      if (Array.isArray(v.sections) && v.sections.length) return JSON.parse(JSON.stringify(v.sections));
-      var secs = [];
-      var helpers = codeToHelpers();
-      // hero dari konten lama
-      if (v.hero_title || v.hero_subtitle || (v.meta && v.meta.eyebrow)) {
-        secs.push({ id: helpers.uid('hero'), type: 'hero', data: {
-          eyebrow: (v.meta && v.meta.eyebrow) || 'untuk sales person · tanpa coding',
-          title: v.hero_title || '',
-          subtitle: v.hero_subtitle || '',
-          cta_text: 'Daftar Course →',
-          cta_link: 'checkout.html'
-        }});
+    function normalizeSections(v, isMain) {
+      if (Array.isArray(v.sections) && v.sections.length) {
+        return JSON.parse(JSON.stringify(v.sections)).map(function (s) {
+          s.data = Object.assign({}, LPRender.sectionDefaults(s.type), s.data || {});
+          s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
+          return s;
+        });
       }
-      secs.push({ id: helpers.uid('divider'), type: 'divider', data: {} });
-      (Array.isArray(v.testimonials) ? v.testimonials : []).forEach(function (t) {
-        secs.push({ id: helpers.uid('testimonial'), type: 'testimonial', data: { quote: t.quote || '', name: t.name || '' } });
+      // konten lama → sections via renderer
+      var converted = LPRender.normalizeLegacy(v || {});
+      var meaningful = converted.some(function (s) {
+        if (s.type === 'cta' || s.type === 'divider') return false;
+        var d = s.data || {};
+        return !!d.title || !!d.heading || !!d.quote || !!d.q || !!d.hero_title || (s.type === 'pricing');
       });
-      if ((v.price_yearly && v.price_yearly !== cfg.PRICES.yearly.harga) || (v.price_lifetime && v.price_lifetime !== cfg.PRICES.lifetime.harga)) {
-        secs.push({ id: helpers.uid('pricing'), type: 'pricing', data: {
-          yearly_label: 'Tahunan', yearly_price: v.price_yearly || cfg.PRICES.yearly.harga,
-          lifetime_label: 'Lifetime', lifetime_price: v.price_lifetime || cfg.PRICES.lifetime.harga
-        }});
+      if (meaningful) return converted;
+      // default: homepage pakai desain utama; landing custom dijisi hero + cta
+      if (isMain) {
+        var defSecs = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.sections) || [];
+        return JSON.parse(JSON.stringify(defSecs)).map(function (s) {
+          s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
+          return s;
+        });
       }
-      (Array.isArray(v.faqs) ? v.faqs : []).forEach(function (f) {
-        secs.push({ id: helpers.uid('faq'), type: 'faq', data: { q: f.q || '', a: f.a || '' } });
-      });
-      return secs;
+      return [LPRender.newSection('hero'), LPRender.newSection('cta')];
     }
 
-    function codeToHelpers() {
-      var c = 0;
-      return { uid: function (t) { return t + '_' + Date.now() + '_' + (c++); } };
-    }
-
-    // ---------- Save ----------
+    // ---------- Save (merge + mirror legacy) ----------
     document.getElementById('lpSaveBtn').addEventListener('click', function () {
       var err = document.getElementById('lpFormError');
       var msg = document.getElementById('lpFormMsg');
@@ -2180,17 +2548,29 @@
       var isMain = (lpEditingKey === 'homepage');
       var key = isMain ? 'homepage' : LandingPages.keyOf(slugRaw || (lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : ''));
 
-      var content = {
-        sections: lpSections,
-        meta: {
-          slug: isMain ? 'utama' : slugRaw,
-          title: document.getElementById('lp_title').value.trim() || slugRaw,
-          page_title: document.getElementById('lp_page_title').value.trim(),
-          accent: document.getElementById('lp_accent').value.trim() || '#00ff88',
-          is_custom: !isMain
-        }
+      // bend dari meta draft
+      lpMetaDraft.slug = isMain ? 'utama' : slugRaw;
+      lpMetaDraft.title = document.getElementById('lp_title').value.trim() || lpMetaDraft.title;
+      lpMetaDraft.page_title = document.getElementById('lp_page_title').value.trim();
+      lpMetaDraft.page_desc = document.getElementById('lp_page_desc').value.trim();
+      lpMetaDraft.accent = document.getElementById('lp_accent').value.trim() || '#00ff88';
+      lpMetaDraft.is_custom = !isMain;
+
+      // kolaps section (ambill al nilai field terakhir via data yg sudah tersimpan di lpSections)
+      var sections = lpSections.map(function (s) {
+        return { id: s.id, type: s.type, anchor: s.anchor || '', data: s.data || {}, style: s.style || {} };
+      });
+
+      // mirror legacy keys biar checkout/countdown/link lama tetap jalan
+      var pricingSec = sections.filter(function (s) { return s.type === 'pricing'; })[0];
+      var legacy = {
+        price_yearly: (pricingSec && pricingSec.data && pricingSec.data.yearly_price) || 0,
+        price_lifetime: (pricingSec && pricingSec.data && pricingSec.data.lifetime_price) || 0
       };
 
+      var content = { sections: sections, meta: lpMetaDraft, legacy: legacy };
+
+      // merge dgn nilai existing (jangan replace total)
       var btn = document.getElementById('lpSaveBtn');
       var stateEl = document.getElementById('lpFormState');
       btn.disabled = true;
@@ -2204,30 +2584,33 @@
           err.textContent = '⚠️ Session expired. Login ulang.';
           err.style.display = 'flex';
           stateEl.textContent = '';
-          return null;
+          return;
         }
-        var token = sess.data.session.access_token;
-        window.__adminToken = token;
-        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(key), {
-          method: 'PATCH',
-          headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ value: content, updated_by: 'admin' })
+        return client.from('site_content').select('value').eq('key', key).maybeSingle().then(function (r) {
+          var existing = (r.data && r.data.value) ? r.data.value : {};
+          var merged = Object.assign({}, existing, content, { legacy: legacy });
+          merged.sections = sections;
+          var token = sess.data.session.access_token;
+          return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(key), {
+            method: 'PATCH',
+            headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ value: merged, updated_by: 'admin' })
+          }).then(function (resp) {
+            if (resp && resp.ok) return { ok: true };
+            // row belum ada → PK conflict → create
+            return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
+              method: 'POST',
+              headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ key: key, value: merged, updated_by: 'admin' })
+            }).then(function (r2) { return { ok: !!r2.ok, status: r2.status }; });
+          });
         });
-      }).then(function (r) {
-        if (!r) return null;
-        if (r.ok) return r;
-        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
-          method: 'POST',
-          headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + window.__adminToken, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          body: JSON.stringify({ key: key, value: content, updated_by: 'admin' })
-        });
-      }).then(function (r) {
-        if (!r) return;
+      }).then(function (res) {
         btn.disabled = false;
         btn.textContent = 'Simpan Landing';
-        if (!r.ok) {
+        if (!res || !res.ok) {
           stateEl.textContent = '';
-          err.textContent = '⚠️ Gagal simpan: HTTP ' + r.status + '. Cek F12 → Console.';
+          err.textContent = '⚠️ Gagal simpan: ' + (res ? 'HTTP ' + res.status : 'session').toString() + '. Cek F12 → Console.';
           err.style.display = 'flex';
           return;
         }

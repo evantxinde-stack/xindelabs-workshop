@@ -1534,3 +1534,11 @@ html.js .reveal.d3 { transition-delay: .24s; }
 .sec-embed iframe, .sec-embed img, .sec-embed video {
   max-width: 100%; border-radius: var(--radius);
 }
+
+/* ----- Fitur sembunyi section (style editor SPA) ----- */
+@media (min-width: 721px) {
+  .hide-d { display: none !important; }
+}
+@media (max-width: 720px) {
+  .hide-m { display: none !important; }
+}
