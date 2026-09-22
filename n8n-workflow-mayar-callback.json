@@ -64,6 +64,52 @@
     },
     {
       "parameters": {
+        "jsCode": "const p = $input.first().json;\nconst productTxt = [p.productName, p.raw || ''].join(' ').toLowerCase();\nconst tier = productTxt.includes('lifetime') ? 'lifetime' : 'yearly';\nreturn {\n  json: {\n    email: p.customerEmail || '',\n    name: p.customerName || '',\n    mobile: p.customerMobile || '',\n    tier: tier\n  }\n};"
+      },
+      "id": "code-prep-provision",
+      "name": "Code: Siapkan Data LMS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://xindelabs.web.id/api/provision-lms",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.PROVISION_LMS_SECRET}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $json.email, name: $json.name, mobile: $json.mobile, tier: $json.tier }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "http-provision-lms",
+      "name": "HTTP: Provision LMS Access",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -320
+      ]
+    },
+    {
+      "parameters": {
         "jsCode": "// Kirim data peserta ke Google Apps Script (auto-email-system.gs)\n// Webhook Apps Script lo: URL dari Deploy > Web app\nconst APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXX/exec';\n\nconst payment = $input.first().json;\n\nreturn {\n  json: {\n    nama: payment.customerName || payment.name || '',\n    email: payment.customerEmail || payment.email || '',\n    no_wa: payment.customerMobile || payment.mobile || '',\n    harga: payment.amount || 299000,\n    status: 'paid',\n    tipe: 'umum',\n    merchant_ref: payment.reference || '',\n    pixel_fbp: payment.pixelFbp || '',\n    pixel_fbc: payment.pixelFbc || '',\n    endpoint: APPS_SCRIPT_WEBHOOK\n  }\n};"
       },
       "id": "code-prep-email",
@@ -154,7 +200,7 @@
       "main": [
         [
           {
-            "node": "Code: Siapkan Data untuk Auto Email",
+            "node": "Code: Siapkan Data LMS",
             "type": "main",
             "index": 0
           }
@@ -162,6 +208,28 @@
         [
           {
             "node": "Code: Log Non-Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Data LMS": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Provision LMS Access",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Provision LMS Access": {
+      "main": [
+        [
+          {
+            "node": "Code: Siapkan Data untuk Auto Email",
             "type": "main",
             "index": 0
           }
