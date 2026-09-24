@@ -4,12 +4,21 @@
    - site_content (key homepage atau lp_<slug>)
      value.promo_countdown_until :
        'datetime+07:00' → countdown ke tanggal itu
-       '' (kosong)      → pakai default (TARGET_DATE di bawah)
+       '' (kosong)      → pakai default (akhir bulan berjalan)
        'OFF'            → matikan total (tidak tampil)
    ============================================================ */
 (function () {
-  var TARGET_DATE = '2026-08-31T23:59:59+07:00';
-  var targetDate = TARGET_DATE;
+  // Default berjalan (end of month) — kalau tanggal dari CMS sudah lewat,
+  // countdown kembali ke default ini supaya tidak menghilang diam-diam.
+  function defaultTarget() {
+    var now = new Date();
+    var end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    if (end.getTime() - now.getTime() < 1000) {
+      end = new Date(now.getFullYear(), now.getMonth() + 2, 0, 23, 59, 59);
+    }
+    return end;
+  }
+  var targetDate = defaultTarget();
 
   function getTimeLeft() {
     if (!targetDate) return null;
@@ -68,10 +77,11 @@
     if (!Object.prototype.hasOwnProperty.call(v, 'promo_countdown_until')) return;
     var cut = v.promo_countdown_until;
     if (cut === 'OFF' || cut === 'off' || cut === 'OFFLINE') { targetDate = null; return; }
-    if (!cut) { targetDate = TARGET_DATE; return; }
+    if (!cut) { targetDate = defaultTarget(); return; }
     var t = new Date(cut).getTime();
-    if (!isNaN(t)) { targetDate = cut; return; }
-    targetDate = TARGET_DATE;
+    // kalau tanggal sudah lewat / tidak valid → pakai default (countdown tetap tampil)
+    if (!isNaN(t) && t - Date.now() > 0) { targetDate = cut; return; }
+    targetDate = defaultTarget();
   }
 
   // Tentukan landing yang sedang dibuka (untuk page.html) atau homepage

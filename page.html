@@ -42,109 +42,23 @@
   <div id="lpFooter"></div>
 
   <script src="js/lp-render.js"></script>
-  <script src="js/landing-pages.js"></script>
+  <script src="js/landing-boot.js"></script>
   <script>
-    window.__LP_MODE = true;
-    var cfg = window.XINDE;
-    var defaults = cfg.DEFAULT_LANDING || { meta: {}, sections: [] };
-    var R = window.LPRender;
-
-    var isPreview = new URLSearchParams(location.search).get('preview') === '1';
-
-    function applyAccent(accent) {
-      if (!accent) return;
-      var st = document.createElement('style');
-      st.textContent = ':root{--green:' + accent + '}.hl{color:' + accent + '}';
-      document.head.appendChild(st);
-    }
-
-    function buildPage(content) {
-      var ctx = R.makeContext(content.meta);
-      applyAccent(ctx.accent);
-
-      if (content.meta && content.meta.page_title) {
-        document.title = content.meta.page_title;
-      }
-
-      var contentOut = R.prepare(content);
-      document.getElementById('lpNav').innerHTML = R.renderNav(contentOut.meta, ctx);
-      document.getElementById('lpRoot').innerHTML = R.renderSections(contentOut, ctx);
-      document.getElementById('lpFooter').innerHTML = R.renderFooter(contentOut.meta, ctx);
-
-      // Reveal observer
-      var rev = document.querySelectorAll('#lpRoot .reveal');
-      if ('IntersectionObserver' in window && rev.length) {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-        }, { threshold: 0.1 });
-        rev.forEach(function (el) { io.observe(el); });
-      }
-
-      bindInteractions();
-    }
-
-    function bindInteractions() {
-      // FAQ accordion (event delegation di root)
-      var root = document.getElementById('lpRoot');
-      root.onclick = function (e) {
-        var btn = e.target.closest('.faq__q');
-        if (!btn) return;
-        var item = btn.closest('.faq__item');
-        if (item) item.classList.toggle('open');
-      };
-      // Hamburger
-      var burger = document.getElementById('hamburger');
-      if (burger) {
-        burger.onclick = function () {
-          document.getElementById('navLinks').classList.toggle('open');
-        };
-      }
-    }
-
-    function embeddedReady() {
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'lp-ready', href: location.href }, '*');
-      }
-    }
-
-    function embeddedReceive(e) {
-      if (!e.data || e.data.type !== 'lp-draft') return;
-      buildPage(e.data.content || { meta: {}, sections: [] });
-    }
-
-    function slugFromLocation() {
-      var q = new URLSearchParams(location.search).get('slug');
-      if (q) return q;
-      var h = String(location.hostname).split('.')[0];
-      if (h && h !== 'www' && h !== 'xindelabs-workshop' && h !== 'localhost') return h;
-      return 'utama';
-    }
-
-    function loadLanding() {
-      if (isPreview) {
-        // Mode preview: tunggu draft dari admin (postMessage), jangan fetch.
-        window.addEventListener('message', embeddedReceive);
-        // fallback: kalau parent belum kirim dalam 1.5s, render default agar tidak kosong
-        setTimeout(function () {
-          if (!document.getElementById('lpRoot').innerHTML) {
-            buildPage({ meta: cfg.DEFAULT_LANDING.meta, sections: cfg.DEFAULT_LANDING.sections });
-          }
-        }, 1500);
-        embeddedReady();
-        return;
-      }
-      var slug = slugFromLocation();
-      LandingPages.get(slug).then(function (c) {
-        if (c) { buildPage(Object.assign({}, c, { meta: c.meta || { slug: slug } })); return; }
-        buildPage({ meta: { slug: slug }, sections: cfg.DEFAULT_LANDING.sections });
-      }).catch(function (e) {
-        console.error('[page] load error', e);
-        buildPage({ meta: { slug: slug }, sections: cfg.DEFAULT_LANDING.sections });
-      });
-    }
-
-    document.documentElement.classList.add('js');
-    loadLanding();
+    LandingBoot.init({
+      slug: (function () {
+        var q = new URLSearchParams(location.search).get('slug');
+        if (q) return q;
+        var h = String(location.hostname).split('.')[0];
+        if (h && h !== 'www' && h !== 'xindelabs-workshop' && h !== 'localhost') return h;
+        return 'utama';
+      })(),
+      main: (function () {
+        var q = new URLSearchParams(location.search).get('slug');
+        var h = String(location.hostname).split('.')[0];
+        var slug = q || (h && h !== 'www' && h !== 'xindelabs-workshop' && h !== 'localhost' ? h : 'utama');
+        return slug === 'utama';
+      })()
+    });
   </script>
   <script src="js/countdown.js"></script>
   <script src="js/notif.js"></script>

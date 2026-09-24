@@ -1941,7 +1941,7 @@
           ? (p.slug === 'utama' ? 'utama' : p.slug)
           : 'utama (default)';
         return '<tr>' +
-          '<td><b>' + esc(p.title || '(tanpa judul)') + '</b>' + (p.isFilled ? '' : ' <span class="hint">· belum diisi</span>') + '</td>' +
+          '<td><b>' + esc(p.title || '(tanpa judul)') + '</b>' + (p.isFilled ? '' : ' <span class="hint">· belum diisi</span>') + (p.is_legacy ? ' <span class="hint">· key lama (dimigrasi saat simpan)</span>' : '') + '</td>' +
           '<td data-label="Slug"><code>' + esc(label) + '</code></td>' +
           '<td data-label="Link"><a href="' + esc(LandingPages.accessUrl(p.key)) + '" target="_blank" rel="noopener">bukak &nearr;</a></td>' +
           '<td data-label="Update">' + (p.updated_at ? new Date(p.updated_at).toLocaleString('id-ID') : '—') + '</td>' +
@@ -2450,7 +2450,7 @@
       document.getElementById('lpFormState').textContent = '';
 
       var isMain = key === 'homepage';
-      LandingPages.get(isMain ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
+      LandingPages.getByKey(key).then(function (c) {
         var v = c || {};
         var m = v.meta || {};
         var def = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.meta) || {};
@@ -2506,30 +2506,33 @@
 
     // Konversi konten lama ke sections kalau belum ada value.sections
     function normalizeSections(v, isMain) {
+      var secs;
       if (Array.isArray(v.sections) && v.sections.length) {
-        return JSON.parse(JSON.stringify(v.sections)).map(function (s) {
-          s.data = Object.assign({}, LPRender.sectionDefaults(s.type), s.data || {});
-          s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
-          return s;
+        secs = v.sections;
+      } else {
+        // konten lama → sections via renderer
+        var converted = LPRender.normalizeLegacy(v || {});
+        var meaningful = converted.some(function (s) {
+          if (s.type === 'cta' || s.type === 'divider') return false;
+          var d = s.data || {};
+          return !!d.title || !!d.heading || !!d.quote || !!d.q || !!d.hero_title || (s.type === 'pricing');
         });
+        if (meaningful) {
+          secs = converted;
+        } else if (isMain) {
+          var defSecs = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.sections) || [];
+          secs = defSecs;
+        } else {
+          return [LPRender.newSection('hero'), LPRender.newSection('cta')];
+        }
       }
-      // konten lama → sections via renderer
-      var converted = LPRender.normalizeLegacy(v || {});
-      var meaningful = converted.some(function (s) {
-        if (s.type === 'cta' || s.type === 'divider') return false;
-        var d = s.data || {};
-        return !!d.title || !!d.heading || !!d.quote || !!d.q || !!d.hero_title || (s.type === 'pricing');
+      // Landing utama: pastikan SEMUA section default tampil di editor (satu menu)
+      if (isMain) secs = LPRender.mergeDefaults(secs);
+      return JSON.parse(JSON.stringify(secs)).map(function (s) {
+        s.data = Object.assign({}, LPRender.sectionDefaults(s.type), s.data || {});
+        s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
+        return s;
       });
-      if (meaningful) return converted;
-      // default: homepage pakai desain utama; landing custom dijisi hero + cta
-      if (isMain) {
-        var defSecs = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.sections) || [];
-        return JSON.parse(JSON.stringify(defSecs)).map(function (s) {
-          s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
-          return s;
-        });
-      }
-      return [LPRender.newSection('hero'), LPRender.newSection('cta')];
     }
 
     // ---------- Save (merge + mirror legacy) ----------
@@ -2615,9 +2618,17 @@
           return;
         }
         stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
-        msg.textContent = '✅ Landing tersimpan. ' + (!isMain ? ('Akses: ' + LandingPages.accessUrl(key)) : '');
+        msg.textContent = '✅ Landing tersimpan. ' + (!isMain ? ('Akses: ' + LandingPages.accessUrl(key)) : '') + (lpEditingKey && lpEditingKey !== key ? ' Key lama dihapus (' + lpEditingKey + ').' : '');
         msg.style.display = 'flex';
-        loadLandingPages();
+        // Migrasi: row legacy (key tanpa prefix lp_) dihapus setelah tersimpan di key baru
+        if (lpEditingKey && lpEditingKey !== key) {
+          client.from('site_content').delete().eq('key', lpEditingKey).then(function (dr) {
+            if (dr.error) console.error('[lp] hapus key legacy', dr.error);
+            loadLandingPages();
+          });
+        } else {
+          loadLandingPages();
+        }
       }).catch(function (e2) {
         btn.disabled = false;
         btn.textContent = 'Simpan Landing';
@@ -2653,7 +2664,7 @@
     });
 
     function duplicateLanding(key) {
-      LandingPages.get(key === 'homepage' ? 'utama' : key.replace(/^lp_/, '')).then(function (c) {
+      LandingPages.getByKey(key).then(function (c) {
         if (!c) { alert('Landing tidak ditemukan.'); return; }
         var base = key === 'homepage' ? 'utama' : key.replace(/^lp_/, '');
         var newSlug = base + '-copy';

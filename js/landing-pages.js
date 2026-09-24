@@ -15,7 +15,8 @@ window.LandingPages = (function () {
 
   function metaOf(key, value) {
     var m = (value && value.meta) || {};
-    var isCustom = m.is_custom || key.indexOf('lp_') === 0;
+    // Custom = apa saja kecuali 'homepage' (termasuk row legacy tanpa prefix lp_)
+    var isCustom = m.is_custom === true || key !== 'homepage';
     var slug = m.slug || (isCustom ? key.replace(/^lp_/, '') : 'utama');
     return Object.assign({}, R ? R.mergeMeta(null) : {}, m, {
       slug: slug,
@@ -50,7 +51,9 @@ window.LandingPages = (function () {
           subdomain: m.subdomain,
           accent: m.accent,
           updated_at: row.updated_at,
-          isFilled: !!(v.hero_title) || !!(Array.isArray(v.sections) && v.sections.length)
+          isFilled: !!(v.hero_title) || !!(Array.isArray(v.sections) && v.sections.length),
+          // row legacy: key bukan 'homepage' dan bukan 'lp_*' → bakal di-migrasi saat simpan
+          is_legacy: row.key !== 'homepage' && row.key.indexOf('lp_') !== 0
         };
       });
       return arr;
@@ -60,6 +63,11 @@ window.LandingPages = (function () {
   // Ambil satu landing berdasarkan slug
   function get(slug) {
     var key = keyOf(slug);
+    return getByKey(key);
+  }
+
+  // Ambil landing langsung berdasarkan key site_content (termasuk key legacy)
+  function getByKey(key) {
     return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(key) + '&select=key,value', {
       headers: { 'apikey': cfg.SUPABASE_ANON_KEY }
     }).then(function (r) { return r.json(); }).then(function (rows) {
@@ -84,7 +92,7 @@ window.LandingPages = (function () {
   }
 
   return {
-    keyOf: keyOf, metaOf: metaOf, listAll: listAll, get: get, accessUrl: accessUrl, previewUrl: previewUrl,
+    keyOf: keyOf, metaOf: metaOf, listAll: listAll, get: get, getByKey: getByKey, accessUrl: accessUrl, previewUrl: previewUrl,
     // Delegasi ke LPRender (backward-compat untuk admin yang lama)
     SECTION_TYPES: R.TYPES,
     sectionDefaults: R.sectionDefaults,

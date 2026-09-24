@@ -829,6 +829,33 @@ window.LPRender = (function () {
     return secs;
   }
 
+  // ---------- Merge: pastikan semua section default selalu ada ----------
+  // Dipakai untuk landing utama: kalau CMS cuma menyimpan sebagian section
+  // (mis. hasil save parsial), section yang kurang diisi dari DEFAULT_LANDING
+  // sehingga komponen seperti founder story, voucher, comm, dll tidak pernah
+  // hilang dari halaman. Section CMS menang per tipe; urutan ikut desain default.
+  function mergeDefaults(sections) {
+    var def = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.sections) || [];
+    if (!def.length) return sections || [];
+    var src = Array.isArray(sections) ? sections.slice() : [];
+    var pools = {};
+    src.forEach(function (s) {
+      if (!s || !s.type) return;
+      (pools[s.type] = pools[s.type] || []).push(s);
+    });
+    var out = [];
+    def.forEach(function (d) {
+      var t = d.type;
+      var s = (pools[t] && pools[t].length) ? pools[t].shift() : deepCopy(d);
+      if (!s.style) s.style = Object.assign(defaultStyles(), {});
+      out.push(s);
+    });
+    Object.keys(pools).forEach(function (t) {
+      pools[t].forEach(function (s) { out.push(s); });
+    });
+    return out;
+  }
+
   function makeContext(meta, defaults) {
     var accent = (meta && meta.accent) || '#00ff88';
     var slug = (meta && meta.slug) || 'utama';
@@ -868,6 +895,7 @@ window.LPRender = (function () {
     mergeMeta: mergeMeta,
     makeContext: makeContext,
     prepare: prepare,
-    normalizeLegacy: normalizeLegacy
+    normalizeLegacy: normalizeLegacy,
+    mergeDefaults: mergeDefaults
   };
 })();
