@@ -90,7 +90,7 @@ Semua halaman **static HTML** (boleh React/Next kalau vibe tool default-nya gitu
 - Nama Lengkap
 - Email Aktif
 - No. WhatsApp (pattern: 08xx, min 9 digit)
-- **Discord User ID** (angka 17-18 digit) + **tutorial collapsible** dengan 2 tab: 📱 Mobile / 💻 Desktop (Developer Mode → Copy User ID)
+- **Discord User ID** (angka 17-20 digit — snowflake Discord sudah 19 digit untuk akun yang dibuat sejak ~2023, jadi batas atas 18 digit akan menolak ID valid) + **tutorial collapsible** dengan 2 tab: 📱 Mobile / 💻 Desktop (Developer Mode → Copy User ID)
 
 ### Pilihan Tier (radio/selector sebelum tombol bayar):
 ```

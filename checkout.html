@@ -167,9 +167,9 @@
           <!-- ============ Discord ID + tutorial ============ -->
           <div class="field" data-field="discord">
             <label for="discord">Discord User ID *</label>
-            <input type="number" id="discord" name="discord" placeholder="cth: 123456789012345678" inputmode="numeric" required />
-            <div class="hint">Angka 17–18 digit. Butuh bantuan? Buka tutorial di bawah.</div>
-            <div class="err-msg">Discord User ID harus berupa angka 17–18 digit.</div>
+            <input type="text" id="discord" name="discord" placeholder="cth: 1234567890123456789" inputmode="numeric" maxlength="20" autocomplete="off" spellcheck="false" required />
+            <div class="hint">Angka 17–20 digit. Butuh bantuan? Buka tutorial di bawah.</div>
+            <div class="err-msg">Discord User ID harus berupa angka 17–20 digit.</div>
           </div>
 
           <div class="tutorial" id="discordTutorial">
@@ -186,7 +186,7 @@
                     <li>Ketuk <b>User Profile</b> → ikon <b>⋯</b> (titik tiga).</li>
                     <li>Ketuk <b>Developer Mode</b> → nyalakan toggle-nya.</li>
                     <li>Tutup menu, ketuk lagi avatar lo → <b>Copy User ID</b>.</li>
-                    <li>Tempel angka (17–18 digit) di kolom atas.</li>
+                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
                   </ol>
                 </div>
                 <div class="tut-pane" data-pane="desktop">
@@ -195,7 +195,7 @@
                     <li>Sidebar kiri → <b>Advanced</b>.</li>
                     <li>Nyalakan toggle <b>Developer Mode</b>.</li>
                     <li>Klik kanan nama lo → <b>Copy User ID</b>.</li>
-                    <li>Tempel angka (17–18 digit) di kolom atas.</li>
+                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
                   </ol>
                 </div>
               </div>
@@ -367,7 +367,8 @@
         },
         discord: function (v) {
           var s = v.replace(/\D/g, '');
-          return s.length >= 17 && s.length <= 18;
+          // Snowflake Discord = 17 digit (2015) s/d 20 digit (masa depan)
+          return s.length >= 17 && s.length <= 20;
         }
       };
     }
