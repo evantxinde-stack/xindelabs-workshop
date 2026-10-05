@@ -219,6 +219,7 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     fbq('track', 'InitiateCheckout');
 
@@ -310,7 +311,7 @@
       btn.textContent = 'Cek…';
 
       var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      client.from('vouchers').select('code,type,value,tier,max_uses,used_count,active,expires_at')
+      client.from('vouchers').select('code,type,value,max_uses,used_count,active,expires_at')
         .eq('code', code).eq('active', true).maybeSingle()
         .then(function (res) {
           btn.disabled = false;
@@ -320,8 +321,10 @@
             updatePrice(); return;
           }
           var v = res.data;
-          if (v.tier !== 'all' && v.tier !== tier) {
-            showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (v.tier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
+          // kolom 'tier' opsional (tidak selalu ada di DB) — default berlaku untuk semua paket
+          var vTier = v.tier || 'all';
+          if (vTier !== 'all' && vTier !== tier) {
+            showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
             updatePrice(); return;
           }
           if (v.expires_at && new Date(v.expires_at) < new Date()) {

@@ -1799,7 +1799,7 @@
       body.innerHTML = vouchersCache.map(function (v) {
         var typeLabel = v.type === 'percent' ? '%' : 'Rp';
         var valLabel = v.type === 'percent' ? v.value + '%' : 'Rp ' + Number(v.value).toLocaleString('id-ID');
-        var tierLabel = v.tier === 'all' ? 'Semua' : v.tier === 'yearly' ? 'Tahunan' : 'Lifetime';
+        var tierLabel = !v.tier || v.tier === 'all' ? 'Semua' : v.tier === 'yearly' ? 'Tahunan' : 'Lifetime';
         var expiry = v.expires_at ? new Date(v.expires_at).toLocaleDateString('id-ID') : '—';
         var maxLabel = v.max_uses !== null ? v.max_uses : '∞';
         return '<tr>' +
@@ -1879,20 +1879,24 @@
           return;
         }
 
-        var rows = (vouchersCache || []).map(function (v) {
-          return {
-            code: v.code,
-            type: v.type,
-            value: v.value,
-            tier: v.tier,
-            max_uses: v.max_uses,
-            used_count: v.used_count || 0,
-            active: v.active !== false,
-            expires_at: v.expires_at
-          };
-        });
+        var buildVoucherRows = function (withTier) {
+          return (vouchersCache || []).map(function (v) {
+            var row = {
+              code: v.code,
+              type: v.type,
+              value: v.value,
+              max_uses: v.max_uses,
+              used_count: v.used_count || 0,
+              active: v.active !== false,
+              expires_at: v.expires_at
+            };
+            // kolom 'tier' opsional — hanya dikirim kalau tabel punya kolom tsb
+            if (withTier && v.tier) row.tier = v.tier;
+            return row;
+          });
+        };
 
-        if (!rows.length) {
+        if (!buildVoucherRows(true).length) {
           btn.disabled = false;
           btn.textContent = 'Simpan Semua';
           stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
@@ -1900,15 +1904,28 @@
           return;
         }
 
-        client.from('vouchers').insert(rows).then(function (insRes) {
+        client.from('vouchers').insert(buildVoucherRows(true)).then(function (insRes) {
+          // Kolom 'tier' belum ada di tabel → coba lagi tanpa kolom itu
+          // (penting: data sudah dihapus di atas, insert wajib berhasil)
+          if (insRes.error && /tier|column/i.test(insRes.error.message || '')) {
+            return client.from('vouchers').insert(buildVoucherRows(false)).then(function (r2) {
+              return { res: r2, droppedTier: true };
+            });
+          }
+          return { res: insRes, droppedTier: false };
+        }).then(function (out) {
           btn.disabled = false;
           btn.textContent = 'Simpan Semua';
+          var insRes = out.res;
           if (insRes.error) {
             stateEl.textContent = '';
             alert('Gagal simpan voucher: ' + insRes.error.message);
             return;
           }
           stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+          if (out.droppedTier) {
+            console.warn('[voucher] kolom "tier" tidak ada di tabel — disimpan tanpa kolom tier');
+          }
           loadVouchers();
         });
       });
