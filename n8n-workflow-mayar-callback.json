@@ -96,7 +96,7 @@
             },
             {
               "name": "Prefer",
-              "value": "return=minimal"
+              "value": "return=minimal, resolution=ignore-duplicates"
             }
           ]
         },
