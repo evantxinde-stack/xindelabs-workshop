@@ -31,7 +31,7 @@ window.XINDE = (function () {
     video_caption: "intro.mp4 — kenapa sales person butuh AI agent sendiri (2:45)",
     price_yearly: 599000,
     price_lifetime: 999000,
-    discord_link: "https://discord.gg/xindelabs",
+    discord_link: "https://discord.gg/JXZWZZRsre",
     whatsapp_link: "https://wa.me/6281234567890",
     instagram_handle: "@xindelabs.id",
     testimonials: [
