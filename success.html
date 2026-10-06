@@ -52,6 +52,14 @@
     </div>
   </footer>
 
+  <script src="js/config.js"></script>
+  <script>
+    // WA support link dari config (single source of truth)
+    (function () {
+      var a = document.getElementById('waLink');
+      if (a) a.href = (window.XINDE && window.XINDE.whatsapp_link) || '#';
+    })();
+  </script>
   <script>
     // ============ Pixel Purchase (PRD §8) ============
     (function () {

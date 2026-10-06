@@ -400,6 +400,7 @@ window.XINDE = (function () {
     MODULES,
     PRODUCT_KEY,
     FOLLOWUP_TEMPLATES,
+    whatsapp_link: DEFAULT_CONTENT.whatsapp_link,
     supabaseConfigured() {
       return !this.SUPABASE_URL.includes("XXXX") && !this.SUPABASE_ANON_KEY.startsWith("eyJ...");
     },

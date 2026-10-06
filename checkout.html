@@ -260,7 +260,7 @@
       var tier = selectedTier().value;
       var base = cfg.PRICES[tier].harga;
       var diskon = calcDiskon(tier, appliedVoucher);
-      var final_ = base - diskon;
+      var final_ = Math.max(1000, base - diskon);
       payAmount.textContent = fmtRp(final_);
     }
 
@@ -311,7 +311,7 @@
       btn.textContent = 'Cek…';
 
       var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      client.from('vouchers').select('code,type,value,max_uses,used_count,active,expires_at')
+      client.from('vouchers').select('code,type,value,tier,max_uses,used_count,active,expires_at')
         .eq('code', code).eq('active', true).maybeSingle()
         .then(function (res) {
           btn.disabled = false;
@@ -363,7 +363,9 @@
         email: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
         wa: function (v) {
           var s = v.replace(/\D/g, '');
-          return s.length >= 9 && /^08/.test(s);
+          var local = /^08\d{7,}$/.test(s);
+          var intl = /^628\d{7,}$/.test(s);
+          return local || intl;
         },
         discord: function (v) {
           var s = v.replace(/\D/g, '');
@@ -405,7 +407,7 @@
       var tier = selectedTier().value;
       var base = cfg.PRICES[tier].harga;
       var diskon = calcDiskon(tier, appliedVoucher);
-      var hargaFinal = base - diskon;
+      var hargaFinal = Math.max(1000, base - diskon);
 
       var payload = {
         nama: document.getElementById('nama').value.trim(),
