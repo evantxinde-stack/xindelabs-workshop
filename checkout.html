@@ -310,37 +310,53 @@
       btn.disabled = true;
       btn.textContent = 'Cek…';
 
-      var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      client.from('vouchers').select('code,type,value,tier,max_uses,used_count,active,expires_at')
+var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      var COLS_WITH_TIER = 'code,type,value,tier,max_uses,used_count,active,expires_at';
+      var COLS_NO_TIER = 'code,type,value,max_uses,used_count,active,expires_at';
+
+      function applyVoucherResult(res) {
+        btn.disabled = false;
+        btn.textContent = 'Gunakan';
+        if (res.error || !res.data) {
+          showVoucherResult('Kode voucher tidak ditemukan atau sudah tidak aktif.', true);
+          updatePrice(); return;
+        }
+        var v = res.data;
+        // kolom 'tier' opsional (tidak selalu ada di DB) — default berlaku untuk semua paket
+        var vTier = v.tier || 'all';
+        if (vTier !== 'all' && vTier !== tier) {
+          showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
+          updatePrice(); return;
+        }
+        if (v.expires_at && new Date(v.expires_at) < new Date()) {
+          showVoucherResult('Kode voucher ini sudah kadaluarsa.', true);
+          updatePrice(); return;
+        }
+        if (v.max_uses !== null && v.used_count >= v.max_uses) {
+          showVoucherResult('Kode voucher ini sudah mencapai batas penggunaan.', true);
+          updatePrice(); return;
+        }
+        appliedVoucher = v;
+        var diskon = calcDiskon(tier, v);
+        var diskonLabel = v.type === 'percent' ? v.value + '%' : fmtRp(v.value);
+        showVoucherResult('✓ Voucher <b>' + v.code + '</b> aktif — diskon ' + diskonLabel + ' (' + fmtRp(diskon) + ')', false);
+        updatePrice();
+      }
+
+      // Kolom 'tier' baru ada setelah migrasi DB. PostgREST menggagalkan SELURUH
+      // query kalau satu kolom tidak dikenal, jadi coba yang lengkap dulu, lalu
+      // ulangi tanpa 'tier' (voucher jadi berlaku untuk semua paket).
+      client.from('vouchers').select(COLS_WITH_TIER)
         .eq('code', code).eq('active', true).maybeSingle()
         .then(function (res) {
-          btn.disabled = false;
-          btn.textContent = 'Gunakan';
-          if (res.error || !res.data) {
-            showVoucherResult('Kode voucher tidak ditemukan atau sudah tidak aktif.', true);
-            updatePrice(); return;
+          var msg = (res.error && res.error.message) || '';
+          if (res.error && /tier|column/i.test(msg)) {
+            return client.from('vouchers').select(COLS_NO_TIER)
+              .eq('code', code).eq('active', true).maybeSingle();
           }
-          var v = res.data;
-          // kolom 'tier' opsional (tidak selalu ada di DB) — default berlaku untuk semua paket
-          var vTier = v.tier || 'all';
-          if (vTier !== 'all' && vTier !== tier) {
-            showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
-            updatePrice(); return;
-          }
-          if (v.expires_at && new Date(v.expires_at) < new Date()) {
-            showVoucherResult('Voucher ini sudah kadaluarsa.', true);
-            updatePrice(); return;
-          }
-          if (v.max_uses !== null && v.used_count >= v.max_uses) {
-            showVoucherResult('Voucher ini sudah mencapai batas penggunaan.', true);
-            updatePrice(); return;
-          }
-          appliedVoucher = v;
-          var diskon = calcDiskon(tier, v);
-          var diskonLabel = v.type === 'percent' ? v.value + '%' : fmtRp(v.value);
-          showVoucherResult('✓ Voucher <b>' + v.code + '</b> aktif — diskon ' + diskonLabel + ' (' + fmtRp(diskon) + ')', false);
-          updatePrice();
+          return res;
         })
+        .then(applyVoucherResult)
         .catch(function () {
           btn.disabled = false;
           btn.textContent = 'Gunakan';
