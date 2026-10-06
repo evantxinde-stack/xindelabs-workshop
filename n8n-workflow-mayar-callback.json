@@ -131,7 +131,7 @@
             },
             {
               "name": "Authorization",
-              "value": "Bearer {{$env.PROVISION_LMS_SECRET}}"
+              "value": "=Bearer {{$env.PROVISION_LMS_SECRET}}"
             }
           ]
         },
