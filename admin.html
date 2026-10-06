@@ -778,6 +778,7 @@
         loadDashboard();
         loadContent();
         loadLms();
+        loadMembers();
         loadLeads('course');
         loadLeads('komunitas');
       });
@@ -1723,7 +1724,12 @@
     function loadMembers() {
       if (!client) return;
       client.from('members').select('*').order('created_at', { ascending: false }).then(function (r) {
-        if (r.error) return;
+        if (r.error) {
+          document.getElementById('membersBody').innerHTML =
+            '<tr><td colspan="5" class="l-meta">Gagal load members: ' + esc(r.error.message || '') + '</td></tr>';
+          document.getElementById('membersEmpty').style.display = 'none';
+          return;
+        }
         membersCache = r.data || [];
         refreshMemberCounts();
         renderMembers();
