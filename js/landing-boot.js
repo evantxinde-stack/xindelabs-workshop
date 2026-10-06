@@ -35,11 +35,23 @@ window.LandingBoot = (function () {
     f.classList.add('invalid');
     field.addEventListener('input', function () { f.classList.remove('invalid'); }, { once: true });
   }
+  // Anti duplikat: penjaga lokal per (source + email).
+  // Tabel leads tidak bisa di-select dari browser (RLS admin-only),
+  // jadi satu-satunya cara mencegah submit berulang adalah penanda lokal.
+  function leadSeen(key) {
+    try { return localStorage.getItem('xinde_lead_' + key) === '1'; } catch (e) { return false; }
+  }
+  function markLeadSeen(key) {
+    try { localStorage.setItem('xinde_lead_' + key, '1'); } catch (e) {}
+  }
   function saveLead(payload, onDone, onFail) {
     if (!cfg.supabaseConfigured() || !window.supabase) { onDone(); return; }
+    var key = String(payload.source || '') + '|' + String(payload.email || '').toLowerCase().trim();
+    if (key !== '|' && leadSeen(key)) { onDone(); return; }
     var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
     client.from('leads').insert(payload).then(function (r) {
       if (r.error) return onFail('Gagal simpan data: ' + (r.error.message || 'coba lagi'));
+      markLeadSeen(key);
       onDone();
     }).catch(function () { onFail('Gagal daftar, coba lagi.'); });
   }

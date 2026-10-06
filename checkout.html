@@ -442,21 +442,8 @@ var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
       payBtn.disabled = true;
       payBtn.textContent = 'Mengarahkan ke pembayaran…';
 
-      // Save lead to Supabase langsung (panel admin)
-      if (cfg.supabaseConfigured() && window.supabase) {
-        try {
-          var sc = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-          sc.from('leads').insert({
-            name: payload.nama,
-            email: payload.email,
-            whatsapp: payload.wa,
-            discord_id: payload.discord,
-            status: 'belum',
-            source: 'landing-daftar',
-            notes: 'tier:' + tier + ' harga:' + hargaFinal + (payload.voucher_code ? ' voucher:' + payload.voucher_code : '')
-          }).then(function () {});
-        } catch (e) {}
-      }
+      // Lead disimpan OLEH n8n (workflow create-payment) — jangan insert dari sini.
+      // Dulu dua-duanya jalan sehingga 1 orang bisa menghasilkan 2 baris di tabel leads.
 
       fetch(cfg.N8N_WEBHOOK, {
         method: 'POST',

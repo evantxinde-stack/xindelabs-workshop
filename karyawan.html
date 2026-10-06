@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/pixel.js"></script>
 </head>
 <body>
@@ -518,11 +519,23 @@
       field.closest('.field').classList.add('invalid');
       field.addEventListener('input', function () { field.closest('.field').classList.remove('invalid'); }, { once: true });
     }
+    // Anti duplikat: penjaga lokal per (source + email). RLS leads tidak
+    // mengizinkan browser melakukan SELECT, jadi dedupe tidak bisa dilakukan
+    // langsung ke database.
+    function leadSeen(key) {
+      try { return localStorage.getItem('xinde_lead_' + key) === '1'; } catch (e) { return false; }
+    }
+    function markLeadSeen(key) {
+      try { localStorage.setItem('xinde_lead_' + key, '1'); } catch (e) {}
+    }
     function saveLead(payload, onDone, onFail) {
       if (!cfg.supabaseConfigured() || !window.supabase) { onDone(); return; }
+      var key = String(payload.source || '') + '|' + String(payload.email || '').toLowerCase().trim();
+      if (key !== '|' && leadSeen(key)) { onDone(); return; }
       var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
       client.from('leads').insert(payload).then(function (r) {
         if (r.error) return onFail('Gagal simpan data: ' + (r.error.message || 'coba lagi'));
+        markLeadSeen(key);
         onDone();
       }).catch(function () { onFail(); });
     }
