@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// \ud83d\udccb CALLBACK MAYAR \u2014 format resmi dari docs (docs.mayar.id/integration/webhook)\n// Event: payment.received (setelah customer selesai bayar)\n// Payload:\n//   data.customerName, data.customerEmail, data.customerMobile\n//   data.amount, data.status (bool), data.productId, data.productName\n//   data.pixelFbp, data.pixelFbc (cookie Meta Pixel \u2014 buat CAPI dedup)\n\nconst raw = $input.first().json;\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst event = body.event || body['event.received'] || '';\nconst data = body.data || {};\n\n// Status transaksi (boolean di docs Mayar)\nconst statusPaid = data.status === true || data.status === 'true' ||\n                   data.status === 'PAID' || data.status === 'paid';\n\n// Event payment.received = pembayaran selesai\nconst isPaymentReceived = event === 'payment.received' || event === 'PAID' || statusPaid;\n\nreturn {\n  json: {\n    valid: true,\n    event: event,\n    isPaid: isPaymentReceived,\n    reference: data.id || body.id || '',\n    amount: data.amount || 0,\n    customerName: data.customerName || '',\n    customerEmail: data.customerEmail || '',\n    customerMobile: data.customerMobile || '',\n    productId: data.productId || '',\n    productName: data.productName || '',\n    pixelFbp: data.pixelFbp || '',\n    pixelFbc: data.pixelFbc || '',\n    raw: JSON.stringify(raw).slice(0, 2000)\n  }\n};"
+        "jsCode": "// \ud83d\udccb CALLBACK MAYAR \u2014 format resmi dari docs (docs.mayar.id/integration/webhook)\n// Event: payment.received (setelah customer selesai bayar)\n// Payload:\n//   data.customerName, data.customerEmail, data.customerMobile\n//   data.amount, data.status, data.transactionStatus, data.productId, data.productName\n//   data.pixelFbp, data.pixelFbc (cookie Meta Pixel \u2014 buat CAPI dedup)\n\nconst raw = $input.first().json;\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst event = body.event || body['event.received'] || '';\nconst data = body.data || {};\n\n// Status transaksi. Docs bilang Boolean, tapi riwayat riil Mayar mengirim\n// string \"SUCCESS\" \u2014 terima keduanya supaya tidak diam-diam lolos.\nconst s = data.status;\nconst statusPaid = s === true || s === 'true' || s === 'PAID' || s === 'paid' ||\n                   s === 'SUCCESS' || s === 'success';\nconst txPaid = data.transactionStatus === 'paid' || data.transactionStatus === 'PAID';\n\n// Event payment.received = pembayaran selesai\nconst isPaymentReceived = event === 'payment.received' || event === 'PAID' || statusPaid || txPaid;\n\nreturn {\n  json: {\n    valid: true,\n    event: event,\n    isPaid: isPaymentReceived,\n    reference: data.transactionId || data.id || body.id || '',\n    amount: Number(data.amount || 0),\n    customerName: data.customerName || '',\n    customerEmail: data.customerEmail || '',\n    customerMobile: data.customerMobile || '',\n    productId: data.productId || '',\n    productName: data.productName || '',\n    pixelFbp: data.pixelFbp || '',\n    pixelFbc: data.pixelFbc || '',\n    raw: JSON.stringify(raw).slice(0, 2000)\n  }\n};"
       },
       "id": "code-parse-callback",
       "name": "Code: Parse Mayar Callback",
@@ -64,7 +64,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const p = $input.first().json;\nconst productTxt = [p.productName, p.raw || ''].join(' ').toLowerCase();\nconst tier = productTxt.includes('lifetime') ? 'lifetime' : 'yearly';\nreturn {\n  json: {\n    email: p.customerEmail || '',\n    name: p.customerName || '',\n    mobile: p.customerMobile || '',\n    tier: tier\n  }\n};"
+        "jsCode": "// Tier ditentukan dari productId (kenaan), BUKUM dari nama produk.\n// Nama produk aslinya \"Langganan Life-Time\" \u2014 contains('lifetime') = false,\n// sehingga pembeli Life-Time dulu salah provisioned jadi 'yearly'.\nconst TIER_BY_PRODUCT_ID = {\n  'd8927ccd-4323-4500-b4f3-2f0e4f82acd1': 'yearly',   // Langganan 1 Tahun (Rp 599.000)\n  '56284414-f48b-47b9-af79-74d2b0f4b2dd': 'lifetime'  // Langganan Life-Time (Rp 999.000)\n};\n\nconst p = $input.first().json;\n\nlet tier = TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()];\nif (!tier) {\n  const txt = [p.productName || '', p.raw || ''].join(' ').toLowerCase();\n  tier = /life[\\s-]?time|lifetime/.test(txt) ? 'lifetime' : 'yearly';\n}\n\nreturn {\n  json: {\n    email: p.customerEmail || '',\n    name: p.customerName || '',\n    mobile: p.customerMobile || '',\n    tier: tier,\n    amount: p.amount || 0,\n    reference: p.reference || '',\n    tierSource: TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()] ? 'productId' : 'productName'\n  }\n};"
       },
       "id": "code-prep-provision",
       "name": "Code: Siapkan Data LMS",
@@ -74,6 +74,49 @@
         180,
         -320
       ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads?email=eq.' + encodeURIComponent(String($json.customerEmail || '').trim().toLowerCase()) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ status: 'paid', current_stage: 'paid' }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-lead-paid",
+      "name": "HTTP: Tandai Lead Paid",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        -480
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
@@ -106,11 +149,13 @@
       "position": [
         420,
         -320
-      ]
+      ],
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
-        "jsCode": "// Kirim data peserta ke Google Apps Script (auto-email-system.gs)\n// Webhook Apps Script lo: URL dari Deploy > Web app\nconst APPS_SCRIPT_WEBHOOK = 'https://script.google.com/macros/s/XXX/exec';\n\nconst payment = $input.first().json;\n\nreturn {\n  json: {\n    nama: payment.customerName || payment.name || '',\n    email: payment.customerEmail || payment.email || '',\n    no_wa: payment.customerMobile || payment.mobile || '',\n    harga: payment.amount || 299000,\n    status: 'paid',\n    tipe: 'umum',\n    merchant_ref: payment.reference || '',\n    pixel_fbp: payment.pixelFbp || '',\n    pixel_fbc: payment.pixelFbc || '',\n    endpoint: APPS_SCRIPT_WEBHOOK\n  }\n};"
+        "jsCode": "// Email dibungkus node Provision, jadi $json di sini BUKAN payload Mayar\n// (itu respons /api/provision-lms: { ok, email, tier, lms_password, lms_url }).\n// Nama/email/nomor WA harus diambil dari node Parse; password dari node Provision.\nconst parsed = $('Code: Parse Mayar Callback').first().json;\nconst prep = $('Code: Siapkan Data LMS').first().json;\nconst prov = $input.first().json || {};\n\n// Endpoint Apps Script \u2014 set sebagai env var AUTO_EMAIL_WEBHOOK di n8n\nconst APPS_SCRIPT_WEBHOOK = $env.AUTO_EMAIL_WEBHOOK || 'https://script.google.com/macros/s/XXX/exec';\n\nconst provisioned = prov.ok === true && !!prov.lms_password;\n\nreturn {\n  json: {\n    nama: parsed.customerName || '',\n    email: parsed.customerEmail || prov.email || '',\n    no_wa: parsed.customerMobile || '',\n    harga: parsed.amount || 0,\n    status: 'paid',\n    tipe: 'workshop',\n    merchant_ref: parsed.reference || '',\n    tier: prep.tier || '',\n    tier_source: prep.tierSource || '',\n    // Kredensial LMS \u2014 dikirim apa adanya oleh /api/provision-lms\n    lms_email: prov.email || parsed.customerEmail || '',\n    lms_password: provisioned ? prov.lms_password : '',\n    lms_url: prov.lms_url || '',\n    // true = provisioning GAGAL, akun BELUM dibuat. Email tetap dikirim supaya\n    // customer tahu harus menghubungi admin (dulu: email tidak dikirim sama sekali).\n    needs_manual: !provisioned,\n    provision_error: provisioned ? '' : (prov.error || JSON.stringify(prov).slice(0, 300)),\n    pixel_fbp: parsed.pixelFbp || '',\n    pixel_fbc: parsed.pixelFbc || '',\n    endpoint: APPS_SCRIPT_WEBHOOK\n  }\n};"
       },
       "id": "code-prep-email",
       "name": "Code: Siapkan Data untuk Auto Email",
@@ -136,7 +181,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ nama: $json.nama, email: $json.email, no_wa: $json.no_wa, harga: $json.harga, status: $json.status, tipe: $json.tipe, merchant_ref: $json.merchant_ref }) }}",
+        "jsonBody": "={{ JSON.stringify({ nama: $json.nama, email: $json.email, no_wa: $json.no_wa, harga: $json.harga, status: $json.status, tipe: $json.tipe, merchant_ref: $json.merchant_ref, tier: $json.tier, lms_email: $json.lms_email, lms_password: $json.lms_password, lms_url: $json.lms_url, needs_manual: $json.needs_manual }) }}",
         "options": {}
       },
       "id": "http-apps-script",
@@ -201,6 +246,11 @@
         [
           {
             "node": "Code: Siapkan Data LMS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP: Tandai Lead Paid",
             "type": "main",
             "index": 0
           }
