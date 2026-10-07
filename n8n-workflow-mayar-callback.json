@@ -1,331 +1,341 @@
 {
-  "name": "Workshop - Mayar Callback + Auto Email",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "mayar-callback",
-        "responseMode": "onReceived",
-        "options": {}
-      },
-      "id": "webhook-mayar-callback",
-      "name": "Webhook: Mayar Callback",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -520,
-        0
-      ],
-      "webhookId": "mayar-callback-workshop"
+ "name": "Workshop - Mayar Callback + Auto Email",
+ "nodes": [
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "mayar-callback",
+    "options": {}
+   },
+   "id": "1ab96bf2-b56f-4e25-b48f-869d731837c5",
+   "name": "Webhook: Mayar Callback",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    256,
+    384
+   ],
+   "webhookId": "mayar-callback-workshop"
+  },
+  {
+   "parameters": {
+    "jsCode": "// ===== CALLBACK MAYAR \u2014 hardened (Lentera) =====\n// Token wajib, event payment.received + status PAID, anti-duplikat transaksi.\nconst raw = $input.first().json;\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\nconst headers = raw.headers || {};\n\n// --- 1. Verifikasi token callback Mayar (wajib, fail-closed) ---\nconst expectedToken = $env.MAYAR_CALLBACK_TOKEN;\nconst gotToken = headers['x-callback-token'] || headers['X-Callback-Token'] || headers['x-callback-token'.toLowerCase()] || '';\nif (!expectedToken) throw new Error('Callback: MAYAR_CALLBACK_TOKEN belum diset di n8n env');\nif (String(gotToken) !== String(expectedToken)) throw new Error('Callback Mayar ditolak: token tidak valid');\n\n// --- 2. Parse payload ---\nconst event = String(body.event || '');\nconst data = body.data || {};\nconst s = data.status;\nconst statusPaid = s === true || s === 'true' || s === 'PAID' || s === 'paid' || s === 'SUCCESS' || s === 'success';\nconst txPaid = data.transactionStatus === 'paid' || data.transactionStatus === 'PAID';\nconst reference = String(data.transactionId || data.id || body.id || '').trim();\nconst email = String(data.customerEmail || '').trim().toLowerCase();\n\n// --- 3. Hanya event payment.received + PAID yang onboarding ---\nconst isPaid = event === 'payment.received' && (statusPaid || txPaid);\nif (isPaid && (!reference || !email)) {\n  throw new Error('Callback payment.received tidak lengkap: reference & email wajib');\n}\n\n// --- 4. Cek duplikat transaksi (lihat leads.notes) ---\nlet duplicate = false;\nif (isPaid) {\n  const rows = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads?select=email,notes&email=eq.' + encodeURIComponent(email) + '&order=created_at.desc&limit=1',\n    headers: { apikey: $env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY },\n    json: true, timeout: 10000\n  });\n  const lead = Array.isArray(rows) && rows.length ? rows[0] : null;\n  const refs = String(lead && lead.notes || '').match(/payment_ref:([^\\s]+)/g) || [];\n  duplicate = refs.some((e) => e.slice('payment_ref:'.length) === reference);\n}\n\nreturn {\n  json: {\n    valid: true, event, isPaid: isPaid && !duplicate, duplicate, reference,\n    amount: Number(data.amount || 0),\n    customerName: data.customerName || '',\n    customerEmail: email,\n    customerMobile: data.customerMobile || '',\n    productId: data.productId || '',\n    productName: data.productName || '',\n    pixelFbp: data.pixelFbp || '', pixelFbc: data.pixelFbc || '',\n    raw: JSON.stringify(raw).slice(0, 2000)\n  }\n};"
+   },
+   "id": "9807863d-5ff6-47dd-bc9f-4f990238ca26",
+   "name": "Code: Parse Mayar Callback",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    496,
+    384
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": true,
+      "leftValue": "",
+      "typeValidation": "strict",
+      "version": 1
+     },
+     "conditions": [
+      {
+       "leftValue": "={{ $json.isPaid }}",
+       "rightValue": true,
+       "operator": {
+        "type": "boolean",
+        "operation": "true"
+       }
+      }
+     ],
+     "combinator": "and"
     },
-    {
-      "parameters": {
-        "jsCode": "// \ud83d\udccb CALLBACK MAYAR \u2014 format resmi dari docs (docs.mayar.id/integration/webhook)\n// Event: payment.received (setelah customer selesai bayar)\n// Payload:\n//   data.customerName, data.customerEmail, data.customerMobile\n//   data.amount, data.status, data.transactionStatus, data.productId, data.productName\n//   data.pixelFbp, data.pixelFbc (cookie Meta Pixel \u2014 buat CAPI dedup)\n\nconst raw = $input.first().json;\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst event = body.event || body['event.received'] || '';\nconst data = body.data || {};\n\n// Status transaksi. Docs bilang Boolean, tapi riwayat riil Mayar mengirim\n// string \"SUCCESS\" \u2014 terima keduanya supaya tidak diam-diam lolos.\nconst s = data.status;\nconst statusPaid = s === true || s === 'true' || s === 'PAID' || s === 'paid' ||\n                   s === 'SUCCESS' || s === 'success';\nconst txPaid = data.transactionStatus === 'paid' || data.transactionStatus === 'PAID';\n\n// Event payment.received = pembayaran selesai\nconst isPaymentReceived = event === 'payment.received' || event === 'PAID' || statusPaid || txPaid;\n\nreturn {\n  json: {\n    valid: true,\n    event: event,\n    isPaid: isPaymentReceived,\n    reference: data.transactionId || data.id || body.id || '',\n    amount: Number(data.amount || 0),\n    customerName: data.customerName || '',\n    customerEmail: data.customerEmail || '',\n    customerMobile: data.customerMobile || '',\n    productId: data.productId || '',\n    productName: data.productName || '',\n    pixelFbp: data.pixelFbp || '',\n    pixelFbc: data.pixelFbc || '',\n    raw: JSON.stringify(raw).slice(0, 2000)\n  }\n};"
+    "options": {}
+   },
+   "id": "fc631980-5a31-4ee3-892f-b88a8f1cbace",
+   "name": "IF: Pembayaran Sukses?",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2,
+   "position": [
+    704,
+    384
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "// Ambil discord_id lead + pastikan tier lifetime dari productId\nconst TIER_BY_PRODUCT_ID = {\n  'd8927ccd-4323-4500-b4f3-2f0e4f82acd1': 'yearly',\n  '56284414-f48b-47b9-af79-74d2b0f4b2dd': 'lifetime'\n};\nconst p = $input.first().json;\nconst email = String(p.customerEmail || '').trim().toLowerCase();\n\nlet discordId = '';\nlet leadNotes = '';\nif (email) {\n  const rows = await this.helpers.httpRequest({\n    method: 'GET',\n    url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads?select=discord_id&email=eq.' + encodeURIComponent(email) + '&order=created_at.desc&limit=1',\n    headers: { apikey: $env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + $env.SUPABASE_SERVICE_ROLE_KEY },\n    json: true, timeout: 10000\n  });\n  const lead = Array.isArray(rows) && rows.length ? rows[0] : null;\n  discordId = String(lead && lead.discord_id || '').trim();\n  leadNotes = String(lead && lead.notes || '').trim();\n}\n\n// tier dari productId dulu; fallback deteksi nama produk lifetime\nlet tier = 'yearly';\nconst noteTier = String(leadNotes).match(/tier:(yearly|lifetime)/i);\nif (noteTier) tier = noteTier[1].toLowerCase();\nelse tier = TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()] || tier;\nif (!noteTier) {\n  const txt = [p.productName || '', p.raw || ''].join(' ').toLowerCase();\n  if (/life[\\s-]?time|lifetime/.test(txt)) tier = 'lifetime';\n}\n\nreturn {\n  json: {\n    email: email,\n    name: p.customerName || '',\n    mobile: p.customerMobile || '',\n    tier, discordId, notes: leadNotes,\n    amount: p.amount || 0,\n    reference: p.reference || '',\n    tierSource: TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()] ? 'productId' : 'productName'\n  }\n};"
+   },
+   "id": "f28e7069-1304-46ca-9d05-9978e88fdac1",
+   "name": "Code: Siapkan Data LMS",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    0,
+    160
+   ]
+  },
+  {
+   "parameters": {
+    "method": "PATCH",
+    "url": "= {{ 'https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads?email=eq.' + encodeURIComponent(String($('Code: Siapkan Data LMS').first().json.email || '').trim().toLowerCase()) }}",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
       },
-      "id": "code-parse-callback",
-      "name": "Code: Parse Mayar Callback",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -280,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "leftValue": "={{ $json.isPaid }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "true"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
+      {
+       "name": "apikey",
+       "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
       },
-      "id": "if-paid",
-      "name": "IF: Pembayaran Sukses?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -60,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Tier ditentukan dari productId (kenaan), BUKUM dari nama produk.\n// Nama produk aslinya \"Langganan Life-Time\" \u2014 contains('lifetime') = false,\n// sehingga pembeli Life-Time dulu salah provisioned jadi 'yearly'.\nconst TIER_BY_PRODUCT_ID = {\n  'd8927ccd-4323-4500-b4f3-2f0e4f82acd1': 'yearly',   // Langganan 1 Tahun (Rp 599.000)\n  '56284414-f48b-47b9-af79-74d2b0f4b2dd': 'lifetime'  // Langganan Life-Time (Rp 999.000)\n};\n\nconst p = $input.first().json;\n\nlet tier = TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()];\nif (!tier) {\n  const txt = [p.productName || '', p.raw || ''].join(' ').toLowerCase();\n  tier = /life[\\s-]?time|lifetime/.test(txt) ? 'lifetime' : 'yearly';\n}\n\nreturn {\n  json: {\n    email: p.customerEmail || '',\n    name: p.customerName || '',\n    mobile: p.customerMobile || '',\n    tier: tier,\n    amount: p.amount || 0,\n    reference: p.reference || '',\n    tierSource: TIER_BY_PRODUCT_ID[String(p.productId || '').toLowerCase()] ? 'productId' : 'productName'\n  }\n};"
+      {
+       "name": "Authorization",
+       "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
       },
-      "id": "code-prep-provision",
-      "name": "Code: Siapkan Data LMS",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        180,
-        -320
-      ]
+      {
+       "name": "Prefer",
+       "value": "return=minimal, resolution=ignore-duplicates"
+      }
+     ]
     },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "={{ 'https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads?email=eq.' + encodeURIComponent(String($json.customerEmail || '').trim().toLowerCase()) }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "apikey",
-              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=minimal, resolution=ignore-duplicates"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ status: 'paid', current_stage: 'paid' }) }}",
-        "options": {
-          "timeout": 10000
-        }
-      },
-      "id": "http-lead-paid",
-      "name": "HTTP: Tandai Lead Paid",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        180,
-        -480
-      ],
-      "onError": "continueRegularOutput",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://xindelabs.web.id/api/provision-lms",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{$env.PROVISION_LMS_SECRET}}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ email: $json.email, name: $json.name, mobile: $json.mobile, tier: $json.tier }) }}",
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "http-provision-lms",
-      "name": "HTTP: Provision LMS Access",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        420,
-        -320
-      ],
-      "onError": "continueRegularOutput",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// \\u2728 EMAIL AKSES \\u2014 dikirim via Resend setelah /api/provision-lms mengembalikan kredensial.\n// Token node ini berisi respons API, BUKAN payload Mayar \\u2014 jadi nama/email harus\n// diambil dari node Parse, password dari respons provisioning.\nconst parsed = $('Code: Parse Mayar Callback').first().json;\nconst prep = $('Code: Siapkan Data LMS').first().json;\nconst prov = $input.first().json || {};\n\nconst RESEND_FROM = $env.RESEND_FROM || 'XindeLabs <no-reply@xindelabs.web.id>';\nconst LMS_URL = String($env.NEXT_PUBLIC_LMS_URL || 'https://xindelabs-workshop.vercel.app').replace(/\\/+$/, '');\nconst DISCORD_URL = $env.DISCORD_INVITE_URL || 'https://discord.gg/JXZWZZRsre';\n\nconst provisioned = prov.ok === true && !!prov.lms_password;\nconst nama = String(parsed.customerName || '').trim();\nconst email = String(parsed.customerEmail || prov.email || '').trim().toLowerCase();\nconst tierLabel = prep.tier === 'lifetime' ? 'Life-Time' : 'Tahunan';\nconst rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');\n\nfunction esc(s) {\n  return String(s == null ? '' : s)\n    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;').replace(/'/g, '&#39;');\n}\n\nfunction row(label, value, mono) {\n  return '<tr><td style=\"padding:8px 0;color:#6b7280;font-size:14px;width:140px;vertical-align:top;\">' + label + '</td>' +\n    '<td style=\"padding:8px 0;color:#111827;font-size:14px;' +\n    (mono ? 'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' : '') + '\">' + value + '</td></tr>';\n}\n\nconst kredensial = provisioned\n  ? '<div style=\"margin:24px 0;padding:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;\">' +\n      '<p style=\"margin:0 0 12px;font-weight:700;color:#065f46;font-size:16px;\">\\u2728 Akun Workshop lo sudah aktif</p>' +\n      '<table style=\"width:100%;border-collapse:collapse;\">' +\n        row('Login', '<a href=\"' + LMS_URL + '/login?email=' + encodeURIComponent(email) + '\" style=\"color:#047857;\">' + LMS_URL + '/login</a>', true) +\n        row('Email', esc(prov.email || email), true) +\n        row('Password', '<span style=\"user-select:all;-webkit-user-select:all;\">' + esc(prov.lms_password) + '</span>', true) +\n      '</table>' +\n      '<p style=\"margin:10px 0 0;color:#065f46;font-size:12.5px;\">Copy password: klik sekali di teks password (langsung ke-select semua), Ctrl+C / ⌘C, lalu tempel di halaman login.</p>' +\n      '<p style=\"margin:8px 0 0;color:#065f46;font-size:13px;\">Masuk pakai email + password di atas. Jangan share password ini ke siapa pun.</p>' +\n    '</div>'\n  : '<div style=\"margin:24px 0;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;\">' +\n      '<p style=\"margin:0 0 8px;font-weight:700;color:#991b1b;font-size:16px;\">Pembayaran diterima, akun sedang disiapkan</p>' +\n      '<p style=\"margin:0;color:#7f1d1d;font-size:14px;\">Sistem kami gagal membuat akses otomatis. Balas email ini supaya admin bisa mengaktifkan akun lo secara manual.</p>' +\n    '</div>';\n\nconst html =\n  '<div style=\"font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111827;\">' +\n  '<h1 style=\"font-size:20px;margin:0 0 4px;\">Pembayaran diterima</h1>' +\n  '<p style=\"margin:0 0 20px;color:#6b7280;font-size:14px;\">Terima kasih' + (nama ? ', ' + esc(nama) : '') + '.</p>' +\n  '<table style=\"width:100%;border-collapse:collapse;\">' +\n    row('Produk', 'Video Workshop \\u2014 ' + tierLabel) +\n    row('Dibayar', rupiah(parsed.amount), true) +\n    row('Referensi', esc(parsed.reference || '-'), true) +\n  '</table>' +\n  kredensial +\n  '<p style=\"margin:24px 0 6px;font-weight:600;font-size:15px;\">Join komunitas Discord</p>' +\n  '<p style=\"margin:0;font-size:14px;color:#4b5563;\">Diskusi, sharing prompt, dan sesi use-case bareng member lain: <a href=\"' + DISCORD_URL + '\" style=\"color:#047857;\">' + DISCORD_URL + '</a></p>' +\n  '<p style=\"margin:28px 0 0;color:#9ca3af;font-size:12px;\">Email ini dikirim otomatis. Balas email ini kalau ada kendala.</p>' +\n'</div>';\n\nreturn {\n  json: {\n    from: RESEND_FROM,\n    to: [email],\n    subject: provisioned ? 'Akses Workshop Xinde Labs lo sudah aktif' : 'Pembayaran diterima \\u2014 akses sedang disiapkan',\n    html: html,\n    lms_password: provisioned ? prov.lms_password : '',\n    needs_manual: !provisioned\n  }\n};"
-      },
-      "id": "code-prep-email",
-      "name": "Code: Siapkan Data untuk Auto Email",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        180,
-        -120
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.resend.com/emails",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $env.RESEND_API_KEY }}"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ from: $json.from, to: $json.to, subject: $json.subject, html: $json.html }) }}",
-        "options": {
-          "timeout": 20000
-        }
-      },
-      "id": "http-apps-script",
-      "name": "HTTP: Kirim Email (Resend)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        420,
-        -120
-      ],
-      "onError": "continueRegularOutput",
-      "alwaysOutputData": true
-    },
-    {
-      "parameters": {
-        "jsCode": "// Log callback yang bukan PAID (debug)\nconst payment = $input.first().json;\nreturn {\n  json: {\n    log: 'CALLBACK BUKAN PAID',\n    status: payment.status,\n    reference: payment.reference,\n    amount: payment.amount\n  }\n};"
-      },
-      "id": "code-reject-log",
-      "name": "Code: Log Non-Paid",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        180,
-        120
-      ]
-    },
-    {
-      "parameters": {},
-      "id": "manual-trigger-2",
-      "name": "Manual Trigger",
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -700,
-        0
-      ]
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "= {{ JSON.stringify({ status: 'paid', notes: (($('Code: Siapkan Data LMS').first().json.notes || '') + ' payment_ref:' + $('Code: Parse Mayar Callback').first().json.reference).trim() }) }}",
+    "options": {
+     "timeout": 10000
     }
-  ],
-  "connections": {
-    "Webhook: Mayar Callback": {
-      "main": [
-        [
-          {
-            "node": "Code: Parse Mayar Callback",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+   },
+   "id": "5b7e67a4-743f-4b54-87dc-7846403470c7",
+   "name": "HTTP: Finalisasi Lead Paid",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    944,
+    -96
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://xindelabs.web.id/api/provision-lms",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      },
+      {
+       "name": "Authorization",
+       "value": "=Bearer {{$env.PROVISION_LMS_SECRET}}"
+      }
+     ]
     },
-    "Code: Parse Mayar Callback": {
-      "main": [
-        [
-          {
-            "node": "IF: Pembayaran Sukses?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IF: Pembayaran Sukses?": {
-      "main": [
-        [
-          {
-            "node": "Code: Siapkan Data LMS",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "HTTP: Tandai Lead Paid",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Code: Log Non-Paid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code: Siapkan Data LMS": {
-      "main": [
-        [
-          {
-            "node": "HTTP: Provision LMS Access",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP: Provision LMS Access": {
-      "main": [
-        [
-          {
-            "node": "Code: Siapkan Data untuk Auto Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code: Siapkan Data untuk Auto Email": {
-      "main": [
-        [
-          {
-            "node": "HTTP: Kirim Email (Resend)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Manual Trigger": {
-      "main": [
-        [
-          {
-            "node": "Webhook: Mayar Callback",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ email: $json.email, name: $json.name, mobile: $json.mobile, tier: $json.tier }) }}",
+    "options": {
+     "timeout": 15000
     }
+   },
+   "id": "3be69b4c-1070-4d62-9c2b-eb199c304a31",
+   "name": "HTTP: Provision LMS Access",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1184,
+    64
+   ]
   },
-  "settings": {
-    "executionOrder": "v1"
+  {
+   "parameters": {
+    "jsCode": "// \\u2728 EMAIL AKSES \\u2014 dikirim via Resend setelah /api/provision-lms mengembalikan kredensial.\n// Token node ini berisi respons API, BUKAN payload Mayar \\u2014 jadi nama/email harus\n// diambil dari node Parse, password dari respons provisioning.\nconst parsed = $('Code: Parse Mayar Callback').first().json;\nconst prep = $('Code: Siapkan Data LMS').first().json;\nconst prov = $input.first().json || {};\n\nconst RESEND_FROM = $env.RESEND_FROM || 'XindeLabs <no-reply@xindelabs.web.id>';\nconst LMS_URL = String($env.NEXT_PUBLIC_LMS_URL || 'https://xindelabs-workshop.vercel.app').replace(/\\/+$/, '');\nconst DISCORD_URL = $env.DISCORD_INVITE_URL || 'https://discord.gg/JXZWZZRsre';\n\nconst provisioned = prov.ok === true && !!prov.lms_password;\nif (!provisioned) throw new Error('Provisioning LMS gagal: kredensial tidak tersedia');\nconst nama = String(parsed.customerName || '').trim();\nconst email = String(parsed.customerEmail || prov.email || '').trim().toLowerCase();\nconst tierLabel = prep.tier === 'lifetime' ? 'Life-Time' : 'Tahunan';\nconst rupiah = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');\n\nfunction esc(s) {\n  return String(s == null ? '' : s)\n    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;').replace(/'/g, '&#39;');\n}\n\nfunction row(label, value, mono) {\n  return '<tr><td style=\"padding:8px 0;color:#6b7280;font-size:14px;width:140px;vertical-align:top;\">' + label + '</td>' +\n    '<td style=\"padding:8px 0;color:#111827;font-size:14px;' +\n    (mono ? 'font-family:ui-monospace,SFMono-Regular,Menlo,monospace;' : '') + '\">' + value + '</td></tr>';\n}\n\nconst kredensial = provisioned\n  ? '<div style=\"margin:24px 0;padding:20px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;\">' +\n      '<p style=\"margin:0 0 12px;font-weight:700;color:#065f46;font-size:16px;\">\\u2728 Akun Workshop lo sudah aktif</p>' +\n      '<table style=\"width:100%;border-collapse:collapse;\">' +\n        row('Login', '<a href=\"' + LMS_URL + '/login\" style=\"color:#047857;\">' + LMS_URL + '/login</a>', true) +\n        row('Email', esc(prov.email || email), true) +\n        row('Password', esc(prov.lms_password), true) +\n      '</table>' +\n      '<p style=\"margin:14px 0 0;color:#065f46;font-size:13px;\">Masuk pakai email + password di atas. Jangan share password ini ke siapa pun.</p>' +\n    '</div>'\n  : '<div style=\"margin:24px 0;padding:20px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;\">' +\n      '<p style=\"margin:0 0 8px;font-weight:700;color:#991b1b;font-size:16px;\">Pembayaran diterima, akun sedang disiapkan</p>' +\n      '<p style=\"margin:0;color:#7f1d1d;font-size:14px;\">Sistem kami gagal membuat akses otomatis. Balas email ini supaya admin bisa mengaktifkan akun lo secara manual.</p>' +\n    '</div>';\n\nconst html =\n  '<div style=\"font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#111827;\">' +\n  '<h1 style=\"font-size:20px;margin:0 0 4px;\">Pembayaran diterima</h1>' +\n  '<p style=\"margin:0 0 20px;color:#6b7280;font-size:14px;\">Terima kasih' + (nama ? ', ' + esc(nama) : '') + '.</p>' +\n  '<table style=\"width:100%;border-collapse:collapse;\">' +\n    row('Produk', 'Video Workshop \\u2014 ' + tierLabel) +\n    row('Dibayar', rupiah(parsed.amount), true) +\n    row('Referensi', esc(parsed.reference || '-'), true) +\n  '</table>' +\n  kredensial +\n  '<p style=\"margin:24px 0 6px;font-weight:600;font-size:15px;\">Join komunitas Discord</p>' +\n  '<p style=\"margin:0;font-size:14px;color:#4b5563;\">Diskusi, sharing prompt, dan sesi use-case bareng member lain: <a href=\"' + DISCORD_URL + '\" style=\"color:#047857;\">' + DISCORD_URL + '</a></p>' +\n  '<p style=\"margin:28px 0 0;color:#9ca3af;font-size:12px;\">Email ini dikirim otomatis. Balas email ini kalau ada kendala.</p>' +\n'</div>';\n\nreturn {\n  json: {\n    from: RESEND_FROM,\n    to: [email],\n    subject: provisioned ? 'Akses Workshop Xinde Labs lo sudah aktif' : 'Pembayaran diterima \\u2014 akses sedang disiapkan',\n    html: html,\n    lms_password: provisioned ? prov.lms_password : '',\n    needs_manual: !provisioned\n  }\n};"
+   },
+   "id": "33b229a6-bdee-4784-854e-8d70996ecfe7",
+   "name": "Code: Siapkan Data untuk Auto Email",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    0,
+    368
+   ]
   },
-  "id": 2,
-  "active": false,
-  "versionId": "1",
-  "meta": {
-    "instanceId": "xindelabs"
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "https://api.resend.com/emails",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "Content-Type",
+       "value": "application/json"
+      },
+      {
+       "name": "Authorization",
+       "value": "=Bearer {{ $env.RESEND_API_KEY }}"
+      }
+     ]
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ from: $json.from, to: $json.to, subject: $json.subject, html: $json.html }) }}",
+    "options": {
+     "timeout": 20000
+    }
+   },
+   "id": "e7f3ded1-e623-4c1b-92f9-a52b79199dff",
+   "name": "HTTP: Kirim Email (Resend)",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1184,
+    272
+   ]
   },
-  "tags": [],
-  "pinData": {}
+  {
+   "parameters": {
+    "jsCode": "// Log callback yang bukan PAID (debug)\nconst payment = $input.first().json;\nreturn {\n  json: {\n    log: 'CALLBACK BUKAN PAID',\n    status: payment.status,\n    reference: payment.reference,\n    amount: payment.amount\n  }\n};"
+   },
+   "id": "754f8eb3-1ced-4f75-adef-2d3cedaec69a",
+   "name": "Code: Log Non-Paid",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    944,
+    512
+   ]
+  },
+  {
+   "parameters": {},
+   "id": "94fd5350-c7fe-4485-9a92-94ae36292d60",
+   "name": "Manual Trigger",
+   "type": "n8n-nodes-base.manualTrigger",
+   "typeVersion": 1,
+   "position": [
+    64,
+    384
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "// ===== DISCORD: auto-assign role member =====\n// Tier lifetime -> role 'Life Time', yearly -> 'Connect Circle'\nconst DISCORD_TOKEN = $env.DISCORD_BOT_TOKEN;\nconst GUILD_ID = '1260441398449143948';\nconst ROLES = {\n  lifetime: '1538779341368860673',  // Life Time\n  yearly:   '1260443523870621736'   // Connect Circle\n};\n\nconst prep = $('Code: Siapkan Data LMS').first().json;\nconst discordId = String(prep.discordId || '').trim();\nconst tier = String(prep.tier || 'yearly').toLowerCase();\nconst roleId = ROLES[tier] || ROLES.yearly;\n\nconst out = { ok: false, discordId, tier, roleId, step: '', error: '' };\n\nif (!DISCORD_TOKEN) {\n  out.step = 'skip'; out.error = 'DISCORD_BOT_TOKEN belum diset';\n  return { json: out };\n}\nif (!discordId || !/^\\d{17,20}$/.test(discordId)) {\n  out.step = 'skip'; out.error = 'discord_id tidak valid/kosong: ' + JSON.stringify(discordId);\n  return { json: out };\n}\n\nconst base = 'https://discord.com/api/v10';\nconst auth = { Authorization: 'Bot ' + DISCORD_TOKEN, 'Content-Type': 'application/json' };\n\n// 1. Cari member guild by user id (butuh Server Members Intent)\nout.step = 'lookup';\nconst mem = await this.helpers.httpRequest({\n  method: 'GET',\n  url: `${base}/guilds/${GUILD_ID}/members/${discordId}`,\n  headers: auth,\n  json: true,\n  timeout: 10000\n}).catch((e) => { out.error = 'lookup gagal: ' + (e.message || e); return null; });\n\nif (!mem) {\n  out.step = 'lookup-fail'; out.error = 'User belum join server (invite link via email). Discord ID: ' + discordId;\n  return { json: out };\n}\n\n// 2. Assign role\nout.step = 'assign-role';\nconst r = await this.helpers.httpRequest({\n  method: 'PUT',\n  url: `${base}/guilds/${GUILD_ID}/members/${discordId}/roles/${roleId}`,\n  headers: auth,\n  timeout: 10000,\n  returnFullResponse: true\n}).catch((e) => { out.error = 'assign role gagal: ' + (e.message || e); return null; });\n\nif (!r || (r.statusCode && r.statusCode >= 400)) {\n  out.step = 'assign-fail';\n  out.error = 'assign role HTTP ' + (r ? r.statusCode : 'null');\n  return { json: out };\n}\n\nout.ok = true;\nout.step = 'done';\nout.error = '';\nreturn { json: out };"
+   },
+   "id": "a63da288-9122-438e-9749-af6a297671fd",
+   "name": "Code: Discord Assign Role",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    460,
+    320
+   ]
+  }
+ ],
+ "connections": {
+  "Webhook: Mayar Callback": {
+   "main": [
+    [
+     {
+      "node": "Code: Parse Mayar Callback",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Code: Parse Mayar Callback": {
+   "main": [
+    [
+     {
+      "node": "IF: Pembayaran Sukses?",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "IF: Pembayaran Sukses?": {
+   "main": [
+    [
+     {
+      "node": "Code: Siapkan Data LMS",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "Code: Log Non-Paid",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Code: Siapkan Data LMS": {
+   "main": [
+    [
+     {
+      "node": "HTTP: Provision LMS Access",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "HTTP: Provision LMS Access": {
+   "main": [
+    [
+     {
+      "node": "Code: Siapkan Data untuk Auto Email",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Code: Siapkan Data untuk Auto Email": {
+   "main": [
+    [
+     {
+      "node": "HTTP: Kirim Email (Resend)",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "HTTP: Kirim Email (Resend)": {
+   "main": [
+    [
+     {
+      "node": "HTTP: Finalisasi Lead Paid",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "HTTP: Finalisasi Lead Paid": {
+   "main": [
+    [
+     {
+      "node": "Code: Discord Assign Role",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "active": false,
+ "meta": {
+  "instanceId": "xindelabs"
+ },
+ "tags": []
 }
