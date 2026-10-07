@@ -133,13 +133,15 @@ create policy "content admin all" on public.site_content for all
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
--- members: service_role (n8n) boleh tulis — anon ga bisa
+-- members: HANYA service_role (n8n) yang boleh tulis.
+-- wajib: tanpa ini, siapa pun yang punya anon key bisa update status='paid' ke dirinya sendiri.
 drop policy if exists "service insert members" on public.members;
 create policy "service insert members" on public.members for insert
-  with check (true);
+  with check (auth.role() = 'service_role');
 drop policy if exists "service update members" on public.members;
 create policy "service update members" on public.members for update
-  using (true);
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
 
 -- leads: SIAPA PUN boleh daftar (form publik landing page)
 drop policy if exists "leads insert anon" on public.leads;
@@ -168,10 +170,23 @@ create policy "leads delete admin" on public.leads for delete
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
--- modules: baca semua orang, tulis cuma admin
+-- modules: baca cuma ADMIN atau MEMBER BERBAYAR, tulis cuma admin.
+-- wajib: kolom video_id isinya ID video YouTube course — kalau publik, semua
+-- video bisa ditarik anon lewat PostgREST tanpa login.
 drop policy if exists "modules read all" on public.modules;
-create policy "modules read all" on public.modules for select
-  using (true);
+drop policy if exists "modules read member/admin" on public.modules;
+create policy "modules read member/admin" on public.modules for select
+  using (
+    exists (select 1 from public.admins where email = auth.jwt() ->> 'email')
+    or (
+      auth.role() = 'authenticated'
+      and exists (
+        select 1 from public.members m
+        where m.email = auth.jwt() ->> 'email'
+          and m.status = 'paid'
+      )
+    )
+  );
 
 drop policy if exists "modules write admin" on public.modules;
 create policy "modules write admin" on public.modules for insert
@@ -341,3 +356,32 @@ create policy "banners read public" on storage.objects for select
 create policy "banners all auth" on storage.objects for all
   using (bucket_id = 'banners' and auth.role() = 'authenticated')
   with check (bucket_id = 'banners' and auth.role() = 'authenticated');
+
+-- ============================================================
+-- MIGRATION 2026-10-02 — keamanan RLS (jalankan di DB yang SUDAH live)
+-- 1) members: tulis hanya service_role (sebelumnya anon bisa set status='paid')
+-- 2) modules: baca hanya admin / member paid (sebelumnya video_id bocor ke publik)
+-- ============================================================
+drop policy if exists "service insert members" on public.members;
+create policy "service insert members" on public.members for insert
+  with check (auth.role() = 'service_role');
+
+drop policy if exists "service update members" on public.members;
+create policy "service update members" on public.members for update
+  using (auth.role() = 'service_role')
+  with check (auth.role() = 'service_role');
+
+drop policy if exists "modules read all" on public.modules;
+drop policy if exists "modules read member/admin" on public.modules;
+create policy "modules read member/admin" on public.modules for select
+  using (
+    exists (select 1 from public.admins where email = auth.jwt() ->> 'email')
+    or (
+      auth.role() = 'authenticated'
+      and exists (
+        select 1 from public.members m
+        where m.email = auth.jwt() ->> 'email'
+          and m.status = 'paid'
+      )
+    )
+  );

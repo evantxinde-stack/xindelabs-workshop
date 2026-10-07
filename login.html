@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
   <script src="js/config.js"></script>
   <script src="js/pixel.js"></script>
@@ -36,23 +36,75 @@
         <div class="notice notice--info" id="verifyNotice" style="display:none">
           📩 Email verifikasi sudah dikirim. Cek inbox (atau spam) lalu klik link verifikasi sebelum login.
         </div>
+        <div class="notice notice--info" id="resetMailNotice" style="display:none">
+          🔑 Link ganti password udah dikirim ke email lo. Buka link itu dari inbox (cek juga spam) buat bikin password baru.
+        </div>
 
+        <!-- ============ FORM LOGIN ============ -->
         <form id="loginForm" novalidate>
           <div class="field" data-field="email">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="email lo" autocomplete="email" required />
+            <input type="email" id="email" name="email" placeholder="email lo" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" required />
             <div class="err-msg">Email wajib diisi.</div>
           </div>
           <div class="field" data-field="password">
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+            <div class="pw-row">
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required />
+              <div class="pw-tools">
+                <button type="button" class="pw-tool" id="pasteBtn" title="Tempel password dari clipboard">Tempel</button>
+                <button type="button" class="pw-tool" id="eyeBtn" aria-pressed="false" title="Lihat password">Lihat</button>
+              </div>
+            </div>
             <div class="err-msg">Password wajib diisi.</div>
           </div>
+
+          <div style="text-align:right;margin:-8px 0 18px">
+            <button type="button" class="linkish" id="forgotBtn">Lupa password?</button>
+          </div>
+
           <div class="notice notice--warn form-error" id="formError"></div>
           <button type="submit" class="btn btn--primary btn--block" id="submitBtn">Masuk →</button>
+
+          <div class="auth-sep">atau</div>
+          <button type="button" class="btn btn--ghost btn--block" id="googleBtn">Masuk dengan Google</button>
         </form>
 
-        <p class="hint" style="text-align:center;margin-top:16px">
+        <!-- ============ FORM PASSWORD BARU (dari link reset) ============ -->
+        <form id="resetForm" novalidate style="display:none">
+          <p class="modal__sub" id="resetHint" style="margin-top:-6px">Bikin password baru buat akun lo. Link reset cuma berlaku sekali.</p>
+
+          <div class="field">
+            <label for="resetNew">Password baru</label>
+            <div class="pw-row">
+              <input type="password" id="resetNew" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" required />
+              <div class="pw-tools">
+                <button type="button" class="pw-tool" data-eye="resetNew">Lihat</button>
+              </div>
+            </div>
+            <div class="hint">Minimal 8 karakter.</div>
+          </div>
+
+          <div class="field">
+            <label for="resetNew2">Ulangi password baru</label>
+            <div class="pw-row">
+              <input type="password" id="resetNew2" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" required />
+              <div class="pw-tools">
+                <button type="button" class="pw-tool" data-eye="resetNew2">Lihat</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice notice--warn form-error" id="resetError"></div>
+          <div class="notice notice--info form-error" id="resetOk"></div>
+
+          <button type="submit" class="btn btn--primary btn--block" id="resetBtn">Simpan password baru →</button>
+          <p class="hint" style="text-align:center;margin-top:16px">
+            <button type="button" class="linkish" id="backToLogin">← Kembali ke login</button>
+          </p>
+        </form>
+
+        <p class="hint" style="text-align:center;margin-top:16px" id="footHint">
           Belum punya akun? <a href="checkout.html">Daftar course dulu</a>. Belum jadi member, <a href="index.html#pricing">lihat harga</a>.
         </p>
       </div>
@@ -69,33 +121,129 @@
   <script>
     var cfg = window.XINDE;
     var configNotice = document.getElementById('configNotice');
+    var loginForm = document.getElementById('loginForm');
+    var resetForm = document.getElementById('resetForm');
+    var formError = document.getElementById('formError');
+    var resetError = document.getElementById('resetError');
+    var resetOk = document.getElementById('resetOk');
+    var supabaseClient = null;
+    var resetMode = false;
+
+    function showErr(box, msg) { box.textContent = '⚠️ ' + msg; box.classList.add('show'); }
+    function hideErr(box) { box.classList.remove('show'); }
+    function siteOrigin() {
+      return (location.protocol === 'http:' || location.protocol === 'https:')
+        ? location.origin
+        : 'https://xindelabs-workshop.vercel.app';
+    }
+    function goMember() { location.href = 'member.html'; }
+
+    // ---------- Tombol Lihat / Sembunyi password ----------
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t.classList || !t.classList.contains('pw-tool')) return;
+      var targetId = t.id === 'eyeBtn' ? 'password' : t.dataset.eye;
+      if (!targetId) return;
+      var input = document.getElementById(targetId);
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      t.textContent = show ? 'Sembunyi' : 'Lihat';
+      if (t.id === 'eyeBtn') t.setAttribute('aria-pressed', show ? 'true' : 'false');
+      input.focus();
+    });
+
+    // ---------- Tombol Tempel ----------
+    document.getElementById('pasteBtn').addEventListener('click', function () {
+      var input = document.getElementById('password');
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function (text) {
+          if (!text) { showErr(formError, 'Clipboard kosong — salin dulu password-nya dari email.'); return; }
+          hideErr(formError);
+          input.value = text;
+          input.focus();
+        }).catch(function () {
+          input.focus();
+          showErr(formError, 'Browser nolak akses clipboard. Blok kolom password terus tekan Ctrl+V (Mac: ⌘V).');
+        });
+        return;
+      }
+      input.focus();
+      showErr(formError, 'Browser lo belum dukung tombol Tempel. Blok kolom password terus tekan Ctrl+V (Mac: ⌘V).');
+    });
+
+    // ---------- Prefill email dari link di email akses (?email=...) ----------
+    var qp = new URLSearchParams(location.search);
+    var prefillEmail = qp.get('email');
+    if (prefillEmail) document.getElementById('email').value = prefillEmail;
+    var hashRecovery = /type=recover/i.test(location.hash);
+    if (qp.get('reset') === '1' || hashRecovery) enterResetMode(!!hashRecovery);
+
+    function enterResetMode(hasToken) {
+      resetMode = true;
+      loginForm.style.display = 'none';
+      resetForm.style.display = 'block';
+      document.getElementById('footHint').style.display = 'none';
+      if (!hasToken) {
+        document.getElementById('resetHint').textContent =
+          'Belum ada token reset di link ini. Buka link dari email, atau kirim ulang lewat "Lupa password?".';
+      }
+    }
+
+    document.getElementById('backToLogin').addEventListener('click', function () {
+      location.href = 'login.html';
+    });
 
     if (!cfg.supabaseConfigured()) {
       configNotice.style.display = 'block';
-      document.getElementById('loginForm').querySelector('button[type="submit"]').disabled = true;
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('googleBtn').disabled = true;
+      document.getElementById('forgotBtn').disabled = true;
     } else {
-      var supabaseClient = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      supabaseClient = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
       // Sudah login? langsung ke member area
       supabaseClient.auth.getSession().then(function (res) {
-        if (res.data && res.data.session) {
-          window.location.href = 'member.html';
-        }
+        if (res.data && res.data.session && !resetMode) goMember();
       });
 
-      document.getElementById('loginForm').addEventListener('submit', function (e) {
+      // OAuth balik ke halaman ini lewat hash / link recovery
+      supabaseClient.auth.onAuthStateChange(function (event) {
+        if (event === 'PASSWORD_RECOVERY') { enterResetMode(true); return; }
+        if (event === 'SIGNED_IN' && !resetMode) goMember();
+      });
+
+      // ---------- Login via Google ----------
+      document.getElementById('googleBtn').addEventListener('click', function () {
+        var btn = this;
+        hideErr(formError);
+        btn.disabled = true;
+        btn.textContent = 'Buka Google…';
+        supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: siteOrigin() + '/login.html' }
+        }).then(function (res) {
+          if (res.error) {
+            showErr(formError, res.error.message);
+            btn.disabled = false;
+            btn.textContent = 'Masuk dengan Google';
+          }
+          // kalau sukses, browser langsung di-redirect ke Google
+        });
+      });
+
+      // ---------- Submit login ----------
+      loginForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        var err = document.getElementById('formError');
         var email = document.getElementById('email').value.trim();
         var password = document.getElementById('password').value;
         var btn = document.getElementById('submitBtn');
 
         if (!email || !password) {
-          err.textContent = '⚠️ Isi email dan password dulu.';
-          err.classList.add('show');
+          showErr(formError, 'Isi email dan password dulu.');
           return;
         }
-        err.classList.remove('show');
+        hideErr(formError);
         btn.disabled = true;
         btn.textContent = 'Masuk…';
 
@@ -104,13 +252,70 @@
             if (res.error.message && /verif/i.test(res.error.message)) {
               document.getElementById('verifyNotice').style.display = 'block';
             }
-            err.textContent = '⚠️ ' + (res.error.message || 'Login gagal.');
-            err.classList.add('show');
+            var msg = res.error.message || 'Login gagal.';
+            if (/invalid login credentials/i.test(msg)) {
+              msg = 'Email atau password salah. Salin persis password dari email akses lo (tombol Tempel), atau klik "Lupa password?".';
+            }
+            showErr(formError, msg);
             btn.disabled = false;
             btn.textContent = 'Masuk →';
             return;
           }
-          window.location.href = 'member.html';
+          goMember();
+        });
+      });
+
+      // ---------- Lupa password ----------
+      document.getElementById('forgotBtn').addEventListener('click', function () {
+        var email = document.getElementById('email').value.trim();
+        if (!email) {
+          showErr(formError, 'Isi email dulu, baru klik "Lupa password?".');
+          document.getElementById('email').focus();
+          return;
+        }
+        hideErr(formError);
+        var btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Mengirim…';
+
+        supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: siteOrigin() + '/login.html?reset=1'
+        }).then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Masuk →';
+          if (res.error) { showErr(formError, res.error.message); return; }
+          document.getElementById('resetMailNotice').style.display = 'block';
+        });
+      });
+
+      // ---------- Simpan password baru ----------
+      resetForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var p1 = document.getElementById('resetNew').value;
+        var p2 = document.getElementById('resetNew2').value;
+        var btn = document.getElementById('resetBtn');
+
+        hideErr(resetError); hideErr(resetOk);
+        if (p1.length < 8) { showErr(resetError, 'Password baru minimal 8 karakter.'); return; }
+        if (p1 !== p2) { showErr(resetError, 'Konfirmasi password baru tidak sama.'); return; }
+
+        btn.disabled = true;
+        btn.textContent = 'Menyimpan…';
+
+        supabaseClient.auth.updateUser({ password: p1 }).then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan password baru →';
+          if (res.error) {
+            var m = res.error.message || 'Gagal menyimpan.';
+            if (/session|missing|jwt/i.test(m)) {
+              m = 'Link reset tidak valid atau sudah kadaluarsa. Minta link baru lewat "Lupa password?".';
+            }
+            showErr(resetError, m);
+            return;
+          }
+          resetOk.textContent = '✓ Password berhasil diganti. Lo masuk ke LMS…';
+          resetOk.classList.add('show');
+          setTimeout(goMember, 900);
         });
       });
     }

@@ -20,7 +20,15 @@
     <div class="nav__in">
       <a href="index.html" class="wordmark">xindelabs<span>.</span></a>
       <div class="nav__right">
-        <button class="btn btn--ghost btn--sm" id="logoutBtn" style="display:none">Logout</button>
+        <div class="acct" id="acct" style="display:none">
+          <button class="btn btn--ghost btn--sm" id="acctBtn" type="button" aria-haspopup="true" aria-expanded="false">Akun ▾</button>
+          <div class="acct-menu" id="acctMenu">
+            <div class="acct-mail" id="acctEmail">—</div>
+            <div class="acct-meta" id="acctMeta">—</div>
+            <button type="button" class="acct-item" id="pwBtn">Ganti Password</button>
+            <button type="button" class="acct-item" id="logoutBtn">Logout</button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -61,7 +69,8 @@
             <li>Tier: <span style="color:var(--muted-dim)" id="blockedTier">—</span></li>
           </ul>
           <a href="checkout.html" class="btn btn--primary btn--block">Daftar Course →</a>
-          <p class="hint" style="text-align:center;margin-top:12px">Sudah bayar tapi belum aktif? Hubungi <a id="waLinkBlocked" href="#">WhatsApp kami</a>.</p>
+          <p class="hint" style="text-align:center;margin-top:12px">Login pakai Google? Pastikan email Google lo sama dengan email yang dipake buat beli course.</p>
+          <p class="hint" style="text-align:center;margin-top:8px">Sudah bayar tapi belum aktif? Hubungi <a id="waLinkBlocked" href="#">WhatsApp kami</a>.</p>
         </div>
       </div>
 
@@ -89,8 +98,9 @@
         <!-- Main: player + judul + navigasi -->
         <div class="lms-main">
           <div class="lms-player">
-            <div class="player-frame">
-              <iframe id="playerIframe" src="" title="Materi modul" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+            <div class="player-frame" id="playerFrame">
+              <div id="ytHost"></div>
+              <div class="player-wm" id="playerWm" style="display:none"></div>
             </div>
             <div class="player-text" id="playerText" style="display:none">
               <div class="player-text__inner" id="playerTextContent"></div>
@@ -113,6 +123,49 @@
     </div>
   </div>
 </div>
+
+  <!-- ============ MODAL: GANTI PASSWORD ============ -->
+  <div class="modal" id="pwModal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle">
+    <div class="modal__box">
+      <div class="modal__head">
+        <h3 id="pwModalTitle">Ganti Password</h3>
+        <button type="button" class="modal__close" id="pwClose" aria-label="Tutup">✕</button>
+      </div>
+      <p class="modal__sub" id="pwNote">Masukkan password lama dulu buat konfirmasi, lalu password baru.</p>
+
+      <div class="field" id="pwOldField">
+        <label for="pwOld">Password lama</label>
+        <div class="pw-row">
+          <input type="password" id="pwOld" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <div class="pw-tools"><button type="button" class="pw-tool" data-eye="pwOld">Lihat</button></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="pwNew">Password baru</label>
+        <div class="pw-row">
+          <input type="password" id="pwNew" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <div class="pw-tools"><button type="button" class="pw-tool" data-eye="pwNew">Lihat</button></div>
+        </div>
+        <div class="hint">Minimal 8 karakter.</div>
+      </div>
+
+      <div class="field">
+        <label for="pwNew2">Ulangi password baru</label>
+        <div class="pw-row">
+          <input type="password" id="pwNew2" autocomplete="new-password" autocapitalize="off" autocorrect="off" spellcheck="false" />
+          <div class="pw-tools"><button type="button" class="pw-tool" data-eye="pwNew2">Lihat</button></div>
+        </div>
+      </div>
+
+      <div class="notice notice--warn form-error" id="pwError"></div>
+      <div class="notice notice--info form-error" id="pwOk"></div>
+      <button type="button" class="btn btn--primary btn--block" id="pwSave">Simpan password</button>
+      <p class="hint" style="text-align:center;margin-top:14px">
+        Lupa password lama? <a href="login.html" id="pwForgot">kirim link reset</a>
+      </p>
+    </div>
+  </div>
 
   <footer class="footer">
     <div class="wrap footer__in">
@@ -147,6 +200,11 @@
       return String(s || '').split(/\n{2,}/).map(function (p) {
         return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
       }).join('');
+    }
+    function siteOrigin() {
+      return (location.protocol === 'http:' || location.protocol === 'https:')
+        ? location.origin
+        : 'https://xindelabs-workshop.vercel.app';
     }
 
     // ============ State ============
@@ -247,6 +305,127 @@
       document.getElementById('progressHint').textContent = done + ' dari ' + total + ' modul selesai';
     }
 
+    // ============ Player: YouTube nocookie + gate tonton ============
+    var ytPlayer = null, ytApi = 'idle', ytWait = [], ytTimer = null;
+    var watchedSec = 0, lastPos = -1, gatePct = 0, gatePassed = {};
+
+    function embedUrl(id, api) {
+      var q = [
+        'rel=0', 'modestbranding=1', 'playsinline=1', 'iv_load_policy=3', 'autoplay=1',
+        'origin=' + encodeURIComponent(location.origin),
+        'widget_referrer=' + encodeURIComponent(location.origin + location.pathname)
+      ];
+      if (api) q.push('enablejsapi=1');
+      return 'https://www.youtube-nocookie.com/embed/' + id + '?' + q.join('&');
+    }
+
+    function failYt() {
+      if (ytApi === 'failed') return;
+      ytApi = 'failed';
+      ytWait.splice(0).forEach(function (f) { f(true); });
+    }
+
+    function ensureYt(cb) {
+      if (window.YT && window.YT.Player) { cb(false); return; }
+      if (ytApi === 'failed') { cb(true); return; }
+      ytWait.push(cb);
+      if (ytApi === 'loading') return;
+      ytApi = 'loading';
+      var prev = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = function () {
+        if (typeof prev === 'function') prev();
+        ytApi = 'ready';
+        ytWait.splice(0).forEach(function (f) { f(false); });
+      };
+      var s = document.createElement('script');
+      s.src = 'https://www.youtube.com/iframe_api';
+      s.onerror = failYt;
+      document.head.appendChild(s);
+      setTimeout(function () { if (ytApi === 'loading') failYt(); }, 9000);
+    }
+
+    function resetWatch() {
+      watchedSec = 0; lastPos = -1; gatePct = 0;
+      refreshCompleteBtn();
+    }
+    function stopWatch() {
+      if (ytTimer) { clearInterval(ytTimer); ytTimer = null; }
+      lastPos = -1;
+    }
+    function startWatch() {
+      stopWatch();
+      lastPos = -1;
+      ytTimer = setInterval(function () {
+        if (!ytPlayer || !ytPlayer.getCurrentTime) return;
+        var t = ytPlayer.getCurrentTime();
+        var d = ytPlayer.getDuration();
+        if (lastPos >= 0) {
+          var delta = t - lastPos;
+          // cuma waktu playback beneran yang dihitung — seek di-skip
+          if (delta > 0 && delta < 1.6) watchedSec += delta;
+        }
+        lastPos = t;
+        if (d) {
+          gatePct = Math.min(1, watchedSec / d);
+          if (gatePct >= 0.9 && activeModules[currentIdx]) {
+            gatePassed[moduleKey(activeModules[currentIdx], currentIdx)] = true;
+          }
+          refreshCompleteBtn();
+        }
+      }, 1000);
+    }
+
+    function createPlayer(id) {
+      var host = document.getElementById('ytHost');
+      if (!host || !window.YT || !YT.Player) return;
+      ytPlayer = new YT.Player(host, {
+        videoId: id,
+        playerVars: {
+          autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1,
+          iv_load_policy: 3, enablejsapi: 1, origin: location.origin
+        },
+        events: {
+          onReady: resetWatch,
+          onStateChange: function (e) {
+            if (e.data === YT.PlayerState.PLAYING) startWatch();
+            else stopWatch();
+          }
+        }
+      });
+    }
+
+    function mountVideo(id) {
+      var wm = document.getElementById('playerWm');
+      if (memberEmail && memberEmail !== 'local') {
+        wm.textContent = memberEmail + ' · ' + new Date().toLocaleDateString('id-ID');
+        wm.style.display = '';
+      } else {
+        wm.style.display = 'none';
+      }
+      if (!id) return;
+
+      if (ytPlayer && ytPlayer.loadVideoById) { ytPlayer.loadVideoById(id); return; }
+      ensureYt(function (failed) {
+        if (failed) {
+          var host = document.getElementById('ytHost');
+          if (host) {
+            host.innerHTML = '<iframe src="' + embedUrl(id, false) + '" title="Materi modul" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>';
+          }
+          return;
+        }
+        if (ytPlayer && ytPlayer.loadVideoById) ytPlayer.loadVideoById(id);
+        else createPlayer(id);
+      });
+    }
+
+    // klik kanan / drag di area video diblokir (penghalang kasual)
+    var videoArea = document.querySelector('.player-frame');
+    if (videoArea) {
+      ['contextmenu', 'dragstart'].forEach(function (ev) {
+        videoArea.addEventListener(ev, function (e) { e.preventDefault(); });
+      });
+    }
+
     // ============ Buka modul ============
     function openModule(i) {
       var m = activeModules[i];
@@ -261,16 +440,19 @@
         'Modul ' + (i + 1) + ' dari ' + activeModules.length + ' · ' +
         (isTextModule(m) ? 'materi teks' : 'video') + ' · ' + durationLabel(m.duration);
 
-      var iframe = document.getElementById('playerIframe');
+      var frame = document.getElementById('playerFrame');
       var textBox = document.getElementById('playerText');
       if (isTextModule(m)) {
-        iframe.style.display = 'none';
+        stopWatch();
+        if (ytPlayer && ytPlayer.stopVideo) ytPlayer.stopVideo();
+        frame.style.display = 'none';
         textBox.style.display = 'block';
         document.getElementById('playerTextContent').innerHTML = renderText(m.content);
       } else {
         textBox.style.display = 'none';
-        iframe.style.display = '';
-        iframe.src = youtubeId(m.video_id) ? 'https://www.youtube.com/embed/' + youtubeId(m.video_id) + '?autoplay=1&rel=0' : '';
+        frame.style.display = '';
+        resetWatch();
+        mountVideo(youtubeId(m.video_id));
       }
 
       document.getElementById('prevBtn').disabled = i === 0;
@@ -281,23 +463,42 @@
       if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
+    function gateOk() {
+      if (currentIdx < 0) return false;
+      var m = activeModules[currentIdx];
+      if (isTextModule(m)) return true;
+      if (isCompleted(currentIdx)) return true;
+      if (gatePassed[moduleKey(m, currentIdx)]) return true;
+      if (ytApi === 'failed') return true;   // player gagal dimuat — jangan blokir member
+      return gatePct >= 0.9;
+    }
+
     function refreshCompleteBtn() {
       var btn = document.getElementById('completeBtn');
       if (currentIdx < 0) { btn.disabled = true; btn.textContent = '✓ Mark as Complete'; return; }
-      btn.disabled = false;
       if (isCompleted(currentIdx)) {
+        btn.disabled = false;
         btn.classList.add('btn--ghost');
         btn.classList.remove('btn--primary');
         btn.textContent = '✓ Selesai (klik buat batal)';
-      } else {
+        return;
+      }
+      if (!gateOk()) {
+        btn.disabled = true;
         btn.classList.remove('btn--ghost');
         btn.classList.add('btn--primary');
-        btn.textContent = '✓ Mark as Complete';
+        btn.textContent = 'Tonton dulu — ' + Math.round(gatePct * 100) + '% / 90%';
+        return;
       }
+      btn.disabled = false;
+      btn.classList.remove('btn--ghost');
+      btn.classList.add('btn--primary');
+      btn.textContent = '✓ Mark as Complete';
     }
 
     function toggleComplete() {
       if (currentIdx < 0) return;
+      if (!isCompleted(currentIdx) && !gateOk()) return;
       setStatus(currentIdx, isCompleted(currentIdx) ? 'in_progress' : 'completed');
     }
     function goPrev() { if (currentIdx > 0) openModule(currentIdx - 1); }
@@ -306,6 +507,120 @@
     document.getElementById('prevBtn').addEventListener('click', goPrev);
     document.getElementById('nextBtn').addEventListener('click', goNext);
     document.getElementById('completeBtn').addEventListener('click', toggleComplete);
+
+    // ============ Menu akun ============
+    function setAcct(email, meta) {
+      document.getElementById('acctEmail').textContent = email || '—';
+      document.getElementById('acctMeta').textContent = meta || '—';
+    }
+    function showAcct() { document.getElementById('acct').style.display = 'flex'; }
+    function showErr(box, msg) { box.textContent = '⚠️ ' + msg; box.classList.add('show'); }
+
+    var acctMenu = document.getElementById('acctMenu');
+    document.getElementById('acctBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = acctMenu.classList.toggle('open');
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+      if (!acctMenu.contains(e.target)) acctMenu.classList.remove('open');
+    });
+
+    // ============ Modal ganti password ============
+    var pwModal = document.getElementById('pwModal');
+    var pwError = document.getElementById('pwError');
+    var pwOk = document.getElementById('pwOk');
+
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t.classList || !t.classList.contains('pw-tool') || !t.dataset.eye) return;
+      var input = document.getElementById(t.dataset.eye);
+      if (!input) return;
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      t.textContent = show ? 'Sembunyi' : 'Lihat';
+      input.focus();
+    });
+
+    function closePwModal() {
+      pwModal.style.display = 'none';
+      pwError.classList.remove('show');
+      pwOk.classList.remove('show');
+      ['pwOld', 'pwNew', 'pwNew2'].forEach(function (id) { document.getElementById(id).value = ''; });
+    }
+    document.getElementById('pwClose').addEventListener('click', closePwModal);
+    pwModal.addEventListener('click', function (e) { if (e.target === pwModal) closePwModal(); });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && pwModal.style.display !== 'none') closePwModal();
+    });
+    document.getElementById('pwForgot').addEventListener('click', function (e) {
+      e.preventDefault();
+      if (!supabaseClient || !memberEmail || memberEmail.indexOf('@') < 0) return;
+      pwError.classList.remove('show');
+      supabaseClient.auth.resetPasswordForEmail(memberEmail, { redirectTo: siteOrigin() + '/login.html?reset=1' }).then(function (r) {
+        if (r.error) { showErr(pwError, r.error.message); return; }
+        pwOk.textContent = 'Link reset udah dikirim ke ' + memberEmail + '. Cek inbox / spam.';
+        pwOk.classList.add('show');
+      });
+    });
+
+    document.getElementById('pwBtn').addEventListener('click', function () {
+      acctMenu.classList.remove('open');
+      if (!supabaseClient) return;
+      pwModal.style.display = 'flex';
+      pwError.classList.remove('show');
+      pwOk.classList.remove('show');
+      document.getElementById('pwOldField').style.display = 'none';
+      document.getElementById('pwNote').textContent = 'Cek metode login lo…';
+      supabaseClient.auth.getUser().then(function (r) {
+        var u = r.data && r.data.user;
+        var provs = (u && u.identities ? u.identities : []).map(function (i) { return i.provider; });
+        var hasEmail = provs.indexOf('email') >= 0;
+        document.getElementById('pwOldField').style.display = hasEmail ? '' : 'none';
+        document.getElementById('pwNote').textContent = hasEmail
+          ? 'Masukkan password lama dulu buat konfirmasi, lalu password baru.'
+          : 'Lo masuk lewat ' + (provs[0] || 'provider lain') + ' — password baru langsung disimpan, tanpa password lama.';
+      });
+    });
+
+    document.getElementById('pwSave').addEventListener('click', function () {
+      var btn = this;
+      var oldV = document.getElementById('pwOld').value;
+      var n1 = document.getElementById('pwNew').value;
+      var n2 = document.getElementById('pwNew2').value;
+      var needOld = document.getElementById('pwOldField').style.display !== 'none';
+
+      pwError.classList.remove('show');
+      pwOk.classList.remove('show');
+      if (needOld && !oldV) { showErr(pwError, 'Password lama wajib diisi.'); return; }
+      if (n1.length < 8) { showErr(pwError, 'Password baru minimal 8 karakter.'); return; }
+      if (n1 !== n2) { showErr(pwError, 'Konfirmasi password baru tidak sama.'); return; }
+
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+
+      function apply() {
+        supabaseClient.auth.updateUser({ password: n1 }).then(function (res) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan password';
+          if (res.error) { showErr(pwError, res.error.message || 'Gagal menyimpan password.'); return; }
+          pwOk.textContent = '✓ Password berhasil diganti.';
+          pwOk.classList.add('show');
+          setTimeout(closePwModal, 1100);
+        });
+      }
+
+      if (!needOld) { apply(); return; }
+      supabaseClient.auth.signInWithPassword({ email: memberEmail, password: oldV }).then(function (r) {
+        if (r.error) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan password';
+          showErr(pwError, 'Password lama salah.');
+          return;
+        }
+        apply();
+      });
+    });
 
     // ============ Load modul + progress ============
     function renderAll() {
@@ -349,7 +664,8 @@
       document.getElementById('memberHead').style.display = 'block';
       document.getElementById('memberName').textContent = (user && user.email ? user.email.split('@')[0] : 'Member');
       document.getElementById('memberState').style.display = 'block';
-      document.getElementById('logoutBtn').style.display = 'inline-flex';
+      setAcct(user && user.email ? user.email : 'member', document.getElementById('memberTier').textContent || '—');
+      showAcct();
       loadModules();
     }
 
@@ -360,7 +676,8 @@
         document.getElementById('blockedStatus').textContent = info.status || 'tidak ada data member';
         document.getElementById('blockedTier').textContent = info.tier || '—';
       }
-      document.getElementById('logoutBtn').style.display = 'inline-flex';
+      setAcct(memberEmail, 'Status: ' + (info ? (info.status || '—') : 'belum terdaftar') + (info && info.tier ? ' · ' + info.tier : ''));
+      showAcct();
     }
 
     // ============ Supabase belum dikonfigurasi ============
@@ -369,7 +686,7 @@
       configNotice.style.display = 'block';
       document.getElementById('memberHead').style.display = 'block';
       document.getElementById('memberName').textContent = 'Member';
-      document.getElementById('logoutBtn').style.display = 'inline-flex';
+      showAcct();
       showMember({ email: 'member' });
     }
 
@@ -388,6 +705,7 @@
       }
       var user = res.data.session.user;
       var email = (user && user.email) || '';
+      memberEmail = email;
 
       // Query tabel members by email
       supabaseClient
@@ -399,7 +717,8 @@
           if (r.error) {
             document.getElementById('blockedState').style.display = 'block';
             document.getElementById('blockedHead').style.display = 'block';
-            document.getElementById('logoutBtn').style.display = 'inline-flex';
+            showAcct();
+            setAcct(email, 'Gagal cek membership');
             document.getElementById('blockedStatus').textContent = 'gagal cek membership (' + r.error.message + ')';
             return;
           }
