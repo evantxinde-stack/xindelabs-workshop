@@ -349,6 +349,7 @@ drop policy if exists "banners insert admin" on storage.objects;
 drop policy if exists "banners update admin" on storage.objects;
 drop policy if exists "banners delete admin" on storage.objects;
 drop policy if exists "banners read public" on storage.objects;
+drop policy if exists "banners all auth" on storage.objects;
 
 create policy "banners read public" on storage.objects for select
   using (bucket_id = 'banners');
