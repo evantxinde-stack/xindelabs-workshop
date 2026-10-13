@@ -3,3 +3,8 @@ node_modules/
 .env
 .env.local
 .vercel
+
+# local artifacts (jangan di-commit)
+graphify-out/
+presession/
+workshop.html

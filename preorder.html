@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pre-Order Lifetime — Build Your Own Personalized Agent</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body>
+
+  <!-- ============ HERO PRE-ORDER ============ -->
+  <div class="preorder-hero" id="preorderHero">
+    <div class="wrap">
+      <span class="preorder-badge">⚡ PRE-ORDER · KODE <b>PREORDER</b></span>
+      <h1 class="preorder-title">Akses <span class="hl">LIFETIME</span> · Bayar Sekali, Akses Selamanya</h1>
+      <p class="preorder-sub">
+        Khusus pre-order workshop <b>20 Oktober 2026</b>.
+        Harga normal <s>Rp 999.000</s> → pakai kode <b class="hl">PREORDER</b> jadi
+        <b class="hl" id="heroPrice">Rp 699.000</b> sekali bayar.
+      </p>
+      <div class="preorder-meta">
+        <div class="pm-item"><span class="pm-ic">📅</span><span>Workshop: <b>Selasa, 20 Oktober 2026</b></span></div>
+        <div class="pm-item"><span class="pm-ic">🔓</span><span>Akses <b>Lifetime</b> — tanpa renew</span></div>
+        <div class="pm-item"><span class="pm-ic">💬</span><span>Auto-join <b>Discord</b> + role Life Time</span></div>
+        <div class="pm-item"><span class="pm-ic">🎓</span><span>Akses <b>Member Area</b> langsung setelah bayar</span></div>
+      </div>
+    </div>
+  </div>
+
+  <header class="nav">
+    <div class="nav__in">
+      <a href="index.html" class="wordmark">xindelabs<span>.</span></a>
+      <div class="nav__right">
+        <a href="index.html" class="btn btn--ghost btn--sm">← Kembali</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <div class="auth-wrap">
+
+      <!-- ============ COUNTDOWN ============ -->
+      <div class="preorder-countdown" id="preorderCountdown">
+        <div class="pc-label">⏰ Workshop dimulai dalam</div>
+        <div class="pc-grid" id="pcGrid">
+          <div class="pc-cell"><span class="pc-num" id="pcD">--</span><span class="pc-unit">hari</span></div>
+          <div class="pc-cell"><span class="pc-num" id="pcH">--</span><span class="pc-unit">jam</span></div>
+          <div class="pc-cell"><span class="pc-num" id="pcM">--</span><span class="pc-unit">menit</span></div>
+          <div class="pc-cell"><span class="pc-num" id="pcS">--</span><span class="pc-unit">detik</span></div>
+        </div>
+      </div>
+
+      <div class="form-card form-card--wide">
+        <h1 class="form-title">Daftar Pre-Order</h1>
+        <p class="form-sub">Isi data lo — link pembayaran langsung dikirim otomatis.</p>
+
+        <div class="trust-grid">
+          <div class="trust-item"><span class="trust-icon">🔒</span><span>Data lo aman</span></div>
+          <div class="trust-item"><span class="trust-icon">💳</span><span>Diproses Mayar</span></div>
+          <div class="trust-item"><span class="trust-icon">🚫</span><span>Ga simpan data kartu</span></div>
+        </div>
+
+        <form id="checkoutForm" novalidate>
+          <!-- ============ Paket (LOCKED lifetime) ============ -->
+          <div class="field">
+            <label>Pilih Paket</label>
+            <div class="tier-options">
+              <div class="tier-opt tier-opt--locked">
+                <div class="tier-price">Rp 999.000 <s style="font-size:14px;color:var(--muted)">→ Rp 699.000</s></div>
+                <div class="tier-period">Lifetime · sekali bayar · PRE-ORDER</div>
+                <span class="tier-badge">PRE-ORDER</span>
+              </div>
+            </div>
+            <div class="hint">Paket pre-order terkunci ke <b>Lifetime</b> (kode voucher berlaku untuk paket ini saja).</div>
+          </div>
+
+          <!-- ============ Voucher PREORDER (locked) ============ -->
+          <div class="field">
+            <label>Kode Voucher</label>
+            <div class="voucher-row">
+              <input type="text" id="voucher" value="PREORDER" readonly style="text-transform:uppercase;background:var(--bg-2);color:var(--green)" />
+              <button type="button" class="btn btn--primary btn--sm" id="applyVoucher" disabled>✓ Aktif</button>
+            </div>
+            <div class="voucher-result voucher-result--ok" id="voucherResult" style="display:flex">
+              ✓ Voucher <b>PREORDER</b> aktif — diskon Rp 300.000
+            </div>
+          </div>
+
+          <!-- ============ Lead form ============ -->
+          <div class="field" data-field="nama">
+            <label for="nama">Nama Lengkap *</label>
+            <input type="text" id="nama" name="nama" placeholder="cth: Budi Santoso" autocomplete="name" required />
+            <div class="err-msg">Nama lengkap wajib diisi.</div>
+          </div>
+
+          <div class="field" data-field="email">
+            <label for="email">Email Aktif *</label>
+            <input type="email" id="email" name="email" placeholder="cth: budi@gmail.com" autocomplete="email" required />
+            <div class="hint">Link course + invite Discord dikirim ke email ini.</div>
+            <div class="err-msg">Email wajib diisi dan harus valid.</div>
+          </div>
+
+          <div class="field" data-field="wa">
+            <label for="wa">No. WhatsApp *</label>
+            <input type="tel" id="wa" name="wa" placeholder="cth: 08123456789" autocomplete="tel" inputmode="numeric" required />
+            <div class="hint">Format 08xx, minimal 9 digit.</div>
+            <div class="err-msg">No. WhatsApp harus diawali 08 dan minimal 9 digit.</div>
+          </div>
+
+          <!-- ============ Discord ID + tutorial ============ -->
+          <div class="field" data-field="discord">
+            <label for="discord">Discord User ID *</label>
+            <input type="text" id="discord" name="discord" placeholder="cth: 1234567890123456789" inputmode="numeric" maxlength="20" autocomplete="off" spellcheck="false" required />
+            <div class="hint">Wajib — role <b>Life Time</b> auto-assign ke ID ini setelah bayar. Cara cari? Buka tutorial.</div>
+            <div class="err-msg">Discord User ID harus berupa angka 17–20 digit.</div>
+          </div>
+
+          <div class="tutorial" id="discordTutorial">
+            <button type="button" class="tutorial-toggle">Cara cari Discord User ID lo 📱/💻</button>
+            <div class="tutorial-body">
+              <div class="tutorial-inner">
+                <div class="tut-tabs">
+                  <button type="button" class="tut-tab active" data-tab="mobile">📱 Mobile</button>
+                  <button type="button" class="tut-tab" data-tab="desktop">💻 Desktop</button>
+                </div>
+                <div class="tut-pane active" data-pane="mobile">
+                  <ol>
+                    <li>Buka Discord, ketuk avatar lo (kanan bawah).</li>
+                    <li>Ketuk <b>User Profile</b> → ikon <b>⋯</b> (titik tiga).</li>
+                    <li>Ketuk <b>Developer Mode</b> → nyalakan toggle-nya.</li>
+                    <li>Tutup menu, ketuk lagi avatar lo → <b>Copy User ID</b>.</li>
+                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
+                  </ol>
+                </div>
+                <div class="tut-pane" data-pane="desktop">
+                  <ol>
+                    <li>Buka Discord (app/desktop), buka <b>User Settings</b> (ikon ⚙️).</li>
+                    <li>Sidebar kiri → <b>Advanced</b>.</li>
+                    <li>Nyalakan toggle <b>Developer Mode</b>.</li>
+                    <li>Klik kanan nama lo → <b>Copy User ID</b>.</li>
+                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice notice--warn form-error" id="formError"></div>
+
+          <button type="submit" class="btn btn--primary btn--block" id="payBtn">
+            Bayar &amp; Daftar → <span id="payAmount">Rp 699.000</span>
+          </button>
+          <p class="hint" style="text-align:center;margin-top:12px">Setelah bayar: invite Discord + akses Member Area dikirim otomatis ke email lo.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <span class="footer__copy">© 2026 Xinde Labs · Pre-Order Lifetime · Pembayaran diproses Mayar</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    fbq('track', 'InitiateCheckout');
+
+    var cfg = window.XINDE;
+    var form = document.getElementById('checkoutForm');
+    var payBtn = document.getElementById('payBtn');
+    var payAmount = document.getElementById('payAmount');
+    var formError = document.getElementById('formError');
+
+    // ===== Pre-order config: tier LOCKED lifetime + voucher PREORDER =====
+    var TIER = 'lifetime';
+    var VOUCHER = 'PREORDER';
+    var appliedVoucher = { code: 'PREORDER', type: 'amount', value: 300000, tier: 'lifetime' };
+
+    function fmtRp(n) { return 'Rp ' + Number(n).toLocaleString('id-ID'); }
+
+    function hargaFinal() {
+      var base = cfg.PRICES.lifetime.harga;       // 999000
+      var diskon = appliedVoucher.value;          // 300000
+      return Math.max(1000, base - diskon);       // 699000
+    }
+    payAmount.textContent = fmtRp(hargaFinal());
+
+    // ===== Discord tutorial =====
+    document.querySelector('.tutorial-toggle').addEventListener('click', function () {
+      document.getElementById('discordTutorial').classList.toggle('open');
+    });
+    document.querySelectorAll('.tut-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        document.querySelectorAll('.tut-tab').forEach(function (t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        var name = tab.dataset.tab;
+        document.querySelectorAll('.tut-pane').forEach(function (p) {
+          p.classList.toggle('active', p.dataset.pane === name);
+        });
+      });
+    });
+
+    // ===== Countdown ke 20 Oktober 2026 19:00 WIB =====
+    (function () {
+      var target = new Date('2026-10-20T19:00:00+07:00').getTime();
+      function tick() {
+        var diff = target - Date.now();
+        if (diff <= 0) {
+          document.getElementById('preorderCountdown').innerHTML =
+            '<div class="pc-label">🔥 Workshop sedang berlangsung / sudah selesai. Ikut next batch ya!</div>';
+          return;
+        }
+        var d = Math.floor(diff / 86400000);
+        var h = Math.floor((diff % 86400000) / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        document.getElementById('pcD').textContent = d;
+        document.getElementById('pcH').textContent = String(h).padStart(2, '0');
+        document.getElementById('pcM').textContent = String(m).padStart(2, '0');
+        document.getElementById('pcS').textContent = String(s).padStart(2, '0');
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+
+    // ===== Validasi (sama dgn checkout) =====
+    function validators() {
+      return {
+        nama: function (v) { return v.trim().length >= 2; },
+        email: function (v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim()); },
+        wa: function (v) {
+          var s = v.replace(/\D/g, '');
+          return /^08\d{7,}$/.test(s) || /^628\d{7,}$/.test(s);
+        },
+        discord: function (v) {
+          var s = v.replace(/\D/g, '');
+          return s.length >= 17 && s.length <= 20;
+        }
+      };
+    }
+
+    function validate() {
+      var v = validators();
+      var ok = true;
+      Object.keys(v).forEach(function (name) {
+        var field = form.querySelector('[data-field="' + name + '"]');
+        var input = field.querySelector('input');
+        var pass = v[name](input.value);
+        field.classList.toggle('invalid', !pass);
+        if (!pass) ok = false;
+      });
+      return ok;
+    }
+
+    form.querySelectorAll('input').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        this.closest('.field').classList.remove('invalid');
+      });
+    });
+
+    // ===== Submit → POST n8n webhook =====
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validate()) {
+        formError.classList.add('show');
+        formError.textContent = '⚠️ Cek lagi isian yang merah, ya.';
+        return;
+      }
+      formError.classList.remove('show');
+
+      var base = cfg.PRICES.lifetime.harga;
+      var diskon = appliedVoucher.value;
+      var hFinal = Math.max(1000, base - diskon);
+
+      var payload = {
+        nama: document.getElementById('nama').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        wa: document.getElementById('wa').value.trim(),
+        discord: document.getElementById('discord').value.trim(),
+        produk: cfg.PRODUCT_KEY,
+        tier: TIER,
+        harga: hFinal,
+        harga_awal: base,
+        diskon: diskon,
+        voucher_code: VOUCHER
+      };
+
+      fbq('track', 'AddPaymentInfo');
+      payBtn.disabled = true;
+      payBtn.textContent = 'Mengarahkan ke pembayaran…';
+
+      fetch(cfg.N8N_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          var url = data.payment_url;
+          if (!url) throw new Error('payment_url tidak ada');
+          window.location.href = url;
+        })
+        .catch(function () {
+          payBtn.disabled = false;
+          payBtn.textContent = 'Bayar & Daftar → ' + fmtRp(hFinal);
+          formError.classList.add('show');
+          formError.textContent = '⚠️ Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
+        });
+    });
+  </script>
+</body>
+</html>
