@@ -451,19 +451,40 @@ var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
         body: JSON.stringify(payload)
       })
         .then(function (res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          return res.json();
+          return res.json().catch(function () { return {}; }).then(function (body) {
+            if (!res.ok) {
+              var e = new Error('HTTP ' + res.status);
+              // n8n kirim { message } saat workflow gagal (mis. VOUCHER_DITOLAK: ...)
+              var m = (body && body.message) || '';
+              if (!res.ok && m) e.serverReason = m;
+              throw e;
+            }
+            return body;
+          });
         })
         .then(function (data) {
+          // Server hitung ulang voucher (anti-hack). Kalau ditolak, blok checkout
+          // — harga di browser jangan dipercaya. Kirim voucher_code, server validasi.
+          if (data.voucher_valid === false) {
+            var why = data.voucher_reason || 'Voucher tidak valid untuk paket ini.';
+            appliedVoucher = null;
+            updatePrice();
+            showVoucherResult('⚠️ ' + why, true);
+            payBtn.disabled = false;
+            payBtn.textContent = 'Bayar & Daftar → ' + fmtRp(hargaFinal);
+            return;
+          }
           var url = data.payment_url;
           if (!url) throw new Error('payment_url tidak ada');
           window.location.href = url;
         })
-        .catch(function () {
+        .catch(function (err) {
           payBtn.disabled = false;
           payBtn.textContent = 'Bayar & Daftar → ' + fmtRp(hargaFinal);
           formError.classList.add('show');
-          formError.textContent = '⚠️ Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
+          // Server menolak (mis. voucher tidak berlaku utk paket ini) -> tampilkan alasannya
+          var msg = (err && err.serverReason) ? err.serverReason : 'Gagal terhubung ke sistem pembayaran. Coba lagi beberapa saat.';
+          formError.textContent = '⚠️ ' + msg;
         });
     });
 
