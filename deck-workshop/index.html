@@ -96,7 +96,6 @@
     }
     .btn-fullscreen:hover { background: var(--green); color: var(--bg); }
 
-    /* progress bar */
     .progress {
       position: fixed; top: var(--nav-h); left: 0; right: 0; height: 3px;
       background: var(--line); z-index: 101;
@@ -160,7 +159,7 @@
       margin-bottom: 14px;
     }
 
-    .lead { color: var(--muted); font-size: clamp(0.98rem, 1.5vw, 1.14rem); max-width: 700px; }
+    .lead { color: var(--muted); font-size: clamp(0.98rem, 1.5vw, 1.14rem); max-width: 720px; }
     .subhead { color: var(--muted); font-size: clamp(0.95rem, 1.4vw, 1.08rem); }
 
     .foot {
@@ -168,7 +167,6 @@
       margin-top: 22px;
     }
 
-    /* center variant */
     .slide.is-center { text-align: center; }
     .slide.is-center .lead, .slide.is-center .subhead { margin-inline: auto; }
     .slide.is-center .kicker { justify-content: center; }
@@ -239,6 +237,29 @@
       gap: 10px; margin-bottom: 4px;
     }
 
+    /* ==================== IMAGES ==================== */
+    .shot {
+      width: 100%; border-radius: var(--radius-sm);
+      border: 1px solid var(--line); display: block;
+      background: var(--bg);
+      max-height: 300px; object-fit: cover; object-position: top;
+    }
+    .shot--tall { max-height: 420px; }
+    .shot-wrap { margin-top: 20px; }
+    .shot-cap {
+      font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted-dim);
+      margin-top: 8px; letter-spacing: 0.03em;
+    }
+    .shot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 20px; }
+    .shot-grid .shot { height: 168px; object-fit: cover; object-position: top; }
+
+    /* photo + text split */
+    .split {
+      display: grid; grid-template-columns: 260px 1fr; gap: 26px;
+      align-items: center; margin-top: 20px;
+    }
+    .split .shot { height: auto; }
+
     /* ==================== STAT CARDS ==================== */
     .stat {
       background: var(--bg-2); border: 1px solid var(--line);
@@ -259,7 +280,7 @@
     /* ==================== STEPS TIMELINE ==================== */
     .steps { margin-top: 22px; display: flex; flex-direction: column; gap: 0; }
     .step {
-      display: grid; grid-template-columns: 110px 1fr; gap: 18px;
+      display: grid; grid-template-columns: 118px 1fr; gap: 18px;
       padding: 13px 0; border-bottom: 1px solid var(--line);
       align-items: baseline;
     }
@@ -286,9 +307,39 @@
       color: var(--green); background: var(--bg-3);
       padding: 11px 14px;
     }
-    td { padding: 11px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+    td { padding: 11px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; vertical-align: top; }
     td strong { color: var(--text); }
     td:first-child { font-weight: 600; color: var(--text); }
+    .pro { color: var(--green); }
+    .con { color: var(--danger); }
+
+    /* two-col pros/cons */
+    .vs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
+    .vs-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 20px;
+    }
+    .vs-card.hl { border-color: var(--line-strong); background: linear-gradient(165deg, var(--bg-2), var(--bg-3)); }
+    .vs-card h3 {
+      font-family: var(--font-display); font-size: 1.02rem; font-weight: 700;
+      margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    }
+    .vs-card h3 .ico { font-size: 1.1rem; }
+    .vs-list { list-style: none; }
+    .vs-list li {
+      font-size: 0.85rem; color: var(--muted); padding-left: 18px;
+      position: relative; margin-bottom: 7px;
+    }
+    .vs-list li::before {
+      content: ""; position: absolute; left: 0; top: 8px;
+      width: 7px; height: 7px; border-radius: 999px;
+    }
+    .vs-list.pros li::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .vs-list.cons li::before { background: var(--danger); }
+    .vs-sub {
+      font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted-dim); margin: 12px 0 6px;
+    }
 
     /* ==================== TERMINAL ==================== */
     .terminal {
@@ -329,7 +380,7 @@
       padding: 7px 14px; margin-top: 24px;
     }
 
-    /* ==================== BOTTOM NAV (dots + arrows) ==================== */
+    /* ==================== BOTTOM DOCK ==================== */
     .dock {
       position: fixed; bottom: 0; left: 0; right: 0; height: 56px;
       z-index: 100;
@@ -369,14 +420,30 @@
     .dock__btn:disabled { opacity: 0.35; cursor: default; }
 
     /* ==================== RESPONSIVE ==================== */
+    @media (max-height: 840px) and (min-width: 861px) {
+      .stage { padding: 16px clamp(18px, 5vw, 64px); }
+      h2.headline { font-size: clamp(1.4rem, 2.6vw, 2rem); }
+      .lead { font-size: 1rem; }
+      .shot { max-height: 200px; }
+      .shot-grid .shot { height: 132px; }
+      .grid-2, .grid-3, .grid-4 { margin-top: 14px; }
+      .card { padding: 14px; }
+      .steps { margin-top: 14px; }
+      .step { padding: 8px 0; }
+      .foot { margin-top: 12px; }
+      .split .shot { max-height: 240px; }
+    }
     @media (max-width: 860px) {
       .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .step { grid-template-columns: 1fr; gap: 2px; }
       .table-card { overflow-x: auto; }
       table { min-width: 560px; }
+      .split { grid-template-columns: 200px 1fr; gap: 18px; }
     }
     @media (max-width: 560px) {
-      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .grid-2, .grid-3, .grid-4, .vs-grid, .shot-grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; gap: 16px; }
+      .split .shot { max-width: 220px; margin-inline: auto; }
       .stage { padding: 14px 14px; bottom: 52px; }
       .nav-pill { display: none; }
       .dock { padding: 0 10px; }
@@ -389,334 +456,359 @@
       th, td { padding: 8px 10px; font-size: 0.78rem; }
       .foot { margin-top: 14px; }
       .bignum { font-size: clamp(3.2rem, 18vw, 5rem); }
+      .shot-grid .shot { height: 190px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ==================== TOP BAR ==================== -->
   <header class="topbar">
     <div class="brand-wrap">
       <span class="wordmark">xindelabs<span>.</span></span>
       <span class="nav-pill">LIVE WORKSHOP DECK</span>
     </div>
     <div class="topbar__right">
-      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">16</span></span>
+      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">17</span></span>
       <button class="btn-fullscreen" id="btn-fs" onclick="toggleFullscreen()">Fullscreen</button>
     </div>
   </header>
 
   <div class="progress"><div class="progress__fill" id="prog-fill"></div></div>
 
-  <!-- ==================== STAGE ==================== -->
   <main class="stage" id="stage">
 
-    <!-- SLIDE 01 — COVER -->
-    <section class="slide is-center active" data-nav="Cover">
+    <!-- 01 COVER -->
+    <section class="slide is-center" data-nav="Cover">
       <div class="eyebrow-row">
         <span class="pill">● Live Workshop · 20 Oktober 2026</span>
         <span class="pill cyan">Tanpa Coding</span>
       </div>
       <h1 class="display">Bangun <em>Hermes Agent</em><br />lo dari 0.</h1>
-      <p class="lead">Dari mindset sampai algoritma bercabang — 10 modul, ikut bareng, langsung praktik.</p>
+      <p class="lead">7 modul — dari mindset, instalasi, sampai agent yang punya kepribadian dan bisa memperbaiki diri sendiri.</p>
       <div class="cta-row">
         <button class="btn btn--primary" onclick="goSlide(1)">Mulai Deck →</button>
         <a class="btn btn--secondary" href="https://xindelabs-workshop.vercel.app/" target="_blank" rel="noopener">Workshop Utama ↗</a>
       </div>
-      <p class="foot">Geser / tekan ← → · klik titik di bawah buat loncat</p>
+      <div class="shot-wrap"><img class="shot" src="./assets/cover-shot.jpeg" alt="Landing page Xinde Labs Workshop" loading="lazy" /></div>
+      <p class="foot">Geser / tekan ← → · klik titik di bawah buat loncat · F = fullscreen</p>
     </section>
 
-    <!-- SLIDE 02 — AGENDA -->
-    <section class="slide" data-nav="Peta">
-      <div class="kicker">Peta Sesi</div>
-      <h2 class="headline">10 modul. 3 level. Satu agent jalan.</h2>
-      <p class="lead">Alurnya bukan urutan kaku — tapi kerangka berpikir: mindset → bahasa → blueprint → build → loop.</p>
-      <div class="steps">
-        <div class="step"><div class="step__t">Beginner</div><div class="step__b"><strong>M1 Mindset · M2 Bahasa Agent · M3 Intro AI Agent</strong><span>Dari ngejar leads sendiri jadi pengarah + cara ngomong ke AI biar nurut.</span></div></div>
-        <div class="step"><div class="step__t">Level-up</div><div class="step__b"><strong>M4 Blueprint · M5 Build · M6 Loop · M7 Channel</strong><span>Rancang, bangun end-to-end, kalibrasi makin akurat, sambung ke WA & email.</span></div></div>
-        <div class="step"><div class="step__t">Pro</div><div class="step__b"><strong>M8 Uji & Perbaiki · M9 Jaga Agent</strong><span>Agent salah? Tangani. Rencana 30 hari biar konsisten jalan.</span></div></div>
-        <div class="step"><div class="step__t">Bonus</div><div class="step__b"><strong>M10 Algoritma by Design</strong><span>Bikin agent bisa ambil keputusan bercabang sesuai bisnis lo.</span></div></div>
-      </div>
-    </section>
-
-    <!-- SLIDE 03 — KENAPA AGENT -->
-    <section class="slide is-center" data-nav="Kenapa">
-      <div class="kicker">Bukan Klaim Kosong</div>
-      <h2 class="headline">Kenapa agent, bukan cuma ChatGPT.</h2>
-      <div class="grid-4">
-        <div class="stat"><span class="stat__v">24/7</span><span class="stat__l">Jalan terus</span><span class="stat__c">Ga nunggu lo online.</span></div>
-        <div class="stat"><span class="stat__v">10x</span><span class="stat__l">Pekerjaan kehabisan</span><span class="stat__c">Tanpa ketik ulang.</span></div>
-        <div class="stat"><span class="stat__v">30 mnt</span><span class="stat__l">Agent pertama</span><span class="stat__c">Dari nol, step-by-step.</span></div>
-        <div class="stat"><span class="stat__v">10</span><span class="stat__l">Modul video</span><span class="stat__c">9 inti + 1 bonus.</span></div>
-      </div>
-      <p class="foot">* Contoh skenario pemakaian — hasil tiap orang beda, tergantung konsistensi & follow-up lo.</p>
-    </section>
-
-    <!-- SLIDE 04 — 5 AGENT -->
-    <section class="slide" data-nav="5 Agent">
-      <div class="kicker">Pilih Target</div>
-      <h2 class="headline">Lima agent. Mulai dari <em>satu</em> masalah nyata.</h2>
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">AGENT 01</span><span class="pill">Auto Follow-Up</span></div>
-          <span class="card__title">Hermes Sales</span>
-          <p>Follow-up leads, riset prospek, bantu closing — biar ga ada calon customer yang nggantung.</p>
-        </div>
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">AGENT 02</span><span class="pill cyan">Rutin Harian</span></div>
-          <span class="card__title">Hermes Konten</span>
-          <p> Ide konten, draft artikel, caption rutin buat semua platform — tanpa mikir tiap hari.</p>
-        </div>
-        <div class="card card--highlight">
-          <div class="card-row-top"><span class="card__num">AGENT 03</span><span class="pill">Aktif 24/7</span></div>
-          <span class="card__title">Hermes Customer Care</span>
-          <p>Membalas pertanyaan pelanggan 24/7 di WhatsApp, Telegram, atau email — konsisten.</p>
-        </div>
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">AGENT 04</span><span class="pill gold">Operasional</span></div>
-          <span class="card__title">Hermes Ops</span>
-          <p>Rekap laporan bulanan otomatis, perapihan data di Google Sheets, jadwal tugas rutin.</p>
-        </div>
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">AGENT 05</span><span class="pill">Blueprint 5 Tahap</span></div>
-          <span class="card__title">Hermes Custom</span>
-          <p>Asisten kustom dengan pengambilan keputusan bercabang sesuai kebutuhan spesifik bisnismu.</p>
-        </div>
-        <div class="card card--highlight" style="justify-content:center;">
-          <div>
-            <span class="pill">Langkah Selanjutnya</span>
-            <span class="card__title" style="margin-top:10px; display:block;">Mau mulai dari mana?</span>
-            <p style="margin-bottom:12px;">Pilih SATU agent yang paling deket sama kerjaan lo harian.</p>
-            <button class="btn btn--primary" onclick="goSlide(4)">Lihat Blueprint →</button>
+    <!-- 02 WHO AM I -->
+    <section class="slide" data-nav="Who Am I">
+      <div class="kicker">Who Am I</div>
+      <h2 class="headline">Xinde — <em>AI Practitioner</em>.</h2>
+      <div class="split">
+        <img class="shot" src="./assets/whoami-photo.jpeg" alt="Foto Evant" loading="lazy" />
+        <div>
+          <p class="lead">Tidak punya background IT atau coding. Ngulik AI dan dunia digital dengan <strong>trial-error</strong> terus-menerus sampai ketemu polanya. Pakai <strong>Hermes Agent</strong> buat efektivitas proses penjualan &amp; pemasaran — hasilnya <strong>2× lebih baik</strong>.</p>
+          <div class="grid-2" style="margin-top:18px;">
+            <div class="card"><span class="card__num">01</span><p>Digital Marketing <strong>2 Perusahaan Tiongkok</strong></p></div>
+            <div class="card"><span class="card__num">02</span><p><strong>Ex-Insurance Agent</strong></p></div>
+            <div class="card"><span class="card__num">03</span><p><strong>Ads Specialist</strong></p></div>
+            <div class="card"><span class="card__num">04</span><p><strong>Digital Business Creator</strong> &amp; <strong>AI Practitioner</strong></p></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- SLIDE 05 — M1 MINDSET -->
+    <!-- 03 MY MENTOR -->
+    <section class="slide is-center" data-nav="Mentor">
+      <div class="kicker">My Mentor</div>
+      <h2 class="headline">Belajar dari yang <em>sudah jalan duluan</em>.</h2>
+      <div class="shot-wrap"><img class="shot" src="./assets/mentor-wide.jpeg" alt="Mentor" loading="lazy" /></div>
+      <div style="display:flex; justify-content:center; margin-top:-46px; position:relative;">
+        <img src="./assets/mentor-mark.jpeg" alt="Mark" style="width:88px;height:88px;border-radius:999px;border:3px solid var(--green);box-shadow:0 0 28px rgba(0,255,136,0.4);" loading="lazy" />
+      </div>
+    </section>
+
+    <!-- 04 PROJECT BEFORE -->
+    <section class="slide" data-nav="Project">
+      <div class="kicker">Project Before</div>
+      <h2 class="headline">Yang udah gw bangun <em>sebelum</em> ngajarin.</h2>
+      <p class="lead">Bukan teori — ini sistem nyata yang jalan: klinik, baksos kesehatan, dashboard agent, sampai AI router.</p>
+      <div class="shot-grid">
+        <img class="shot" src="./assets/proj-1.jpeg" alt="Bot Control Hermes" loading="lazy" />
+        <img class="shot" src="./assets/proj-2.jpeg" alt="Dashboard klinik" loading="lazy" />
+        <img class="shot" src="./assets/proj-3.jpeg" alt="Sistem baksos" loading="lazy" />
+        <img class="shot" src="./assets/proj-4.jpeg" alt="Data pasien" loading="lazy" />
+        <img class="shot" src="./assets/proj-5.jpeg" alt="Clinic management" loading="lazy" />
+        <img class="shot" src="./assets/proj-6.jpeg" alt="Aplikasi terapis" loading="lazy" />
+      </div>
+      <p class="foot">Beberapa di antaranya dibangun pakai Hermes Agent + automasi — bukan tim developer.</p>
+    </section>
+
+    <!-- 05 AGENDA -->
+    <section class="slide" data-nav="Peta">
+      <div class="kicker">Peta Sesi</div>
+      <h2 class="headline">7 modul. Satu agent yang <em>hidup</em>.</h2>
+      <div class="steps">
+        <div class="step"><div class="step__t">Modul 1</div><div class="step__b"><strong>Mindset</strong><span>Identify · Adapt · Automate — cara mikir sebelum ngoding apa pun.</span></div></div>
+        <div class="step"><div class="step__t">Modul 2</div><div class="step__b"><strong>Intro to AI Agents</strong><span>Agent vs Chatbot, AI Harness, AI Automation.</span></div></div>
+        <div class="step"><div class="step__t">Modul 3</div><div class="step__b"><strong>Introduction to Hermes</strong><span>Kenapa Hermes + Cloud/VPS vs Lokal.</span></div></div>
+        <div class="step"><div class="step__t">Modul 4</div><div class="step__b"><strong>How to Install</strong><span>Install lokal, deploy server, via VPS, gateway, model.</span></div></div>
+        <div class="step"><div class="step__t">Modul 5</div><div class="step__b"><strong>Give Your Agent Life</strong><span>SOUL.md — kepribadian, gaya, larangan, teknis.</span></div></div>
+        <div class="step"><div class="step__t">Modul 6</div><div class="step__b"><strong>Give Agent Hand</strong><span>Skill &amp; Plugin — kasih tangan biar bisa aksi nyata.</span></div></div>
+        <div class="step"><div class="step__t">Modul 7</div><div class="step__b"><strong>Loop Engineering</strong><span>Reason → Act → Observe, biar agent memperbaiki diri sendiri.</span></div></div>
+      </div>
+    </section>
+
+    <!-- 06 MODUL 1 MINDSET -->
     <section class="slide" data-nav="M1">
-      <div class="kicker">Modul 1 · Beginner</div>
-      <h2 class="headline">Mindset: dari ngejar leads ke jadi <em>pengarah</em>.</h2>
-      <div class="steps">
-        <div class="step"><div class="step__t">Pergeseran</div><div class="step__b"><strong>Berhenti kerjain semuanya sendiri</strong><span>Lo jadi arsitek, bukan tukang. Ngatur, bukan eksekusi tiap leads.</span></div></div>
-        <div class="step"><div class="step__t">Sasaran</div><div class="step__b"><strong>Pilih satu tugas berulang</strong><span>Tugas yang lo kerjakan setiap hari tanpa sadar — itu kandidat pertama.</span></div></div>
-        <div class="step"><div class="step__t">Eksekusi</div><div class="step__b"><strong>Serahkan ke agent</strong><span>Agent yang jalan. Lo cuma review hasilnya.</span></div></div>
-        <div class="step"><div class="step__t">Skala</div><div class="step__b"><strong>Skala setelah menang</strong><span>Satu agent jalan dulu, baru tambah yang lain.</span></div></div>
+      <div class="kicker">Modul 1 · Mindset</div>
+      <h2 class="headline">Identify. Adapt. <em>Automate.</em></h2>
+      <div class="grid-3">
+        <div class="card card--highlight">
+          <span class="card__num">IDENTIFY · ADAPT · AUTOMATE</span>
+          <ul>
+            <li>Identifikasi workflow kerja kamu — mana yang <strong>berulang</strong> dan bisa diimplementasikan ke AI.</li>
+            <li>Adaptasikan workflow itu jadi <strong>step-by-step</strong> yang nantinya digantikan AI Agent.</li>
+            <li>Automatiskan yang perlu, <strong>minta persetujuan untuk yang penting</strong>.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card__num">TRIAL · ERROR · EVALUATE</span>
+          <ul>
+            <li>Berani mencoba walaupun awalnya <strong>berantakan</strong> — nggak masalah.</li>
+            <li>Kalau ada error, pakai <strong>reverse engineer</strong> buat identifikasi errornya di mana.</li>
+            <li>Evaluasi setiap workflow, <strong>test sampai 100%</strong> sesuai keinginan kamu.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card__num">EXPERIMENT</span>
+          <ul>
+            <li>Experiment dengan <strong>batasan</strong> — supaya data-data kamu tetap aman.</li>
+            <li>Mulai dari scope kecil, jangan langsung semua.</li>
+            <li>Yang penting: <strong>jalan dulu</strong>, sempurna belakangan.</li>
+          </ul>
+        </div>
       </div>
-      <p class="foot">Analogi: lo jadi arsitek, bukan tukang. Mindset ini fondasi semua modul berikutnya.</p>
+      <p class="foot">Mindset ini fondasi semua modul berikutnya — lo jadi arsitek, bukan tukang.</p>
     </section>
 
-    <!-- SLIDE 06 — M2 BAHASA AGENT -->
+    <!-- 07 MODUL 2 INTRO TO AI AGENTS -->
     <section class="slide" data-nav="M2">
-      <div class="kicker">Modul 2 · Beginner</div>
-      <h2 class="headline">Bahasa agent: cara <em>ngomong</em> biar nurut.</h2>
-      <div class="table-card">
-        <table>
-          <thead><tr><th>Situasi</th><th>Cara Salah</th><th>Cara Agent</th></tr></thead>
-          <tbody>
-            <tr><td>Minta sesuatu</td><td>"Bikinin follow-up"</td><td><strong>"Tulis follow-up untuk leads properti, nada ramah, 3 paragraf"</strong></td></tr>
-            <tr><td>Kasih konteks</td><td>Kata-kata generik</td><td><strong>Sebut produk, audiens, channel output</strong></td></tr>
-            <tr><td>Contoh output</td><td>"Yang bagus ya"</td><td><strong>Contoh pesan yang lo suka, suruh ikutin gayanya</strong></td></tr>
-            <tr><td>Hasil</td><td>Biasa-biasa</td><td><strong>Langsung pakai</strong></td></tr>
-          </tbody>
-        </table>
+      <div class="kicker">Modul 2 · Intro to AI Agents</div>
+      <h2 class="headline">Agent vs <em>Chatbot</em>.</h2>
+      <div class="vs-grid">
+        <div class="vs-card hl">
+          <h3><span class="ico">🤖</span> AI Agent</h3>
+          <ul class="vs-list pros">
+            <li><strong>Bersifat proaktif-otonom</strong></li>
+            <li>Mampu <strong>merencanakan langkah</strong> sendiri</li>
+            <li>Menjalankan <strong>tool</strong> eksternal</li>
+            <li><strong>Memantau hasil</strong> eksekusi</li>
+            <li><strong>Mengulang eksekusi</strong> kalau terjadi error</li>
+          </ul>
+        </div>
+        <div class="vs-card">
+          <h3><span class="ico">💬</span> Chatbot</h3>
+          <ul class="vs-list cons">
+            <li><strong>Bersifat pasif-reaktif</strong></li>
+            <li>Hanya <strong>merespons prompt</strong></li>
+            <li>Kerjanya <strong>dalam satu sesi</strong> teks saja</li>
+            <li>Nggak punya rencana sendiri</li>
+            <li>Nggak bisa jalan tanpa kamu ketik</li>
+          </ul>
+        </div>
       </div>
-      <p class="foot">Rumus: <strong>konteks + tugas + format output</strong>.</p>
+      <div class="shot-wrap"><img class="shot" src="./assets/agent-vs-chatbot.jpeg" alt="Ilustrasi AI Agent vs Chatbot" loading="lazy" /></div>
     </section>
 
-    <!-- SLIDE 07 — M3 INTRO AI AGENT -->
+    <!-- 08 MODUL 2b HARNESS & AUTOMATION -->
+    <section class="slide" data-nav="M2b">
+      <div class="kicker">Modul 2 · Lanjutan</div>
+      <h2 class="headline">AI Harness &amp; AI <em>Automation</em>.</h2>
+      <div class="grid-2">
+        <div class="card card--highlight">
+          <span class="card__num">AI HARNESS</span>
+          <span class="card__title">"Tali pengaman" buat AI</span>
+          <p>Harness = lapisan yang ngatur cara AI berpikir &amp; bertindak. Dia yang kasih <strong>aturan</strong>, <strong>tool</strong>, dan <strong>batasan</strong> — supaya agent nggak ngawur. Hermes Agent itu harness-nya.</p>
+        </div>
+        <div class="card">
+          <span class="card__num">AI AUTOMATION</span>
+          <span class="card__title">Dari "bisa" jadi "jalan sendiri"</span>
+          <p>Automation = waktu agent udah bisa mikir + punya tool, tugas itu <strong>dijalankan otomatis</strong> tanpa kamu ketik ulang. Trigger, jadwal, event — agent yang handle.</p>
+        </div>
+      </div>
+      <p class="foot">Harness tanpa automation = pintar tapi nunggu. Automation tanpa harness = jalan tapi ngawur. Butuh dua-duanya.</p>
+    </section>
+
+    <!-- 09 MODUL 3 INTRO HERMES -->
     <section class="slide" data-nav="M3">
-      <div class="kicker">Modul 3 · Beginner</div>
-      <h2 class="headline">Intro AI Agent + kenalan <em>5 jenis Hermes</em>.</h2>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">KONSEP</span></div>
-          <span class="card__title">Agent ≠ Chatbot</span>
-          <ul>
-            <li>Chatbot <strong>nunggu input</strong> — hidup cuma saat lo buka chat.</li>
-            <li>Agent <strong>eksekusi tugas</strong> — jalan sendiri sesuai jadwal & aturan.</li>
-            <li>Output dikirim ke channel: <strong>WA, Telegram, email</strong> — bukan cuma layar.</li>
+      <div class="kicker">Modul 3 · Introduction to Hermes</div>
+      <h2 class="headline">Hermes: <em>framework autonomous agent</em> open-source.</h2>
+      <p class="lead">Dikembangkan oleh <strong>Nous Research</strong>. Sebuah <strong>orkestrator</strong> antar program lewat LLM — jadi bisa melakukan <strong>aksi nyata</strong>, bukan cuma membalas chat.</p>
+      <div class="shot-wrap"><img class="shot" src="./assets/hermes-hero.jpeg" alt="Hermes Agent" loading="lazy" /></div>
+      <div class="grid-3" style="margin-top:20px;">
+        <div class="card"><span class="card__num">WHY 01</span><p><strong>Agent that grow with you</strong> — belajar dari pola kerja kamu dan selalu update.</p></div>
+        <div class="card"><span class="card__num">WHY 02</span><p><strong>Memory persisten</strong> + auto-generate skills. Nggak pernah lupa cara nyelesain masalah.</p></div>
+        <div class="card"><span class="card__num">WHY 03</span><p><strong>Komunitas tumbuh</strong> — sudah dilengkapi Skill Hub &amp; Plugin Hub.</p></div>
+      </div>
+    </section>
+
+    <!-- 10 MODUL 3b CLOUD VS LOCAL -->
+    <section class="slide" data-nav="Cloud/Lokal">
+      <div class="kicker">Modul 3 · Infrastruktur</div>
+      <h2 class="headline">Cloud/VPS vs <em>Lokal</em>.</h2>
+      <div class="vs-grid">
+        <div class="vs-card hl">
+          <h3><span class="ico">☁️</span> Cloud / Virtual Private Server</h3>
+          <div class="vs-sub pro">Pros</div>
+          <ul class="vs-list pros">
+            <li>Aktif <strong>24/7</strong> tanpa mati</li>
+            <li>Server <strong>stabil</strong>, nggak pernah tidur</li>
+            <li><strong>Nggak perlu dibawa-bawa</strong></li>
+            <li>Tugas yang udah di-set <strong>beneran dieksekusi</strong></li>
+          </ul>
+          <div class="vs-sub con">Cons</div>
+          <ul class="vs-list cons">
+            <li><strong>Sewa bulanan</strong></li>
+            <li>Kalau salah setting keamanan bisa <strong>bocor</strong></li>
+            <li>Datanya milik server, <strong>bukan pribadi</strong></li>
           </ul>
         </div>
-        <div class="card card--highlight">
-          <div class="card-row-top"><span class="card__num">PRAKTIK</span></div>
-          <span class="card__title">Latihan live: pilih agent lo</span>
-          <ul>
-            <li>Pilih <strong>1 dari 5 jenis Hermes</strong> yang paling nyambung sama kerjaan lo.</li>
-            <li>Tulis <strong>satu tugas berulang</strong> yang mau lo serahkan.</li>
-            <li>Pilihan ini dipakai sepanjang modul build — jangan overthink.</li>
+        <div class="vs-card">
+          <h3><span class="ico">💻</span> Lokal / Mac Mini, Laptop</h3>
+          <div class="vs-sub pro">Pros</div>
+          <ul class="vs-list pros">
+            <li>Biaya tambahan <strong>hampir nol</strong></li>
+            <li>Data <strong>milik pribadi</strong>, mudah diawasi &amp; dimatikan</li>
+            <li><strong>Pas untuk belajar</strong></li>
+          </ul>
+          <div class="vs-sub con">Cons</div>
+          <ul class="vs-list cons">
+            <li>Laptop ketutup / server mati = <strong>agent OFF</strong></li>
+            <li>Kinerja <strong>tergantung spek</strong> laptop kamu</li>
           </ul>
         </div>
       </div>
-      <p class="foot">Fundamental yang sama, diarahkan ke kebutuhan spesifik lo.</p>
+      <p class="foot">Lokal buat latihan &amp; eksperimen. Cloud buat agent yang harus jalan 24/7.</p>
     </section>
 
-    <!-- SLIDE 08 — M4 BLUEPRINT -->
+    <!-- 11 MODUL 4 INSTALL -->
     <section class="slide" data-nav="M4">
-      <div class="kicker">Modul 4 · Level-up</div>
-      <h2 class="headline">Blueprint 5 tahap + kerangka <em>Frontend-Backend-Database</em>.</h2>
-      <div class="steps">
-        <div class="step"><div class="step__t">Tahap 1</div><div class="step__b"><strong>Masalah</strong><span>Definisikan satu tugas berulang yang akan digantikan.</span></div></div>
-        <div class="step"><div class="step__t">Tahap 2</div><div class="step__b"><strong>Input</strong><span>Dari mana data masuk: chat, form, email, Google Sheets.</span></div></div>
-        <div class="step"><div class="step__t">Tahap 3</div><div class="step__b"><strong>Keputusan</strong><span>Aturan main agent: kapan jawab, kapan eskalasi ke human.</span></div></div>
-        <div class="step"><div class="step__t">Tahap 4</div><div class="step__b"><strong>Output</strong><span>Format + channel hasil: WA, email, sheet, laporan.</span></div></div>
-        <div class="step"><div class="step__t">Tahap 5</div><div class="step__b"><strong>Iterasi</strong><span>Ukur, evaluasi, refine. Agent makin akurat tiap loop.</span></div></div>
-      </div>
-      <p class="foot">Tiga lapisan yang sama di tiap agent: Frontend → Backend → Database.</p>
-    </section>
-
-    <!-- SLIDE 09 — M5 BUILD (BIG NUMBER) -->
-    <section class="slide is-center" data-nav="M5">
-      <div class="kicker">Modul 5 · Level-up</div>
-      <div class="bignum">30 menit</div>
-      <h2 class="headline" style="margin-bottom:10px;">Waktu bikin agent pertama lo. <em>End-to-end, live.</em></h2>
-      <p class="lead">Demo bukan teori: dari prompt kosong sampai output jalan di channel lo.</p>
-      <div class="terminal" style="max-width:520px; margin:22px auto 0; text-align:left;">
-        <code>$ lo: "Bikinin agent yang riset 5 prospek baru tiap pagi,
-       taruh hasilnya di Google Sheets, kalo ada yang hot
-       kasih tau gw via WhatsApp."
-
-agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
-      </div>
-    </section>
-
-    <!-- SLIDE 10 — M6 LOOP -->
-    <section class="slide" data-nav="M6">
-      <div class="kicker">Modul 6 · Level-up</div>
-      <h2 class="headline">Loop engineering: agent makin <em>akurat</em>.</h2>
-      <div class="grid-2">
-        <div class="card card--highlight">
-          <div class="card-row-top"><span class="card__num">LOOP INTI</span></div>
-          <span class="card__title">Evaluate → Refine → Repeat</span>
-          <ul>
-            <li><strong>Evaluate:</strong> jalankan agent, kumpulkan hasil & kesalahan.</li>
-            <li><strong>Refine:</strong> perbaiki aturan atau konteks — bukan ulang dari nol.</li>
-            <li><strong>Repeat:</strong> loop sampe output konsisten sesuai ekspektasi.</li>
-          </ul>
-        </div>
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">BATAS</span></div>
-          <span class="card__title">Aturan main biar ga ngamuk</span>
-          <ul>
-            <li>Kalau gagal <strong>3x</strong>, eskalasi ke human.</li>
-            <li>Simpan <strong>versi prompt + hasilnya</strong> — bisa dibandingkan.</li>
-            <li>Catat kasus gagal jadi <strong>regression test</strong>.</li>
-          </ul>
-        </div>
-      </div>
-      <p class="foot">Ini yang membedakan agent mainan vs agent produksi.</p>
-    </section>
-
-    <!-- SLIDE 11 — M7 CHANNEL -->
-    <section class="slide" data-nav="M7">
-      <div class="kicker">Modul 7 · Level-up</div>
-      <h2 class="headline">Hubungin agent ke <em>channel kerja nyata</em> lo.</h2>
+      <div class="kicker">Modul 4 · How to Install</div>
+      <h2 class="headline">Tiga cara pasang <em>Hermes Agent</em>.</h2>
       <div class="grid-3">
         <div class="card">
-          <div class="card-row-top"><span class="card__num">WA</span></div>
-          <span class="card__title">WhatsApp</span>
-          <p>Paling cepat menang. Follow-up leads & jawab customer langsung dari chat — bukan dashboard.</p>
+          <span class="card__num">CARA 01</span>
+          <span class="card__title">Install Lokal</span>
+          <p>macOS, Windows, atau Linux. Paling pas buat belajar dan eksperimen awal.</p>
         </div>
         <div class="card">
-          <div class="card-row-top"><span class="card__num">EMAIL</span></div>
-          <span class="card__title">Email</span>
-          <p>Untuk laporan & dokumen. Rekap harian/mingguan, lampiran, urusan surat-menyurat otomatis.</p>
+          <span class="card__num">CARA 02</span>
+          <span class="card__title">Deploy di Server Nous</span>
+          <p>Pakai infrastruktur resmi Nous Research. Cepat, tanpa ngurus server sendiri.</p>
+        </div>
+        <div class="card card--highlight">
+          <span class="card__num">CARA 03</span>
+          <span class="card__title">Via VPS</span>
+          <p>Rakit VPS sendiri buat agent 24/7. Lebih murah &amp; kamu yang pegang kendali penuh.</p>
+        </div>
+      </div>
+      <div class="shot-grid">
+        <img class="shot" src="./assets/hostinger-1.jpeg" alt="Hostinger" loading="lazy" />
+        <img class="shot" src="./assets/hostinger-2.jpeg" alt="Hostinger VPS" loading="lazy" />
+      </div>
+      <p class="foot">Docs: <a href="https://hermes-agent.nousresearch.com/" target="_blank" rel="noopener">hermes-agent.nousresearch.com</a> · VPS: <a href="https://www.hostinger.com/id?REFERRALCODE=EAVEVANTXVSM" target="_blank" rel="noopener">Hostinger</a></p>
+    </section>
+
+    <!-- 12 MODUL 4b GATEWAY & MODEL -->
+    <section class="slide" data-nav="M4b">
+      <div class="kicker">Modul 4 · Gateway &amp; Model</div>
+      <h2 class="headline">Hermes Gateway, AI LLM Model, <em>&amp; how it works</em>.</h2>
+      <div class="grid-2">
+        <div class="card">
+          <span class="card__num">GATEWAY</span>
+          <span class="card__title">Jembatan ke channel kerja</span>
+          <p>Hermes Gateway nyambungin agent ke Telegram, WhatsApp, atau channel lain. Dari sini kamu bisa kontrol agent dari HP.</p>
         </div>
         <div class="card">
-          <div class="card-row-top"><span class="card__num">SHEETS</span></div>
-          <span class="card__title">Google Sheets</span>
-          <p>Database si pemula. Simpan leads, status follow-up, dan hasil agent — tanpa coding.</p>
+          <span class="card__num">MODEL</span>
+          <span class="card__title">Otak agent</span>
+          <p>Agent butuh LLM sebagai mesin berpikir. Bisa pakai model dari provider mana pun yang kompatibel OpenAI.</p>
         </div>
       </div>
-      <p class="foot">Agent tanpa channel = mainan. Agent dengan channel = asisten.</p>
-    </section>
-
-    <!-- SLIDE 12 — M8 UJI -->
-    <section class="slide" data-nav="M8">
-      <div class="kicker">Modul 8 · Pro</div>
-      <h2 class="headline">Uji & perbaiki: kalau agent <em>salah jawab</em>.</h2>
-      <div class="steps">
-        <div class="step"><div class="step__t">Reproduksi</div><div class="step__b"><strong>Cari input spesifik yang bikin agent salah</strong><span>Bukan "kadang salah" — tapi input persisnya apa.</span></div></div>
-        <div class="step"><div class="step__t">Diagnosa</div><div class="step__b"><strong>Salahnya di konteks, aturan, atau model?</strong><span>Tiga sumber error — tahu lokasinya baru bisa tambal.</span></div></div>
-        <div class="step"><div class="step__t">Tambal</div><div class="step__b"><strong>Perbaiki aturan/konteks — bukan dilupakan</strong><span>Error yang dibiarkan akan berulang tiap hari.</span></div></div>
-        <div class="step"><div class="step__t">Uji lagi</div><div class="step__b"><strong>Jalankan ulang input tadi. Harus lolos.</strong><span>Baru bisa dibilang benar-benar fix.</span></div></div>
-        <div class="step"><div class="step__t">Catat</div><div class="step__b"><strong>Simpan sebagai regression test agent lo</strong><span>Bank kasus ini jadi penjaga kualitas agent.</span></div></div>
+      <div class="shot-wrap"><img class="shot" src="./assets/nine-router.jpeg" alt="9Router — Smart AI Router" loading="lazy" /></div>
+      <p class="foot">9Router: satu endpoint OpenAI-compatible buat 60+ provider AI. Fleksibel ganti model tanpa ubah setup.</p>
+      <div class="shot-grid" style="margin-top:18px;">
+        <img class="shot" src="./assets/botfather-1.jpeg" alt="BotFather di Telegram" loading="lazy" />
+        <img class="shot" src="./assets/userinfobot.jpeg" alt="UserInfoBot — ambil user ID" loading="lazy" />
       </div>
-      <p class="foot">Agent salah itu pasti. Yang penting: buang ke sampah, atau tambal & uji?</p>
+      <p class="foot">Gateway Telegram: bikin bot lewat <strong>@BotFather</strong>, ambil user ID via <strong>@userinfobot</strong>.</p>
     </section>
 
-    <!-- SLIDE 13 — M9 JAGA + RENCANA 30 HARI -->
-    <section class="slide" data-nav="M9">
-      <div class="kicker">Modul 9 · Pro</div>
-      <h2 class="headline">Jaga agent biar ga kacau + <em>rencana 30 hari</em>.</h2>
+    <!-- 13 MODUL 5 SOUL.md -->
+    <section class="slide" data-nav="M5">
+      <div class="kicker">Modul 5 · Give Your Agent Life</div>
+      <h2 class="headline">SOUL.md — <em>kepribadian</em> agent kamu.</h2>
+      <p class="lead">Hermes punya profile yang disebut <strong>SOUL.md</strong>: jati diri, gaya, kepribadian, dan karakter sang agent.</p>
+      <div class="grid-4">
+        <div class="card card--highlight"><span class="card__num">KEPRIBADIAN</span><p>Mau agent punya kepribadian seperti siapa? Contoh: <strong>Engineering</strong>, <strong>CEO</strong>. Value apa yang mau kamu tanamkan.</p></div>
+        <div class="card"><span class="card__num">GAYA</span><p>Cara berbicara: santai, formal, ala jaksel, to the point. Atur sesuai kamu — atau dia menyesuaikan sendiri.</p></div>
+        <div class="card"><span class="card__num">LARANGAN</span><p>Jelaskan apa yang <strong>tidak boleh dilanggar</strong> oleh sang agent.</p></div>
+        <div class="card"><span class="card__num">TEKNIS</span><p>Gimana agent menangani hal teknis. Contoh: <strong>fokus yang simpel dulu</strong>, baru yang ribet.</p></div>
+      </div>
+      <p class="foot">Agent tanpa SOUL.md = robot generik. Agent dengan SOUL.md = asisten yang punya karakter.</p>
+    </section>
+
+    <!-- 14 MODUL 6 SKILL & PLUGIN -->
+    <section class="slide" data-nav="M6">
+      <div class="kicker">Modul 6 · Give Agent Hand</div>
+      <h2 class="headline">Skill &amp; Plugin — kasih agent <em>tangan</em>.</h2>
+      <p class="lead">Skill = kemampuan yang agent pelajari. Plugin = fitur tambahan dari komunitas. Dua-duanya bikin agent bisa <strong>aksi nyata</strong>.</p>
+      <div class="shot-grid">
+        <img class="shot" src="./assets/skills-hub.jpeg" alt="Hermes Skills Hub" loading="lazy" />
+        <img class="shot" src="./assets/plugin-catalog.jpeg" alt="Hermes Plugin Catalog" loading="lazy" />
+      </div>
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card"><span class="card__num">SKILLS HUB</span><p><strong>100.837 skills</strong> dari 12 registry. Discover, search, install — auto-rebuilt 2× sehari.</p></div>
+        <div class="card"><span class="card__num">PLUGIN CATALOG</span><p><strong>243 plugin</strong> di 9 kategori: memory, voice, messaging, browsing, desktop panes, dll.</p></div>
+      </div>
+      <p class="foot">Bisa juga bikin skill sendiri dengan bantuan AI — nggak harus nunggu yang udah jadi.</p>
+    </section>
+
+    <!-- 15 MODUL 7 LOOP ENGINEERING -->
+    <section class="slide" data-nav="M7">
+      <div class="kicker">Modul 7 · Loop Engineering</div>
+      <h2 class="headline">Biar agent <em>memperbaiki diri</em> sendiri.</h2>
+      <p class="lead">Loop Engineering merancang bagaimana agen <strong>berpikir, bertindak, mengevaluasi hasil, dan memperbaiki diri secara berulang</strong> sampai tujuan tercapai.</p>
+      <div class="grid-2">
+        <div class="card card--highlight"><span class="card__num">REASON-ACT-OBSERVE</span><p>Siklus dasar: agent menganalisis situasi (<em>reason</em>), memanggil tool eksternal (<em>act</em>), lalu baca data hasilnya (<em>observe</em>) buat nentuin langkah berikutnya.</p></div>
+        <div class="card"><span class="card__num">TERMINATION CRITERIA</span><p>Aturan ketat kapan loop harus <strong>berhenti</strong> — karena tugas selesai, atau batas toleransi tercapai.</p></div>
+        <div class="card"><span class="card__num">SELF-CORRECTION</span><p>Saat eksekusi gagal, log error dikembalikan ke model supaya sistem <strong>revisi parameternya sendiri</strong> — bukan langsung berhenti atau macet.</p></div>
+        <div class="card"><span class="card__num">CIRCUIT BREAKERS</span><p>Pembatasan deterministik: <strong>max_steps</strong>, batas token, atau waktu tunggu — biar nggak terjebak infinite loop yang boros.</p></div>
+      </div>
+      <div class="shot-wrap"><img class="shot" src="./assets/loop-diagram-1.jpeg" alt="Diagram loop" loading="lazy" /></div>
+    </section>
+
+    <!-- 16 MODUL 7b BUG TABLE -->
+    <section class="slide" data-nav="M7b">
+      <div class="kicker">Modul 7 · Waspada Bug</div>
+      <h2 class="headline">Empat bug klasik &amp; <em>cara nanganin</em>.</h2>
       <div class="table-card">
         <table>
-          <thead><tr><th>Minggu</th><th>Aksi</th><th>Target</th></tr></thead>
+          <thead><tr><th>Tipe Bug</th><th>Penyebab Utama</th><th>Dampak Sistem</th></tr></thead>
           <tbody>
-            <tr><td>Hari 1–7</td><td>1 agent jalan</td><td><strong>Bot merespons benar</strong></td></tr>
-            <tr><td>Hari 8–14</td><td>Tambah case & prompt</td><td><strong>Akurasi naik</strong></td></tr>
-            <tr><td>Hari 15–21</td><td>Sambungkan channel</td><td><strong>Output masuk WA/email</strong></td></tr>
-            <tr><td>Hari 22–30</td><td>Loop & dokumentasi</td><td><strong>Konsisten & terukur</strong></td></tr>
+            <tr><td>Infinite Loop</td><td>Error tool tidak teruraikan jelas</td><td><strong>Pemborosan kuota token</strong></td></tr>
+            <tr><td>Schema Mismatch</td><td>Format JSON fungsi tidak valid</td><td><strong>Eksekusi runtime terhenti</strong></td></tr>
+            <tr><td>Context Drift</td><td>Riwayat log terlalu panjang</td><td><strong>Halusinasi tujuan utama</strong></td></tr>
           </tbody>
         </table>
       </div>
-      <p class="foot">Guardrails: limit loop, eskalasi ke human, review mingguan. Tanpa rem, agent 24/7 = kecelakaan 24/7.</p>
+      <div class="shot-wrap"><img class="shot" src="./assets/loop-diagram-2.jpeg" alt="Diagram circuit breaker" loading="lazy" /></div>
+      <div class="shot-wrap"><img class="shot" src="./assets/loop-bug-table.jpeg" alt="Tabel bug loop engineering" loading="lazy" /></div>
+      <p class="foot">Circuit breaker bukan opsional — itu yang nyegah agent kamu "ngamuk" dan boros biaya.</p>
     </section>
 
-    <!-- SLIDE 14 — M10 BONUS -->
-    <section class="slide" data-nav="M10">
-      <div class="kicker">Modul 10 · Bonus</div>
-      <h2 class="headline">Algoritma by design: keputusan <em>bercabang</em>.</h2>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-row-top"><span class="card__num">RANCANG</span></div>
-          <span class="card__title">Pohon keputusan</span>
-          <ul>
-            <li>Tiap cabang = <strong>satu kondisi nyata</strong> di bisnis lo.</li>
-            <li>Kondisi <em>high-stakes</em> → <strong>human yang ambil alih</strong>.</li>
-            <li>Loop terbatas: <strong>maks 3 percobaan</strong>, lalu fallback manual.</li>
-          </ul>
-        </div>
-        <div class="card card--highlight">
-          <div class="card-row-top"><span class="card__num">CONTOH</span></div>
-          <span class="card__title">Agent follow-up cabang</span>
-          <ul>
-            <li>Leads panas? → <strong>follow-up langsung</strong></li>
-            <li>Leads ragu? → <strong>kirim social proof</strong></li>
-            <li>Leads dingin &gt; 7 hari? → <strong>arkipkan, jangan ganggu</strong></li>
-            <li>Nomor invalid? → <strong>eskalasi ke human</strong></li>
-          </ul>
-        </div>
-      </div>
-      <p class="foot">Yang bikin agent terasa "pintar" bukan model — tapi desain.</p>
-    </section>
-
-    <!-- SLIDE 15 — YANG LO DAPET -->
-    <section class="slide is-center" data-nav="Benefit">
-      <div class="kicker">Apa Yang Lo Dapet</div>
-      <h2 class="headline">Bukan cuma video. <em>Sistem kerja.</em></h2>
-      <div class="grid-3">
-        <div class="card"><span class="card__num">01</span><span class="card__title">Video Course</span><p>10 modul step-by-step, mobile-friendly, bisa diulang kapan aja.</p></div>
-        <div class="card"><span class="card__num">02</span><span class="card__title">AI Bot Tanya Jawab</span><p>Bingung di tengah jalan? Tanya bot, jawaban dalam konteks proyek lo.</p></div>
-        <div class="card"><span class="card__num">03</span><span class="card__title">Kumpulan Prompt</span><p>Prompt siap pakai: follow-up, riset, konten, customer care.</p></div>
-        <div class="card"><span class="card__num">04</span><span class="card__title">Komunitas Discord</span><p>Live Q&A + update konten rutin bareng member sefrekuensi.</p></div>
-        <div class="card"><span class="card__num">05</span><span class="card__title">AI News</span><p>Update tools AI terbaru yang relevan sama kerjaan lo.</p></div>
-        <div class="card"><span class="card__num">06</span><span class="card__title">Use-case Update</span><p>Contoh agent baru tiap bulan — biar lo ga ketinggalan.</p></div>
-      </div>
-      <div class="cta-row">
-        <a class="btn btn--primary" href="https://xindelabs-workshop.vercel.app/checkout.html" target="_blank" rel="noopener">Daftar Course →</a>
-        <a class="btn btn--secondary" href="https://xindelabs-workshop.vercel.app/" target="_blank" rel="noopener">Lihat Semua Fitur ↗</a>
-      </div>
-    </section>
-
-    <!-- SLIDE 16 — CTA -->
+    <!-- 17 CTA -->
     <section class="slide is-center" data-nav="Mulai">
       <div class="eyebrow-row">
         <span class="pill">● Live 20 Oktober 2026 · Zoom</span>
         <span class="pill gold">GRATIS Member BYOPA</span>
       </div>
       <h1 class="display">Agent pertama lo<br /><em>siap kerja</em> malam ini.</h1>
-      <p class="lead">Pilih satu agent. Jalankan blueprint 5 tahap. Ulangi tiap minggu. Jangan tunggu sempurna.</p>
+      <p class="lead">Identify → Adapt → Automate. Mulai dari satu tugas berulang. Ulangi tiap minggu. Jangan tunggu sempurna.</p>
       <div class="cta-row">
         <a class="btn btn--primary" href="https://xindelabs-workshop.vercel.app/pre-session" target="_blank" rel="noopener">Siapin Dulu: Pre-Session →</a>
         <a class="btn btn--secondary" href="https://xindelabs-workshop.vercel.app/" target="_blank" rel="noopener">Workshop Utama ↗</a>
@@ -726,7 +818,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
 
   </main>
 
-  <!-- ==================== BOTTOM DOCK ==================== -->
   <nav class="dock" aria-label="Navigasi Slide">
     <button class="dock__btn" id="btn-prev" onclick="stepSlide(-1)">←</button>
     <div class="dock__nav" id="dots"></div>
@@ -738,7 +829,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
     const dotsWrap = document.getElementById('dots');
     let cur = 0;
 
-    // Build dots
     slides.forEach((_, i) => {
       const b = document.createElement('button');
       b.className = 'dot' + (i === 0 ? ' active' : '');
@@ -765,7 +855,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
     }
     function stepSlide(d) { goSlide(cur + d); }
 
-    // Keyboard
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') stepSlide(1);
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') stepSlide(-1);
@@ -774,7 +863,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
       else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     });
 
-    // Touch swipe
     let touchX = null;
     document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
     document.addEventListener('touchend', (e) => {
@@ -784,7 +872,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
       touchX = null;
     }, { passive: true });
 
-    // Mouse wheel (horizontal threshold, anti-trigger saat scroll vertikal)
     let wheelLock = false;
     document.addEventListener('wheel', (e) => {
       if (wheelLock) return;
@@ -802,7 +889,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
       }
     }, { passive: true });
 
-    // Fullscreen
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -814,7 +900,6 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
       document.getElementById('btn-fs').textContent = document.fullscreenElement ? 'Keluar' : 'Fullscreen';
     });
 
-    // Deep link via hash
     function syncHash() {
       const h = parseInt((location.hash || '#1').slice(1), 10);
       if (!isNaN(h)) goSlide(h - 1);
