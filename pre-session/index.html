@@ -847,7 +847,7 @@
       -webkit-backdrop-filter: blur(18px);
       border-top: 1px solid var(--line-strong);
       padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 4px;
     }
 
@@ -927,7 +927,6 @@
         <button class="nav__tab" data-target="tab-fokus1" onclick="activateTab('tab-fokus1')">1. Persiapan</button>
         <button class="nav__tab" data-target="tab-fokus2" onclick="activateTab('tab-fokus2')">2. Lokal vs VPS</button>
         <button class="nav__tab" data-target="tab-fokus3" onclick="activateTab('tab-fokus3')">3. Hermes Agent</button>
-        <button class="nav__tab" data-target="tab-deploy" onclick="activateTab('tab-deploy')">Deploy ke VPS</button>
       </nav>
 
       <div class="nav__right">
@@ -968,7 +967,7 @@
         <div class="status-panel">
           <div class="status-top">
             <span class="status-label">Checklist Kesiapan Member</span>
-            <span class="status-pct" id="progress-text">0 / 8 Selesai (0%)</span>
+            <span class="status-pct" id="progress-text">0 / 9 Selesai (0%)</span>
           </div>
           <div class="meter">
             <div class="meter__fill" id="progress-fill"></div>
@@ -981,7 +980,6 @@
             </div>
             <div class="env-grid">
               <input type="text" id="inp-atria" class="input-cyber" placeholder="ATRIA_API_KEY (atr_xxx)" oninput="syncDynamicCommands()" />
-              <input type="text" id="inp-vps-ip" class="input-cyber" placeholder="IP VPS Kamu (misal: 103.x.x.x)" oninput="syncDynamicCommands()" />
             </div>
           </div>
 
@@ -1521,63 +1519,6 @@ hermes doctor</code>
       </div>
     </section>
 
-    <!-- TAB 4: PANDUAN DEPLOY WEB INI KE VPS -->
-    <section id="tab-deploy" class="tab-panel">
-      <div class="section-head">
-        <h2>Cara Upload & Hosting <em>Web Interaktif Ini</em> di VPS Lo</h2>
-        <p>
-          File <code>pre_session_workshop.html</code> ini mandiri (<em>single-file</em>). Ketik IP VPS kamu di kotak bagian atas halaman agar perintah di bawah otomatis terisi dengan IP server kamu.
-        </p>
-      </div>
-
-      <div class="grid-2">
-        <div class="card card--highlight">
-          <div>
-            <div class="card__top">
-              <span class="card__num">OPSI 01 • REKOMENDASI</span>
-              <span class="pill">Nginx Web Server</span>
-            </div>
-            <h3 class="card__title">Upload ke VPS Linux dengan Nginx</h3>
-            <ol>
-              <li>Dari terminal komputer kamu, kirim file ini ke VPS:</li>
-            </ol>
-            <div class="terminal">
-              <code id="cmd-scp-vps">scp pre_session_workshop.html root@IP_VPS_KAMU:/var/www/html/index.html</code>
-              <button class="btn-copy" onclick="copyCode('cmd-scp-vps', this)">Salin</button>
-            </div>
-            <ol start="2" style="margin-top: 10px;">
-              <li>Login ke VPS dan pastikan Nginx aktif:</li>
-            </ol>
-            <div class="terminal">
-              <code id="cmd-nginx-vps">apt update && apt install -y nginx && systemctl enable --now nginx</code>
-              <button class="btn-copy" onclick="copyCode('cmd-nginx-vps', this)">Salin</button>
-            </div>
-            <p style="margin-top: 10px;">Selesai! Member workshop bisa langsung mengaksesnya di <code>http://<span id="lbl-vps-url">IP_VPS_KAMU</span></code>.</p>
-          </div>
-        </div>
-
-        <div class="card">
-          <div>
-            <div class="card__top">
-              <span class="card__num">OPSI 02 • INSTAN</span>
-              <span class="pill cyan">Python / Vercel / Git</span>
-            </div>
-            <h3 class="card__title">Jalankan Cepat via Python atau Deploy Git</h3>
-            <ul>
-              <li><strong>Satu Baris via Python3 di VPS (Port 8080):</strong></li>
-            </ul>
-            <div class="terminal">
-              <code id="cmd-py-vps">mkdir -p ~/web && cp pre_session_workshop.html ~/web/index.html && cd ~/web && nohup python3 -m http.server 8080 &</code>
-              <button class="btn-copy" onclick="copyCode('cmd-py-vps', this)">Salin</button>
-            </div>
-            <ul style="margin-top: 10px;">
-              <li><strong>Deploy Otomatis via <a href="https://www.vpsmurah.co.id/" target="_blank" rel="noopener">VPSMurah Deploy Aplikasi</a> atau <a href="https://vercel.com/new" target="_blank" rel="noopener">Vercel</a>:</strong> Ubah nama file menjadi <code>index.html</code>, unggah ke repositori <a href="https://github.com/signup" target="_blank" rel="noopener">GitHub</a>, lalu hubungkan ke Vercel atau fitur Deploy Git di VPSMurah untuk mendapatkan domain HTTPS gratis.</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
   <!-- ==================== FOOTER (EXACT XINDE LABS COPY) ==================== -->
@@ -1604,10 +1545,6 @@ hermes doctor</code>
     <button class="dock-btn" data-target="tab-fokus3" onclick="activateTab('tab-fokus3')">
       <span class="icon">3️⃣</span>
       <span>Hermes</span>
-    </button>
-    <button class="dock-btn" data-target="tab-deploy" onclick="activateTab('tab-deploy')">
-      <span class="icon">🚀</span>
-      <span>Deploy</span>
     </button>
   </nav>
 
@@ -1697,8 +1634,6 @@ hermes doctor</code>
 
     function syncDynamicCommands() {
       const key = document.getElementById('inp-atria').value.trim() || 'atr_xxx';
-      const ip = document.getElementById('inp-vps-ip').value.trim() || 'IP_VPS_KAMU';
-
       document.getElementById('cmd-atria-test').textContent =
 `export ATRIA_API_KEY=${key}
 curl -X POST https://api.atria-asi.ai/v1/chat/completions \
@@ -1707,8 +1642,6 @@ curl -X POST https://api.atria-asi.ai/v1/chat/completions \
   -d '{"model": "Atria-Dawn-Preview", "messages": [{"role": "user", "content": "Halo!"}]}'`;
 
       document.getElementById('inline-atria-key').textContent = key;
-      document.getElementById('cmd-scp-vps').textContent = `scp pre_session_workshop.html root@${ip}:/var/www/html/index.html`;
-      document.getElementById('lbl-vps-url').textContent = ip;
     }
 
     function copyCode(id, btn) {
