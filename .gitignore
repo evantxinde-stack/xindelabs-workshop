@@ -8,3 +8,4 @@ node_modules/
 graphify-out/
 presession/
 workshop.html
+backup-*.json
