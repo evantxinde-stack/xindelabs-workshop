@@ -114,6 +114,8 @@
       top: var(--nav-h); bottom: 56px; left: 0; right: 0;
       display: flex; align-items: center; justify-content: center;
       padding: 28px clamp(18px, 5vw, 64px);
+      overflow-y: auto;
+      align-items: safe center;
     }
 
     .slide {
@@ -375,10 +377,18 @@
     }
     @media (max-width: 560px) {
       .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-      .stage { padding: 18px 16px; bottom: 52px; }
+      .stage { padding: 14px 14px; bottom: 52px; }
       .nav-pill { display: none; }
       .dock { padding: 0 10px; }
       .counter { display: none; }
+      .card { padding: 14px; gap: 6px; }
+      .card p, .card li { font-size: 0.82rem; }
+      .step { padding: 8px 0; }
+      .step__b span { font-size: 0.8rem; }
+      table { min-width: 480px; }
+      th, td { padding: 8px 10px; font-size: 0.78rem; }
+      .foot { margin-top: 14px; }
+      .bignum { font-size: clamp(3.2rem, 18vw, 5rem); }
     }
   </style>
 </head>
@@ -746,6 +756,7 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
       document.getElementById('prog-fill').style.width = pct + '%';
       document.getElementById('btn-prev').disabled = cur === 0;
       document.getElementById('btn-next').disabled = cur === slides.length - 1;
+      document.getElementById('stage').scrollTop = 0;
     }
 
     function goSlide(i) {
@@ -777,6 +788,13 @@ agent: ✅ jalan tiap hari 08:00 — hasilmu tunggu di WA.</code>
     let wheelLock = false;
     document.addEventListener('wheel', (e) => {
       if (wheelLock) return;
+      const stage = document.getElementById('stage');
+      const canScroll = stage.scrollHeight > stage.clientHeight + 4;
+      if (canScroll) {
+        const atTop = stage.scrollTop <= 2;
+        const atBottom = stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 2;
+        if ((e.deltaY > 0 && !atBottom) || (e.deltaY < 0 && !atTop)) return;
+      }
       if (Math.abs(e.deltaX) > 24 || Math.abs(e.deltaY) > 60) {
         wheelLock = true;
         stepSlide(Math.abs(e.deltaX) > Math.abs(e.deltaY) ? (e.deltaX > 0 ? 1 : -1) : (e.deltaY > 0 ? 1 : -1));
