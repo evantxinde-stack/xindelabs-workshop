@@ -232,13 +232,12 @@
   </main>
 
   <script>
-    // Ambil pesan error + tujuan dari query string (?e=...&next=...)
     (function () {
-      var q = new URLSearchParams(location.search);
-      var e = q.get('e');
       var box = document.getElementById('err');
+      var q = new URLSearchParams(location.search);
+      var e = q.get('e') || '';
       if (e && e.trim()) { box.textContent = e; box.hidden = false; }
-      var n = q.get('next') || '';
+      var n = document.getElementById('next-field').value || q.get('next') || '';
       // Cuma izinkan path relatif — cegah open-redirect.
       if (n.charAt(0) === '/' && n.charAt(1) !== '/') {
         document.getElementById('next-field').value = n;
