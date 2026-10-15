@@ -1,21 +1,26 @@
 /**
  * Xinde Labs — Access Gate untuk Vercel (Edge Middleware)
  *
- * Melindungi /deck-workshop dan /pre-session supaya cuma member yang udah beli
- * workshop yang bisa buka.
+ * Cara kerja: Vercel jadi "pintu depan". Semua keputusan akses ditanyakan ke
+ * gate VPS (43.133.131.126:3020 lewat HTTP), jadi kunci Supabase TIDAK perlu
+ * ada di Vercel sama sekali. Hanya satu tempat yang pegang kunci: VPS.
  *
  * Alur:
  *   1. Request masuk ke /deck-workshop atau /pre-session
- *   2. Middleware cek cookie `xinde_access` (HMAC-SHA256, ditandatangani di server)
- *   3. Valid   → lanjut ke file statik
- *   4. Invalid → redirect ke /auth?next=<path>
+ *   2. Middleware tanya gate VPS: "cookie ini valid?"
+ *   3. Valid   → lanjut ke file statik di Vercel (cepat, dari edge)
+ *   4. Invalid → redirect ke /auth
  *
- * Env var yang dibutuhkan (set di Vercel → Settings → Environment Variables):
- *   SESSION_SECRET       — sama persis dengan yang dipakai gate di VPS
- *   GATE_ORIGIN          — (opsional) origin gate VPS kalau mau pakai login di sana
+ * Endpoint /auth, /api/login, /api/logout, /api/me juga diteruskan ke VPS,
+ * supaya logika login cuma ada di satu tempat.
  *
- * Catatan: middleware ini TIDAK menyimpan kode akses. Verifikasi email + kode
- * dilakukan di /api/login (lihat /api/login.js), yang memanggil Supabase.
+ * Env var yang dibutuhkan:
+ *   GATE_ORIGIN — alamat gate VPS. Default:
+ *                 https://gate.43-133-131-126.sslip.io
+ *                 (boleh dibiarkan default; ganti kalau alamat VPS berubah)
+ *
+ * TIDAK butuh SESSION_SECRET maupun SUPABASE_SERVICE_KEY di Vercel —
+ * kunci master cuma hidup di VPS.
  */
 
 export const config = {
@@ -31,82 +36,79 @@ export const config = {
   ],
 };
 
-const COOKIE_NAME = 'xinde_access';
-
-function b64urlDecode(s) {
-  s = s.replace(/-/g, '+').replace(/_/g, '/');
-  while (s.length % 4) s += '=';
-  const bin = atob(s);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
-}
-
-function b64url(bytes) {
-  let bin = '';
-  const arr = new Uint8Array(bytes);
-  for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function verifyToken(token, secret) {
-  if (!token || typeof token !== 'string' || token.indexOf('.') < 0) return null;
-  const [payload, mac] = token.split('.');
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
-  // Bandingkan tanda tangan
-  if (b64url(sig) !== mac) return null;
-  try {
-    const obj = JSON.parse(new TextDecoder().decode(b64urlDecode(payload)));
-    if (!obj.exp || Date.now() > obj.exp) return null;
-    return obj;
-  } catch (_) {
-    return null;
-  }
-}
-
-function parseCookies(header) {
-  const out = {};
-  if (!header) return out;
-  header.split(';').forEach((part) => {
-    const i = part.indexOf('=');
-    if (i > 0) out[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim());
-  });
-  return out;
-}
+// Alamat gate VPS. Bukan rahasia — cuma alamat. Boleh di-override lewat env var.
+const GATE = (process.env.GATE_ORIGIN || 'https://gate.43-133-131-126.sslip.io').replace(/\/+$/, '');
 
 export default async function middleware(request) {
   const url = new URL(request.url);
   const path = url.pathname;
-  const secret = process.env.SESSION_SECRET || '';
 
-  // Route login/api selalu dilayani (mereka yang memutuskan sendiri).
-  if (path.startsWith('/auth') || path.startsWith('/api/')) {
-    return; // lanjutkan ke handler masing-masing
+  // ── Route khusus login: teruskan ke gate VPS, apa adanya (termasuk cookie) ──
+  const isAuthRoute =
+    path === '/auth' ||
+    path === '/api/login' ||
+    path === '/api/logout' ||
+    path === '/api/me';
+
+  if (isAuthRoute) {
+    const target = GATE + path + (url.search || '');
+    const proxied = new Request(target, {
+      method: request.method,
+      headers: request.headers,
+      body: request.method === 'GET' || request.method === 'HEAD' ? undefined : request.body,
+      redirect: 'manual',
+    });
+
+    let res;
+    try {
+      res = await fetch(proxied);
+    } catch (err) {
+      return new Response(
+        'Gate sedang tidak bisa dihubungi. Coba lagi sebentar.',
+        { status: 502, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
+      );
+    }
+
+    // Teruskan balik ke browser, termasuk Set-Cookie + Location (redirect).
+    const headers = new Headers();
+    for (const [k, v] of res.headers) {
+      const lk = k.toLowerCase();
+      if (lk === 'set-cookie' || lk === 'location' || lk === 'content-type' || lk === 'cache-control') {
+        headers.append(k, v);
+      }
+    }
+    // Cegah caching halaman login.
+    headers.set('Cache-Control', 'no-store');
+
+    return new Response(res.body, { status: res.status, headers });
   }
 
+  // ── Halaman member: tanya gate VPS dulu ──
   const isProtected = path.startsWith('/deck-workshop') || path.startsWith('/pre-session');
   if (!isProtected) return;
 
-  // Kalau SESSION_SECRET belum diset, JANGAN buka akses — tolak dengan jelas.
-  if (!secret) {
+  const next = encodeURIComponent(path + (url.search || ''));
+  let verified = false;
+
+  try {
+    const r = await fetch(GATE + '/verify?next=' + next, {
+      method: 'GET',
+      headers: { cookie: request.headers.get('cookie') || '' },
+      redirect: 'manual',
+    });
+    // 200 = cookie valid. 3xx = belum login / tidak valid.
+    verified = r.status === 200;
+    if (!verified) {
+      const loc = r.headers.get('location') || '/auth?next=' + next;
+      return new Response(null, { status: 302, headers: { Location: loc, 'Cache-Control': 'no-store' } });
+    }
+  } catch (err) {
+    // Gate tidak bisa dihubungi → jangan buka akses (fail closed).
     return new Response(
-      'Konfigurasi server belum lengkap (SESSION_SECRET belum diset).',
+      'Gate sedang tidak bisa dihubungi. Coba lagi sebentar.',
       { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
     );
   }
 
-  const cookies = parseCookies(request.headers.get('cookie'));
-  const sess = await verifyToken(cookies[COOKIE_NAME], secret);
-
-  if (sess) return; // sesi valid → lanjut ke file statik
-
-  const next = encodeURIComponent(path + url.search);
-  return Response.redirect(new URL('/auth?next=' + next, request.url), 302);
+  return; // lolos → lanjut layani file statik dari edge Vercel
 }
