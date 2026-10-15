@@ -365,6 +365,39 @@
       .term, .term__line.ok { animation: none; opacity: 1; }
     }
 
+    /* ==================== KANBAN FLOW ==================== */
+    .kanban-flow {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 20px;
+    }
+    .kb-step {
+      font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
+      padding: 9px 15px; border-radius: 9px;
+      background: var(--bg-2); border: 1px solid var(--line);
+      color: var(--muted); white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .kb-step:hover { border-color: var(--line-strong); color: var(--text); }
+    .kb-hot {
+      background: var(--green-dim); border-color: var(--green);
+      color: var(--green); box-shadow: 0 0 16px rgba(0, 255, 136, 0.2);
+    }
+    .kb-warn { border-color: rgba(255, 214, 10, 0.35); color: var(--gold); }
+    .kb-done { border-color: rgba(0, 229, 255, 0.35); color: var(--cyan); }
+    .kb-arrow {
+      font-family: var(--font-mono); color: var(--muted-dim); font-size: 0.9rem;
+    }
+
+    /* inline code */
+    code {
+      font-family: var(--font-mono); font-size: 0.85em;
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid var(--line);
+      padding: 1px 6px; border-radius: 5px;
+      color: var(--green); word-break: break-word;
+    }
+    .terminal code, .term__body code { background: none; border: none; padding: 0; }
+
     /* ==================== IMAGES ==================== */
     .shot {
       width: 100%; border-radius: var(--radius-sm);
@@ -605,7 +638,7 @@
       <span class="nav-pill">LIVE WORKSHOP DECK</span>
     </div>
     <div class="topbar__right">
-      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">17</span></span>
+      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">26</span></span>
       <button class="btn-fullscreen" id="btn-fs" onclick="toggleFullscreen()">Fullscreen</button>
     </div>
   </header>
@@ -979,7 +1012,229 @@
       <p class="foot">Circuit breaker bukan opsional — itu yang nyegah agent kamu "ngamuk" dan boros biaya.</p>
     </section>
 
-    <!-- 17 CTA -->
+    <!-- 17 BABAK 2: HERMES SLANG — PEMBUKA -->
+    <section class="slide is-center" data-nav="Slang">
+      <div class="kicker">Babak 2 · Hermes Slang</div>
+      <h2 class="headline">Enam istilah. Satu <em>perusahaan digital</em>.</h2>
+      <p class="lead">Biar gampang kebayang tanpa pusing baca istilah teknisnya: bayangkan Hermes Agent itu seperti sebuah <strong>perusahaan / agensi digital</strong> yang jalan di komputer atau server kamu. Tiap istilah punya jabatan dan fungsi sendiri.</p>
+      <div class="grid-3">
+        <div class="card card--highlight"><span class="card__num">PROFILE</span><span class="card__title">Karyawan tetap</span><p>Punya KTP, meja kerja, ingatan jangka panjang, kepribadian, keahlian, dan kunci akses sendiri.</p></div>
+        <div class="card"><span class="card__num">BOT</span><span class="card__title">Nomor kontak / wajah</span><p>Cara kamu ngobrol langsung sama satu Profile — lewat Bot Mode desktop atau akun Telegram/WA/Discord.</p></div>
+        <div class="card"><span class="card__num">KANBAN</span><span class="card__title">Papan proyek utama</span><p>Papan berbasis database tempat semua tugas ditempel, dioper antar-karyawan, dan dipantau. Restart pun nggak hilang.</p></div>
+        <div class="card"><span class="card__num">ORCHESTRATOR</span><span class="card__title">Manajer proyek</span><p>Terima instruksi besar dari kamu, pecah jadi tugas kecil, bagi ke Profile yang tepat, lalu periksa hasilnya.</p></div>
+        <div class="card"><span class="card__num">WORKER</span><span class="card__title">Yang turun tangan</span><p>Proses yang sedang aktif ngerjain satu tugas spesifik — bisa Profile dari Kanban, atau pekerja lepas via delegate_task.</p></div>
+        <div class="card card--highlight"><span class="card__num">SWARM</span><span class="card__title">Tim keroyokan sekali jalan</span><p>Satu perintah, langsung terjunkan beberapa Worker paralel — lalu dicek Verifier dan digabung Synthesizer.</p></div>
+      </div>
+    </section>
+
+    <!-- 18 PROFIL -->
+    <section class="slide" data-nav="Profile">
+      <div class="kicker">Komponen 1 · Profile</div>
+      <h2 class="headline">Profile — <em>fondasi &amp; identitas</em> agen.</h2>
+      <p class="lead">Profile adalah folder rumah terpisah (<code>~/.hermes/profiles/nama_profile/</code>) yang menyimpan seluruh pengaturan dan ingatan satu agen.</p>
+      <div class="grid-3" style="margin-top:20px;">
+        <div class="card"><span class="card__num">SOUL.md</span><p>Karakter, instruksi peran, dan <strong>batasan kerja</strong> agen tersebut.</p></div>
+        <div class="card"><span class="card__num">config.yaml &amp; .env</span><p>Pilihan model AI <em>(coder pakai model kuat, researcher pakai yang hemat)</em>, API key, daftar tools &amp; skills.</p></div>
+        <div class="card"><span class="card__num">state.db &amp; memories/</span><p>Riwayat obrolan dan <strong>ingatan jangka panjang</strong> yang dipelajari dari sesi sebelumnya.</p></div>
+      </div>
+      <div class="card card--highlight" style="margin-top:18px;">
+        <span class="card__num">⚠ ATURAN PENTING</span>
+        <p style="margin-bottom:10px;">Jangan pernah menjalankan <strong>dua agen di satu Profile yang sama</strong> secara bersamaan — memori mereka akan saling timpa. Butuh peran berbeda? Wajib buat Profile baru:</p>
+        <div class="terminal" style="margin-top:0;">
+          <code>hermes profile create researcher --description "Riset data web, baca dokumentasi, dan tulis rangkuman fakta."</code>
+        </div>
+        <p style="margin-top:10px;font-size:0.82rem;">Parameter <code>--description</code> sangat penting — ini yang dibaca Orchestrator saat membagi tugas di Kanban.</p>
+      </div>
+    </section>
+
+    <!-- 19 BOT -->
+    <section class="slide" data-nav="Bot">
+      <div class="kicker">Komponen 2 · Bot</div>
+      <h2 class="headline">Bot — <em>pintu ngobrol</em> ke Profile.</h2>
+      <div class="vs-grid">
+        <div class="vs-card hl">
+          <h3><span class="ico">🖥️</span> Bot Mode (Desktop)</h3>
+          <ul class="vs-list pros">
+            <li>Profile yang dipasang ke <strong>daftar kontak</strong> di menu Bot Mode Hermes Desktop</li>
+            <li>Lengkap dengan <strong>avatar</strong> dan ruang chat tetap</li>
+            <li>Semua Bot adalah Profile, tapi <strong>tidak semua Profile jadi Bot</strong> — ada yang kerja di belakang layar lewat Kanban</li>
+          </ul>
+        </div>
+        <div class="vs-card">
+          <h3><span class="ico">💬</span> Messaging Bot</h3>
+          <ul class="vs-list pros">
+            <li>Akun bot di platform luar: <strong>Telegram / WhatsApp / Discord / Slack</strong></li>
+            <li>Dihubungkan ke satu Profile lewat <strong>Hermes Gateway</strong></li>
+          </ul>
+          <div class="vs-sub con">Aturan Penting</div>
+          <ul class="vs-list cons">
+            <li>Satu token bot (mis. satu <code>TELEGRAM_BOT_TOKEN</code>) <strong>hanya boleh dipakai satu Profile</strong> — biar nggak berebut pesan <em>(long-poll conflict)</em></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 20 KANBAN -->
+    <section class="slide" data-nav="Kanban">
+      <div class="kicker">Komponen 3 · Kanban</div>
+      <h2 class="headline">Kanban — <em>papan kerja</em> multi-agen.</h2>
+      <p class="lead">Antrean kerja permanen (<code>~/.hermes/kanban.db</code>) yang memungkinkan banyak Profile bekerja sama secara estafet. Enam kolom status dari kiri ke kanan:</p>
+      <div class="kanban-flow">
+        <span class="kb-step">Triage</span><span class="kb-arrow">→</span>
+        <span class="kb-step">Todo</span><span class="kb-arrow">→</span>
+        <span class="kb-step">Ready</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-hot">In Progress</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-warn">Blocked</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-done">Done</span>
+      </div>
+      <div class="card card--highlight" style="margin-top:22px;">
+        <span class="card__num">DI BALIK PAPAN — DISPATCHER</span>
+        <p>Mesin bernama <strong>Dispatcher</strong> berjalan otomatis di dalam <strong>Hermes Gateway</strong> setiap <strong>60 detik</strong>. Tugasnya: cek kolom <strong>Ready</strong>, lalu otomatis "membangunkan" Profile yang ditugaskan pada kartu itu untuk mulai bekerja.</p>
+        <p style="margin-top:8px;font-size:0.82rem;">⚠ Kalau Gateway mati, kartu di Kanban <strong>tidak akan jalan</strong>.</p>
+      </div>
+    </section>
+
+    <!-- 21 ORCHESTRATOR -->
+    <section class="slide" data-nav="Orchestrator">
+      <div class="kicker">Komponen 4 · Orchestrator</div>
+      <h2 class="headline">Orchestrator — si <em>pembagi tugas</em>.</h2>
+      <p class="lead">Otak yang mengatur strategi. Bekerja dalam dua cara:</p>
+      <div class="grid-2">
+        <div class="card card--highlight">
+          <span class="card__num">DI KANBAN</span>
+          <span class="card__title">Auto / Manual Decomposer</span>
+          <ul>
+            <li>Kamu lempar satu <strong>ide mentah</strong> ke kolom Triage</li>
+            <li>Decomposer (<code>kanban.orchestrator_profile</code>) baca daftar semua Profile kamu + deskripsi keahliannya</li>
+            <li>Ia pecah jadi <strong>kartu anak</strong> via <code>kanban_create</code></li>
+            <li>Lalu ikat urutannya via <code>kanban_link</code> — <em>Tugas B baru boleh jalan kalau Tugas A sudah Done</em></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card__num">DI CHAT LANGSUNG</span>
+          <span class="card__title">delegate_task</span>
+          <ul>
+            <li>Saat kamu sedang chatting dengan satu agen</li>
+            <li>Agen itu memanggil <strong>sub-agen di belakang layar</strong></li>
+            <li>Buat bantuin jawab pertanyaanmu <strong>saat itu juga</strong></li>
+          </ul>
+          <div class="terminal" style="margin-top:14px;">
+            <code>Triage ──▶ [kartu anak A] ──▶ [kartu anak B]
+                      (Blocked sampai A Done)</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 22 WORKER -->
+    <section class="slide" data-nav="Worker">
+      <div class="kicker">Komponen 5 · Worker</div>
+      <h2 class="headline">Worker — dua kasta yang <em>wajib</em> kamu bedakan.</h2>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>Aspek</th><th>Kanban Worker</th><th>Subagent Worker</th></tr></thead>
+          <tbody>
+            <tr><td>Identitas</td><td>Pakai <strong>Profile bernama</strong> — punya memori &amp; skill tetap</td><td><strong>Anonim</strong> — pekerja sementara, selesai langsung hilang</td></tr>
+            <tr><td>Cara kerja</td><td><strong>Fire-and-forget</strong> — jalan mandiri di background via Dispatcher</td><td>Agen induk harus <strong>nungguin (blocking)</strong> sampai subagent selesai</td></tr>
+            <tr><td>Ketahanan</td><td><strong>Tahan banting</strong> — kalau crash atau butuh input manusia (Blocked), bisa dilanjut lagi</td><td><strong>Sekali jalan</strong> — kalau gagal atau sesi ditutup, progresnya hilang</td></tr>
+            <tr><td>Kapan dipakai</td><td>Tugas besar, lintas-peran, butuh review manusia, atau jalan <strong>berjam-jam</strong></td><td>Tugas singkat (<strong>2–5 menit</strong>) buat cari info paralel di tengah sesi chat</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="foot">Uniknya, keduanya bisa digabung: Kanban Worker yang sedang mengerjakan kartunya boleh memanggil Subagent Worker via <code>delegate_task</code> untuk bantu bagian kecil.</p>
+    </section>
+
+    <!-- 23 SWARM -->
+    <section class="slide" data-nav="Swarm">
+      <div class="kicker">Komponen 6 · Swarm</div>
+      <h2 class="headline">Swarm — <em>empat lapis</em> keroyokan otomatis.</h2>
+      <p class="lead">Kalau kamu malas merangkai kartu Kanban satu per satu untuk tugas riset atau analisis paralel, panggil <code>hermes kanban swarm</code> atau <code>/swarm</code>. Hermes langsung mencetak alur kerja otomatis:</p>
+      <div class="steps">
+        <div class="step"><div class="step__t">Lapis 1</div><div class="step__b"><strong>Root / Blackboard Card</strong><span>Kartu induk tempat menaruh brief utama dan folder kerja bersama (shared workspace).</span></div></div>
+        <div class="step"><div class="step__t">Lapis 2</div><div class="step__b"><strong>N Parallel Workers</strong><span>Beberapa Worker langsung jalan serentak mengerjakan sub-topik masing-masing.</span></div></div>
+        <div class="step"><div class="step__t">Lapis 3</div><div class="step__b"><strong>Gated Verifier</strong><span>Satu agen pemeriksa menunggu di kolom Todo sampai semua Worker paralel selesai — lalu cek kualitas &amp; kebenaran hasilnya.</span></div></div>
+        <div class="step"><div class="step__t">Lapis 4</div><div class="step__b"><strong>Gated Synthesizer</strong><span>Agen perangkum akhir yang baru jalan setelah lolos Verifier — menyatukan semua temuan jadi satu laporan rapi.</span></div></div>
+      </div>
+    </section>
+
+    <!-- 24 REKOMENDASI SETUP -->
+    <section class="slide" data-nav="Setup Level">
+      <div class="kicker">Rekomendasi · Pilih Sesuai Kebutuhan</div>
+      <h2 class="headline">Tiga level setup, dari <em>simpel</em> ke agency.</h2>
+      <div class="grid-3">
+        <div class="card">
+          <span class="card__num">LEVEL 1 · PALING SIMPEL</span>
+          <span class="card__title">Single Assistant + Subagents</span>
+          <p style="margin-bottom:8px;"><strong>Cocok buat:</strong> pemakaian harian — 1 asisten utama di Telegram/Desktop, tapi bisa nyuruh subagent cari data barengan saat chatting.</p>
+          <ul>
+            <li>Cukup <strong>1 Profile</strong> (default) + <strong>1 Bot</strong></li>
+            <li><strong>Tidak perlu</strong> menyalakan Kanban</li>
+            <li>Kerja paralel otomatis pakai <code>delegate_task</code></li>
+          </ul>
+        </div>
+        <div class="card card--highlight">
+          <span class="card__num">LEVEL 2 · PISAH OTAK &amp; KONTEKS</span>
+          <span class="card__title">Multi-Bot Spesialis</span>
+          <p style="margin-bottom:8px;"><strong>Cocok buat:</strong> kamu dengan beberapa topi pekerjaan berbeda (Coding, Copywriting, Riset) — dan nggak mau ingatan/gaya bahasa tercampur.</p>
+          <ul>
+            <li>Buat beberapa Profile: <code>hermes profile create coder</code></li>
+            <li>Atur <strong>SOUL.md &amp; model AI</strong> spesifik tiap Profile</li>
+            <li>Munculkan masing-masing sebagai <strong>Bot terpisah</strong></li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="card__num">LEVEL 3 · AUTONOMOUS AGENCY</span>
+          <span class="card__title">Profile + Kanban + Orchestrator + Swarm</span>
+          <p style="margin-bottom:8px;"><strong>Cocok buat:</strong> mendelegasikan proyek besar dari satu pintu, lalu tim agen bekerja estafet di background sampai tuntas.</p>
+          <ul>
+            <li>Buat Profile tim + deskripsi keahliannya</li>
+            <li>Aktifkan Kanban di Profile Director</li>
+            <li>Inisialisasi Kanban &amp; nyalakan Gateway</li>
+            <li>Pantau lewat <code>hermes dashboard</code></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 25 SETUP LEVEL 3 — LANGKAH -->
+    <section class="slide" data-nav="Setup 3">
+      <div class="kicker">Level 3 · Urutan Setup</div>
+      <h2 class="headline">Empat langkah menuju <em>agency</em>.</h2>
+      <div class="grid-2">
+        <div class="card">
+          <span class="card__num">LANGKAH 1 · BUAT PROFILE TIM</span>
+          <div class="terminal" style="margin-top:6px;">
+            <code>hermes profile create director --description "Orchestrator utama yang memecah proyek, membagi tugas di Kanban, dan me-review hasil akhir."
+hermes profile create researcher --description "Spesialis riset mendalam dari web, jurnal, dan dokumen referensi."
+hermes profile create writer --description "Spesialis penulisan naskah, copywriting, dan dokumentasi terstruktur."
+hermes profile create coder --description "Spesialis full-stack developer untuk menulis kode, testing, dan git worktree."</code>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <span class="card__num">LANGKAH 2 · AKTIFKAN KANBAN DI DIRECTOR</span>
+            <div class="terminal" style="margin-top:6px;">
+              <code>hermes -p director tools enable kanban
+hermes -p director tools enable kanban --platform telegram</code>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <span class="card__num">LANGKAH 3 · INIT &amp; NYALAKAN GATEWAY</span>
+            <div class="terminal" style="margin-top:6px;">
+              <code>hermes kanban init
+hermes gateway start</code>
+            </div>
+            <p style="margin-top:8px;font-size:0.82rem;">⚠ <strong>Wajib diingat:</strong> Dispatcher yang membangunkan Kanban Worker hidup di dalam Gateway. Kalau Gateway mati, kartu tidak jalan.</p>
+          </div>
+          <div class="card" style="margin-top:16px;">
+            <span class="card__num">LANGKAH 4 · PANTAU DASHBOARD</span>
+            <p><code>hermes dashboard</code> → buka <code>http://127.0.0.1:9119</code>, klik menu <strong>Kanban</strong> di kiri. Kamu bisa lihat langsung pergerakan kartu dari Triage sampai Done beserta jalur kerja tiap Worker.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 26 CTA -->
     <section class="slide is-center" data-nav="Mulai">
       <div class="eyebrow-row">
         <span class="pill">● Live 20 Oktober 2026 · Zoom</span>
