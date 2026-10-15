@@ -26,10 +26,13 @@
 export const config = {
   matcher: [
     '/deck-workshop',
+    '/deck-workshop/',
     '/deck-workshop/:path*',
     '/pre-session',
+    '/pre-session/',
     '/pre-session/:path*',
     '/auth',
+    '/auth/',
     '/api/login',
     '/api/logout',
     '/api/me',
