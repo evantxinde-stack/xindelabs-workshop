@@ -28,17 +28,14 @@ const path = require('path');
 
 // ──────────────────────────── Konfigurasi ────────────────────────────
 const PORT = Number(process.env.GATE_PORT || 3020);
-const SB_URL = process.env.SB_URL || 'https://qxzvmnbhplgmspdxdbmg.supabase.co';
-const SB_SERVICE_KEY = (process.env.SB_SERVICE_KEY || readSecret('/etc/xinde-gate/supabase-service.key', '/tmp/srk.txt')).trim();
 const SESSION_SECRET = (process.env.SESSION_SECRET || readSecret('/etc/xinde-gate/session.secret')).trim();
+const ACCESS_CODE = (process.env.ACCESS_CODE || readSecret('/etc/xinde-gate/access-code')).trim();
 const COOKIE_NAME = 'xinde_access';
 const SESSION_DAYS = 30;
 
 // Halaman yang dilindungi
 const PROTECTED = ['/deck-workshop', '/pre-session'];
 
-// Status member yang dianggap punya akses
-const OK_STATUS = new Set(['paid', 'active', 'lifetime', 'trial']);
 
 function readSecret(...candidates) {
   for (const c of candidates) {
@@ -47,8 +44,8 @@ function readSecret(...candidates) {
   return '';
 }
 
-if (!SB_SERVICE_KEY) { console.error('FATAL: Supabase service key tidak ditemukan'); process.exit(1); }
 if (!SESSION_SECRET || SESSION_SECRET.length < 32) { console.error('FATAL: SESSION_SECRET tidak ditemukan / terlalu pendek'); process.exit(1); }
+if (!ACCESS_CODE || ACCESS_CODE.length < 6) { console.error('FATAL: ACCESS_CODE tidak ditemukan / terlalu pendek'); process.exit(1); }
 
 // ──────────────────────────── Util ────────────────────────────
 const log = (...a) => console.log(new Date().toISOString(), ...a);
@@ -91,42 +88,6 @@ function parseCookies(header) {
   return out;
 }
 
-/** HTTPS GET ke Supabase REST. */
-function sbGet(pathname) {
-  return new Promise((resolve, reject) => {
-    const u = new URL(SB_URL + '/rest/v1/' + pathname);
-    const req = https.request({
-      hostname: u.hostname,
-      path: u.pathname + u.search,
-      method: 'GET',
-      headers: {
-        apikey: SB_SERVICE_KEY,
-        Authorization: 'Bearer ' + SB_SERVICE_KEY,
-        Accept: 'application/json',
-      },
-      timeout: 10000,
-    }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        if (res.statusCode >= 400) return reject(new Error('Supabase ' + res.statusCode + ': ' + data.slice(0, 200)));
-        try { resolve(JSON.parse(data || '[]')); } catch (e) { reject(e); }
-      });
-    });
-    req.on('timeout', () => { req.destroy(new Error('Supabase timeout')); });
-    req.on('error', reject);
-    req.end();
-  });
-}
-
-async function findMember(email) {
-  const em = String(email || '').trim().toLowerCase();
-  if (!em || em.length > 200) return null;
-  const q = 'members?select=email,status,tier,paid_until,lms_password&email=eq.' + encodeURIComponent(em) + '&limit=1';
-  const rows = await sbGet(q);
-  return Array.isArray(rows) && rows.length ? rows[0] : null;
-}
-
 /** Bandingkan kode akses dengan aman (timing-safe). */
 function codeMatches(input, stored) {
   if (!stored) return false;
@@ -136,51 +97,26 @@ function codeMatches(input, stored) {
   return crypto.timingSafeEqual(a, b);
 }
 
-/** Member masih berlaku? paid_until null = berlaku selamanya. */
-function stillValid(member) {
-  if (!OK_STATUS.has(String(member.status || '').toLowerCase())) return false;
-  if (member.paid_until) {
-    const t = Date.parse(member.paid_until);
-    // paid_until tanggal saja, atau timestamp — anggap akhir hari.
-    if (!isNaN(t) && Date.now() > t + 24 * 3600 * 1000) return false;
-  }
-  return true;
-}
-
 // ──────────────────────────── Rate limit ────────────────────────────
-// Kunci rate limit: gabungan IP + email. IP saja tidak cukup karena
-// proxy Vercel bisa memakai IP keluar yang berbeda tiap request.
-// Email saja juga tidak cukup (penyerang bisa ganti-ganti email).
+// Rate limit per IP (cukup — tidak ada email lagi).
 const attempts = new Map();
-const MAX_ATTEMPTS = 5;          // percobaan gagal sebelum diblokir
-const WINDOW_MS = 15 * 60 * 1000; // jendela 15 menit
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 15 * 60 * 1000;
 
-function rlKey(ip, email) {
-  return String(ip || '-') + '|' + String(email || '').trim().toLowerCase().slice(0, 120);
-}
-function rateLimited(ip, email) {
+function rateLimited(ip) {
   const now = Date.now();
-  const keys = [rlKey(ip, email), 'ip|' + String(ip || '-'), 'em|' + String(email || '').trim().toLowerCase().slice(0, 120)];
-  for (const k of keys) {
-    const rec = attempts.get(k);
-    if (rec && rec.until > now && rec.n >= MAX_ATTEMPTS) return true;
-  }
-  return false;
+  const rec = attempts.get(ip);
+  return rec && rec.until > now && rec.n >= MAX_ATTEMPTS;
 }
-function noteAttempt(ip, email) {
+function noteAttempt(ip) {
   const now = Date.now();
-  const keys = [rlKey(ip, email), 'ip|' + String(ip || '-'), 'em|' + String(email || '').trim().toLowerCase().slice(0, 120)];
-  for (const k of keys) {
-    let rec = attempts.get(k);
-    if (!rec || rec.until <= now) rec = { n: 0, until: now + WINDOW_MS };
-    rec.n++;
-    attempts.set(k, rec);
-  }
-  if (attempts.size > 20000) attempts.clear();
+  let rec = attempts.get(ip);
+  if (!rec || rec.until <= now) rec = { n: 0, until: now + WINDOW_MS };
+  rec.n++;
+  attempts.set(ip, rec);
+  if (attempts.size > 5000) attempts.clear();
 }
-function clearAttempts(ip, email) {
-  attempts.delete(rlKey(ip, email));
-}
+function clearAttempts(ip) { attempts.delete(ip); }
 
 // ──────────────────────────── Halaman login ────────────────────────────
 const LOGIN_HTML = fs.readFileSync(path.join(__dirname, 'login.html'), 'utf8');
@@ -239,41 +175,30 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const params = new URLSearchParams(body);
-        const email = params.get('email') || '';
         const code = params.get('code') || '';
         const next = params.get('next') || '';
         const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '';
 
-        if (rateLimited(ip, email)) {
-          log('RATE LIMITED', ip, email.slice(0, 60));
+        if (rateLimited(ip)) {
+          log('RATE LIMITED', ip);
           return backToLogin(res, 'Terlalu banyak percobaan. Coba lagi 15 menit lagi.', safeNext);
         }
 
-        if (!email || !code) {
-          noteAttempt(ip, email);
-          return backToLogin(res, 'Email dan kode akses wajib diisi.', safeNext);
+        if (!code) {
+          noteAttempt(ip);
+          return backToLogin(res, 'Kode akses wajib diisi.', safeNext);
         }
 
-        const member = await findMember(email);
-
-        // Pesan error disamakan supaya tidak bisa dipakai menebak email terdaftar.
-        const genericFail = () => {
-          noteAttempt(ip, email);
-          log('LOGIN FAIL', ip, email.slice(0, 60));
-          return backToLogin(res, 'Email atau kode akses salah.', safeNext);
-        };
-
-        if (!member) return genericFail();
-        if (!codeMatches(code, member.lms_password)) return genericFail();
-        if (!stillValid(member)) {
-          noteAttempt(ip, email);
-          return backToLogin(res, 'Akses untuk akun ini sudah tidak aktif. Hubungi admin.', safeNext);
+        if (!codeMatches(code, ACCESS_CODE)) {
+          noteAttempt(ip);
+          log('LOGIN FAIL', ip);
+          return backToLogin(res, 'Kode akses salah.', safeNext);
         }
 
-        clearAttempts(ip, email);
+        clearAttempts(ip);
         const exp = Date.now() + SESSION_DAYS * 24 * 3600 * 1000;
-        const token = sign({ e: member.email, t: member.tier || '', exp });
-        log('LOGIN OK', ip, member.email, member.tier || '-');
+        const token = sign({ e: 'member', t: 'workshop', exp });
+        log('LOGIN OK', ip);
 
         const cookie = [
           COOKIE_NAME + '=' + encodeURIComponent(token),
