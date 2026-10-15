@@ -368,7 +368,7 @@
     /* ==================== KANBAN FLOW ==================== */
     .kanban-flow {
       display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-      gap: 8px; margin-top: 20px;
+      gap: 8px; margin-top: 14px;
     }
     .kb-step {
       font-family: var(--font-mono); font-size: 0.78rem; font-weight: 600;
@@ -413,6 +413,9 @@
     }
     .shot-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 20px; }
     .shot-grid .shot { height: 168px; object-fit: cover; object-position: top; }
+    /* 6-shot grid (Project): 3 kolom biar tidak melebihi tinggi layar */
+    .shot-grid--3 { grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+    .shot-grid--3 .shot { height: 126px; }
 
     /* photo + text split */
     .split {
@@ -445,6 +448,11 @@
       padding: 13px 0; border-bottom: 1px solid var(--line);
       align-items: baseline;
     }
+    .table-card--tight { margin-top: 14px; }
+    .table-card--tight th, .table-card--tight td { padding: 9px 13px; font-size: 0.82rem; }
+    .steps--dense { margin-top: 16px; }
+    .steps--dense .step { padding: 8px 0; }
+    .steps--dense .step__b span { font-size: 0.83rem; }
     .step:last-child { border-bottom: none; }
     .step__t {
       font-family: var(--font-mono); font-size: 0.74rem; font-weight: 700;
@@ -511,6 +519,96 @@
     .terminal code {
       font-family: var(--font-mono); font-size: 0.78rem; color: var(--green);
       white-space: pre-wrap; word-break: break-all; line-height: 1.6;
+    }
+
+    /* ==================== HERMES SLANG · KOMPONEN 7 (ARSITEKTUR) ==================== */
+    .arch-card {
+      background: var(--bg-2); border: 1px solid var(--line);
+      border-radius: var(--radius); margin-top: 16px; padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .arch-card:hover { border-color: var(--line-strong); }
+
+    .arch-top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+    .arch-kicker {
+      font-family: var(--font-mono); font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase; color: var(--green);
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .arch-kicker::before { content: ""; width: 18px; height: 2px; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .arch-hint { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted-dim); }
+
+    .arch-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .arch-chip {
+      font-family: var(--font-mono); font-size: 0.72rem; font-weight: 600;
+      padding: 6px 12px; border-radius: 999px; cursor: pointer;
+      background: var(--bg-3); border: 1px solid var(--line); color: var(--muted);
+      transition: all 0.16s ease;
+    }
+    .arch-chip:hover { color: var(--text); border-color: var(--line-strong); }
+    .arch-chip.is-on {
+      background: var(--green-dim); border-color: var(--green);
+      color: var(--green); box-shadow: 0 0 14px rgba(0, 255, 136, 0.16);
+    }
+
+    .arch-stage { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .arch-pre { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+    .arch-btn {
+      font-family: var(--font-mono); font-size: 0.76rem; font-weight: 700;
+      padding: 8px 14px; border-radius: 8px; cursor: pointer;
+      background: var(--bg-3); border: 1px solid var(--line-strong); color: var(--green);
+      transition: all 0.16s ease; white-space: nowrap;
+    }
+    .arch-btn:hover { background: var(--green); color: var(--bg); }
+    .arch-btn:disabled { opacity: 0.3; cursor: default; }
+    .arch-btn:disabled:hover { background: var(--bg-3); color: var(--green); }
+
+    .arch-step {
+      font-family: var(--font-mono); font-size: 0.74rem; color: var(--muted-dim);
+      letter-spacing: 0.03em;
+    }
+    .arch-step b { color: var(--green); }
+
+    .arch-canvas { position: relative; background: #020604; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px; }
+    .arch-svg { width: 100%; height: auto; display: block; aspect-ratio: 660 / 330; max-height: 236px; margin-inline: auto; }
+
+    .arch-node rect { fill: var(--bg-2); stroke: var(--line); stroke-width: 1.3; transition: stroke 0.24s ease, fill 0.24s ease, stroke-width 0.24s ease; }
+    .arch-node { cursor: pointer; transition: opacity 0.3s ease; }
+    .arch-node text { fill: var(--text); font-family: var(--font-display); font-size: 13px; font-weight: 600; }
+    .arch-node text.sub { fill: var(--muted-dim); font-family: var(--font-mono); font-size: 9.5px; font-weight: 400; font-style: italic; }
+    .arch-node.is-dim { opacity: 0.22; }
+    .arch-node.is-on rect { stroke: var(--green); stroke-width: 2; fill: var(--green-dim); }
+    .arch-node.is-on text.sub { fill: var(--green); }
+    .arch-node.is-pick rect { stroke: var(--cyan); stroke-width: 2.4; }
+
+    .arch-pill { font-family: var(--font-mono); font-size: 9.5px; font-style: italic; }
+    .arch-pill rect { fill: var(--bg-3); }
+    .arch-pill text { fill: var(--muted-dim); }
+
+    .arch-edge { fill: none; stroke: var(--muted-dim); stroke-width: 1.3; transition: stroke 0.3s ease, stroke-width 0.3s ease, opacity 0.3s ease; opacity: 0.45; }
+    .arch-edge.is-on { stroke: var(--green); stroke-width: 2; opacity: 1; stroke-dasharray: 6 8; animation: flowDash 1.2s linear infinite; }
+    @keyframes flowDash { to { stroke-dashoffset: -28; } }
+
+    .arch-detail {
+      background: var(--bg-3); border: 1px solid var(--line);
+      border-left: 3px solid var(--green); border-radius: var(--radius-sm);
+      padding: 10px 13px; display: flex; flex-direction: column; gap: 6px;
+    }
+    .arch-detail__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .arch-detail__title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text); }
+    .arch-detail__role { font-family: var(--font-mono); font-size: 0.7rem; font-style: italic; color: var(--green); }
+    .arch-detail__desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+    .arch-detail__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .arch-detail__box { background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+    .arch-detail__label {
+      font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--muted-dim); margin-bottom: 2px;
+    }
+    .arch-detail__val { font-family: var(--font-mono); font-size: 0.73rem; color: var(--green); word-break: break-word; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .arch-edge.is-on { animation: none; }
     }
 
     /* ==================== CTA ==================== */
@@ -593,6 +691,43 @@
       .step { padding: 8px 0; }
       .foot { margin-top: 12px; }
       .split .shot { max-height: 240px; }
+      .shot-grid--3 .shot { height: 104px; }
+      .arch-card { margin-top: 10px; padding: 10px 12px; gap: 7px; }
+      .arch-svg { max-height: 168px; }
+      .arch-detail { padding: 8px 11px; gap: 4px; }
+      .arch-detail__desc { font-size: 0.76rem; }
+      .arch-detail__grid { grid-template-columns: 1fr 1fr; gap: 6px; }
+      .arch-detail__box { padding: 5px 8px; }
+      .arch-detail__title { font-size: 0.9rem; }
+      .arch-chip { font-size: 0.68rem; padding: 5px 10px; }
+      .arch-step { font-size: 0.68rem; }
+      .arch-hint { display: none; }
+      .grid-2 { margin-top: 12px; gap: 12px; }
+      .kanban-flow { margin-top: 10px; gap: 6px; }
+      .kb-step { padding: 6px 11px; font-size: 0.72rem; }
+      .table-card { margin-top: 12px; }
+      th, td { padding: 8px 12px; font-size: 0.82rem; }
+      .steps--dense { margin-top: 10px; }
+      .steps--dense .step { padding: 5px 0; }
+    }
+    @media (max-height: 780px) and (min-width: 861px) {
+      .terminal { margin-top: 7px; padding: 8px 10px; }
+      .terminal code { font-size: 0.7rem; line-height: 1.4; }
+      .card { padding: 12px; gap: 5px; }
+      .grid-2 { gap: 12px; }
+      .arch-svg { max-height: 140px; }
+      .arch-canvas { padding: 6px; }
+      .arch-detail__desc { display: none; }
+      .arch-card { gap: 6px; }
+      .steps--dense { margin-top: 8px; }
+      .steps--dense .step { padding: 3px 0; grid-template-columns: 96px 1fr; gap: 12px; }
+      .steps--dense .step__b span { font-size: 0.74rem; }
+      .steps--dense .step__b strong { font-size: 0.88rem; }
+      .steps--dense .step__t { font-size: 0.68rem; }
+      .kanban-flow { margin-top: 8px; }
+      .kb-step { padding: 5px 9px; font-size: 0.68rem; }
+      .card p, .card li { font-size: 0.8rem; }
+      .foot { display: none; }
     }
     @media (max-width: 860px) {
       .cover__inner { grid-template-columns: 1fr; gap: 26px; }
@@ -604,6 +739,9 @@
       .table-card { overflow-x: auto; }
       table { min-width: 560px; }
       .split { grid-template-columns: 200px 1fr; gap: 18px; }
+      .arch-detail__grid { grid-template-columns: 1fr; }
+      .arch-stage { justify-content: center; }
+      .arch-pre { justify-content: center; }
     }
     @media (max-width: 560px) {
       .cover__stats { flex-wrap: wrap; gap: 12px; }
@@ -627,6 +765,11 @@
       .foot { margin-top: 14px; }
       .bignum { font-size: clamp(3.2rem, 18vw, 5rem); }
       .shot-grid .shot { height: 190px; }
+      .arch-card { padding: 12px; }
+      .arch-svg { max-height: 172px; }
+      .arch-chip { font-size: 0.66rem; padding: 5px 10px; }
+      .arch-btn { font-size: 0.7rem; padding: 7px 11px; }
+      .arch-detail__grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -638,7 +781,7 @@
       <span class="nav-pill">LIVE WORKSHOP DECK</span>
     </div>
     <div class="topbar__right">
-      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">26</span></span>
+      <span class="counter"><strong id="c-cur">1</strong> / <span id="c-total">29</span></span>
       <button class="btn-fullscreen" id="btn-fs" onclick="toggleFullscreen()">Fullscreen</button>
     </div>
   </header>
@@ -661,11 +804,11 @@
             lo dari <em>nol.</em>
           </h1>
           <p class="cover__sub">
-            Tujuh modul. Dari mindset sampai agent yang punya kepribadian —
+            Delapan modul. Dari mindset sampai agent yang punya kepribadian —
             bisa mikir, bertindak, dan memperbaiki diri sendiri. Tanpa coding.
           </p>
           <div class="cover__stats">
-            <div class="cover__stat"><strong>7</strong><span>Modul</span></div>
+            <div class="cover__stat"><strong>8</strong><span>Modul</span></div>
             <div class="cover__stat-sep"></div>
             <div class="cover__stat"><strong>24/7</strong><span>Agent aktif</span></div>
             <div class="cover__stat-sep"></div>
@@ -737,7 +880,7 @@
       <div class="kicker">Project Before</div>
       <h2 class="headline">Yang udah gw bangun <em>sebelum</em> ngajarin.</h2>
       <p class="lead">Bukan teori — ini sistem nyata yang jalan: klinik, baksos kesehatan, dashboard agent, sampai AI router.</p>
-      <div class="shot-grid">
+      <div class="shot-grid shot-grid--3">
         <img class="shot" src="/deck-workshop/assets/proj-1.jpeg" alt="Bot Control Hermes" loading="lazy" />
         <img class="shot" src="/deck-workshop/assets/proj-2.jpeg" alt="Dashboard klinik" loading="lazy" />
         <img class="shot" src="/deck-workshop/assets/proj-3.jpeg" alt="Sistem baksos" loading="lazy" />
@@ -751,15 +894,16 @@
     <!-- 05 AGENDA -->
     <section class="slide" data-nav="Peta">
       <div class="kicker">Peta Sesi</div>
-      <h2 class="headline">7 modul. Satu agent yang <em>hidup</em>.</h2>
-      <div class="steps">
+      <h2 class="headline">8 modul. Satu agent yang <em>hidup</em>.</h2>
+      <div class="steps steps--dense">
         <div class="step"><div class="step__t">Modul 1</div><div class="step__b"><strong>Mindset</strong><span>Identify · Adapt · Automate — cara mikir sebelum ngoding apa pun.</span></div></div>
         <div class="step"><div class="step__t">Modul 2</div><div class="step__b"><strong>Intro to AI Agents</strong><span>Agent vs Chatbot, AI Harness, AI Automation.</span></div></div>
         <div class="step"><div class="step__t">Modul 3</div><div class="step__b"><strong>Introduction to Hermes</strong><span>Kenapa Hermes + Cloud/VPS vs Lokal.</span></div></div>
         <div class="step"><div class="step__t">Modul 4</div><div class="step__b"><strong>How to Install</strong><span>Install lokal, deploy server, via VPS, gateway, model.</span></div></div>
         <div class="step"><div class="step__t">Modul 5</div><div class="step__b"><strong>Give Your Agent Life</strong><span>SOUL.md — kepribadian, gaya, larangan, teknis.</span></div></div>
-        <div class="step"><div class="step__t">Modul 6</div><div class="step__b"><strong>Give Agent Hand</strong><span>Skill &amp; Plugin — kasih tangan biar bisa aksi nyata.</span></div></div>
-        <div class="step"><div class="step__t">Modul 7</div><div class="step__b"><strong>Loop Engineering</strong><span>Reason → Act → Observe, biar agent memperbaiki diri sendiri.</span></div></div>
+        <div class="step"><div class="step__t">Modul 6</div><div class="step__b"><strong>Arsitektur &amp; Alur Kerja</strong><span>Enam komponen: Bot, Profile, Orchestrator, Kanban, Worker, Swarm — lengkap dengan visual interaktif.</span></div></div>
+        <div class="step"><div class="step__t">Modul 7</div><div class="step__b"><strong>Give Agent Hand</strong><span>Skill &amp; Plugin — kasih tangan biar bisa aksi nyata.</span></div></div>
+        <div class="step"><div class="step__t">Modul 8</div><div class="step__b"><strong>Loop Engineering</strong><span>Reason → Act → Observe, biar agent memperbaiki diri sendiri.</span></div></div>
       </div>
     </section>
 
@@ -963,9 +1107,172 @@
       <p class="foot">Agent tanpa SOUL.md = robot generik. Agent dengan SOUL.md = asisten yang punya karakter.</p>
     </section>
 
-    <!-- 14 MODUL 6 SKILL & PLUGIN -->
-    <section class="slide" data-nav="M6">
-      <div class="kicker">Modul 6 · Give Agent Hand</div>
+    <!-- 13b MODUL 6 ARSITEKTUR — PEMBUKA -->
+    <section class="slide is-center" data-nav="M6">
+      <div class="kicker">Modul 6 · Arsitektur &amp; Alur Kerja</div>
+      <h2 class="headline">Enam komponen. Satu <em>perusahaan digital</em>.</h2>
+      <p class="lead">Biar gampang kebayang tanpa pusing baca istilah teknisnya: bayangkan Hermes Agent itu seperti sebuah <strong>perusahaan / agensi digital</strong> yang jalan di komputer atau server kamu. Tiap istilah punya jabatan dan fungsi sendiri.</p>
+      <div class="grid-3">
+        <div class="card card--highlight"><span class="card__num">PROFILE</span><span class="card__title">Karyawan tetap</span><p>Punya KTP, meja kerja, ingatan jangka panjang, kepribadian, keahlian, dan kunci akses sendiri.</p></div>
+        <div class="card"><span class="card__num">BOT</span><span class="card__title">Nomor kontak / wajah</span><p>Cara kamu ngobrol langsung sama satu Profile — lewat Bot Mode desktop atau akun Telegram/WA/Discord.</p></div>
+        <div class="card"><span class="card__num">KANBAN</span><span class="card__title">Papan proyek utama</span><p>Papan berbasis database tempat semua tugas ditempel, dioper antar-karyawan, dan dipantau. Restart pun nggak hilang.</p></div>
+        <div class="card"><span class="card__num">ORCHESTRATOR</span><span class="card__title">Manajer proyek</span><p>Terima instruksi besar dari kamu, pecah jadi tugas kecil, bagi ke Profile yang tepat, lalu periksa hasilnya.</p></div>
+        <div class="card"><span class="card__num">WORKER</span><span class="card__title">Yang turun tangan</span><p>Proses yang sedang aktif ngerjain satu tugas spesifik — bisa Profile dari Kanban, atau pekerja lepas via delegate_task.</p></div>
+        <div class="card card--highlight"><span class="card__num">SWARM</span><span class="card__title">Tim keroyokan sekali jalan</span><p>Satu perintah, langsung terjunkan beberapa Worker paralel — lalu dicek Verifier dan digabung Synthesizer.</p></div>
+      </div>
+      <p class="foot">Enam istilah ini yang bikin kamu bisa baca dokumen Hermes tanpa bingung — di slide berikutnya kita lihat langsung diagram alurnya.</p>
+    </section>
+
+    <!-- 13c MODUL 6 VISUAL INTERAKTIF — ARSITEKTUR -->
+    <section class="slide" data-nav="Diagram">
+      <div class="kicker">Modul 6 · Visual Interaktif</div>
+      <h2 class="headline">Coba sendiri: <em>klik &amp; telusuri</em> alurnya.</h2>
+      <p class="lead">Klik node buat baca detailnya · pilih skenario buat lihat jalurnya · tekan <strong>Selanjutnya</strong> buat ngikutin satu tugas dari chat sampai kelar.</p>
+
+      <div class="arch-card" id="arch">
+        <div class="arch-top">
+          <span class="arch-kicker">Arsitektur Agen &amp; Alur Kerja Hermes</span>
+          <span class="arch-hint">klik node · pilih skenario · telusuri langkah</span>
+        </div>
+
+        <div class="arch-chips" id="arch-chips">
+          <button class="arch-chip is-on" data-scenario="all" type="button">Semua Komponen</button>
+          <button class="arch-chip" data-scenario="kanban" type="button">Alur Kanban &amp; Orchestrator</button>
+          <button class="arch-chip" data-scenario="swarm" type="button">Topologi Swarm</button>
+          <button class="arch-chip" data-scenario="direct" type="button">Chat Langsung vs Kanban</button>
+        </div>
+
+        <div class="arch-stage">
+          <div class="arch-pre">
+            <button class="arch-btn" id="arch-prev" type="button">← Sebelumnya</button>
+            <button class="arch-btn" id="arch-next" type="button">Selanjutnya →</button>
+          </div>
+          <span class="arch-step" id="arch-stepinfo"><b>Langkah 1/4</b> · Inisiasi Instruksi Pengguna</span>
+        </div>
+
+        <div class="arch-canvas">
+          <svg class="arch-svg" viewBox="0 0 660 330" id="arch-svg" role="img" aria-label="Diagram arsitektur Hermes Agent">
+            <defs>
+              <marker id="arch-caret" viewBox="0 0 10 10" refX="7.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">
+                <path d="M 3 1.2 L 7.5 5 L 3 8.8" fill="none" stroke="var(--muted-dim)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+              </marker>
+              <marker id="arch-caret-on" viewBox="0 0 10 10" refX="7.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto">
+                <path d="M 3 1.2 L 7.5 5 L 3 8.8" fill="none" stroke="var(--green)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+              </marker>
+            </defs>
+
+            <g id="arch-edges">
+              <path id="e-bot-profile" class="arch-edge" d="M 170 68 L 216 68" marker-end="url(#arch-caret)" />
+              <path id="e-profile-orch" class="arch-edge" d="M 380 68 L 426 68" marker-end="url(#arch-caret)" />
+              <path id="e-bot-worker" class="arch-edge" d="M 85 106 L 85 190 Q 85 206 101 206 L 216 206" marker-end="url(#arch-caret)" />
+              <path id="e-orch-kanban" class="arch-edge" d="M 515 106 L 515 158 Q 515 174 499 174 L 101 174 Q 85 174 85 190 L 85 214" marker-end="url(#arch-caret)" />
+              <path id="e-kanban-worker" class="arch-edge" d="M 170 256 L 216 256" marker-end="url(#arch-caret)" />
+              <path id="e-worker-swarm" class="arch-edge" d="M 380 256 L 426 256" marker-end="url(#arch-caret)" />
+            </g>
+
+            <g id="arch-pills">
+              <g class="arch-pill"><rect x="176" y="58" width="36" height="19" rx="9.5" /><text x="194" y="71" text-anchor="middle">SOUL</text></g>
+              <g class="arch-pill"><rect x="386" y="58" width="36" height="19" rx="9.5" /><text x="404" y="71" text-anchor="middle">Context</text></g>
+              <g class="arch-pill"><rect x="106" y="196" width="64" height="19" rx="9.5" /><text x="138" y="209" text-anchor="middle">delegate</text></g>
+              <g class="arch-pill"><rect x="176" y="246" width="36" height="19" rx="9.5" /><text x="194" y="259" text-anchor="middle">60s</text></g>
+            </g>
+
+            <g id="arch-nodes">
+              <g class="arch-node" data-node="bot" transform="translate(10, 30)">
+                <rect x="0" y="0" width="160" height="76" rx="38" />
+                <text x="80" y="32" text-anchor="middle">Bot</text>
+                <text class="sub" x="80" y="50" text-anchor="middle">Telegram / Desktop</text>
+              </g>
+              <g class="arch-node" data-node="profile" transform="translate(220, 30)">
+                <rect x="0" y="0" width="160" height="76" rx="20" />
+                <text x="80" y="32" text-anchor="middle">Profile</text>
+                <text class="sub" x="80" y="50" text-anchor="middle">~/.hermes/profiles/</text>
+              </g>
+              <g class="arch-node" data-node="orchestrator" transform="translate(430, 30)">
+                <rect x="0" y="0" width="170" height="76" rx="20" />
+                <text x="85" y="32" text-anchor="middle">Orchestrator</text>
+                <text class="sub" x="85" y="50" text-anchor="middle">Task Decomposition</text>
+              </g>
+              <g class="arch-node" data-node="kanban" transform="translate(10, 218)">
+                <rect x="0" y="0" width="160" height="76" rx="20" />
+                <text x="80" y="32" text-anchor="middle">Kanban Board</text>
+                <text class="sub" x="80" y="50" text-anchor="middle">~/.hermes/kanban.db</text>
+              </g>
+              <g class="arch-node" data-node="worker" transform="translate(220, 218)">
+                <rect x="0" y="0" width="160" height="76" rx="20" />
+                <text x="80" y="32" text-anchor="middle">Worker</text>
+                <text class="sub" x="80" y="50" text-anchor="middle">Process / Subagent</text>
+              </g>
+              <g class="arch-node" data-node="swarm" transform="translate(430, 218)">
+                <rect x="0" y="0" width="170" height="76" rx="38" />
+                <text x="85" y="32" text-anchor="middle">Swarm</text>
+                <text class="sub" x="85" y="50" text-anchor="middle">Parallel Blackboard</text>
+              </g>
+            </g>
+          </svg>
+        </div>
+
+        <div class="arch-detail" id="arch-detail">
+          <div class="arch-detail__head">
+            <span class="arch-detail__title" id="arch-title">1. Bot (Antarmuka Chat)</span>
+            <span class="arch-detail__role" id="arch-role">Pintu Masuk &amp; Interaction Layer</span>
+          </div>
+          <p class="arch-detail__desc" id="arch-desc">Menerima pesan pengguna via Telegram, WhatsApp, atau Desktop Bot Mode. Memilih Profile yang aktif dan mengarahkan instruksi awal ke agen.</p>
+          <div class="arch-detail__grid">
+            <div class="arch-detail__box">
+              <div class="arch-detail__label">Lokasi / Storage</div>
+              <div class="arch-detail__val" id="arch-loc">Chat Adapters &amp; Messaging Gateway</div>
+            </div>
+            <div class="arch-detail__box">
+              <div class="arch-detail__label">Perintah CLI / Trik Setup</div>
+              <div class="arch-detail__val" id="arch-cmd">hermes chat --profile &lt;nama&gt;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 13d MODUL 6 ARSITEKTUR — KANBAN, WORKER, SWARM -->
+    <section class="slide" data-nav="M6b">
+      <div class="kicker">Modul 6 · Lanjutan</div>
+      <h2 class="headline">Kanban, Worker, <em>&amp; Swarm</em>.</h2>
+      <p class="lead">Antrean permanen (<code>~/.hermes/kanban.db</code>) biar banyak Profile bisa kerja estafet. Enam kolom status:</p>
+      <div class="kanban-flow" style="margin-top:14px;">
+        <span class="kb-step">Triage</span><span class="kb-arrow">→</span>
+        <span class="kb-step">Todo</span><span class="kb-arrow">→</span>
+        <span class="kb-step">Ready</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-hot">In Progress</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-warn">Blocked</span><span class="kb-arrow">→</span>
+        <span class="kb-step kb-done">Done</span>
+      </div>
+      <div class="grid-2" style="margin-top:16px;">
+        <div class="card card--highlight">
+          <span class="card__num">DI BALIK PAPAN — DISPATCHER</span>
+          <p>Mesin bernama <strong>Dispatcher</strong> berjalan otomatis di dalam <strong>Hermes Gateway</strong> setiap <strong>60 detik</strong>. Tugasnya: cek kolom <strong>Ready</strong>, lalu otomatis "membangunkan" Profile yang ditugaskan pada kartu itu untuk mulai bekerja.</p>
+          <p style="margin-top:8px;font-size:0.82rem;">⚠ Kalau Gateway mati, kartu di Kanban <strong>tidak akan jalan</strong>.</p>
+        </div>
+        <div class="card">
+          <span class="card__num">ORCHESTRATOR — SI PEMBAGI TUGAS</span>
+          <p>Di Kanban ia jadi <strong>Decomposer</strong>: baca daftar Profile + deskripsi keahliannya, pecah ide mentah jadi <strong>kartu anak</strong> via <code>kanban_create</code>, lalu ikat urutannya via <code>kanban_link</code>.</p>
+          <p style="margin-top:8px;">Di chat langsung, ia pakai <code>delegate_task</code> buat manggil sub-agen di belakang layar.</p>
+        </div>
+      </div>
+      <div class="table-card table-card--tight">
+        <table>
+          <thead><tr><th>Aspek</th><th>Kanban Worker</th><th>Subagent Worker</th></tr></thead>
+          <tbody>
+            <tr><td>Identitas</td><td>Pakai <strong>Profile bernama</strong> — punya memori &amp; skill tetap</td><td><strong>Anonim</strong> — pekerja sementara, selesai langsung hilang</td></tr>
+            <tr><td>Cara kerja</td><td><strong>Fire-and-forget</strong> — jalan mandiri di background via Dispatcher</td><td>Agen induk harus <strong>nungguin (blocking)</strong> sampai subagent selesai</td></tr>
+            <tr><td>Kapan dipakai</td><td>Tugas besar, lintas-peran, atau jalan <strong>berjam-jam</strong></td><td>Tugas singkat (<strong>2–5 menit</strong>) buat cari info paralel</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="foot foot--m6b">Swarm = keroyokan otomatis 4 lapis: Root → N Parallel Workers → Gated Verifier → Gated Synthesizer. Panggil pakai <code>/swarm</code>.</p>
+    </section>
+
+    <!-- 14 MODUL 7 SKILL & PLUGIN -->
+    <section class="slide" data-nav="M7">
+      <div class="kicker">Modul 7 · Give Agent Hand</div>
       <h2 class="headline">Skill &amp; Plugin — kasih agent <em>tangan</em>.</h2>
       <p class="lead">Skill = kemampuan yang agent pelajari. Plugin = fitur tambahan dari komunitas. Dua-duanya bikin agent bisa <strong>aksi nyata</strong>.</p>
       <div class="shot-grid">
@@ -979,9 +1286,9 @@
       <p class="foot">Bisa juga bikin skill sendiri dengan bantuan AI — nggak harus nunggu yang udah jadi.</p>
     </section>
 
-    <!-- 15 MODUL 7 LOOP ENGINEERING -->
-    <section class="slide" data-nav="M7">
-      <div class="kicker">Modul 7 · Loop Engineering</div>
+    <!-- 15 MODUL 8 LOOP ENGINEERING -->
+    <section class="slide" data-nav="M8">
+      <div class="kicker">Modul 8 · Loop Engineering</div>
       <h2 class="headline">Biar agent <em>memperbaiki diri</em> sendiri.</h2>
       <p class="lead">Loop Engineering merancang bagaimana agen <strong>berpikir, bertindak, mengevaluasi hasil, dan memperbaiki diri secara berulang</strong> sampai tujuan tercapai.</p>
       <div class="grid-2">
@@ -993,9 +1300,9 @@
       <div class="shot-wrap"><img class="shot" src="/deck-workshop/assets/loop-diagram-1.jpeg" alt="Diagram loop" loading="lazy" /></div>
     </section>
 
-    <!-- 16 MODUL 7b BUG TABLE -->
-    <section class="slide" data-nav="M7b">
-      <div class="kicker">Modul 7 · Waspada Bug</div>
+    <!-- 16 MODUL 8b BUG TABLE -->
+    <section class="slide" data-nav="M8b">
+      <div class="kicker">Modul 8 · Waspada Bug</div>
       <h2 class="headline">Empat bug klasik &amp; <em>cara nanganin</em>.</h2>
       <div class="table-card">
         <table>
@@ -1341,6 +1648,104 @@ hermes gateway start</code>
     syncHash();
     document.getElementById('c-total').textContent = slides.length;
     render();
+
+    /* ============ MODUL 6 · VISUAL INTERAKTIF (ARSITEKTUR HERMES) ============ */
+    (function initArch() {
+      const root = document.getElementById('arch');
+      if (!root) return;
+
+      const NODE_DATA = {
+        bot: { title: '1. Bot (Antarmuka Chat)', role: 'Pintu Masuk & Interaction Layer', desc: 'Menerima pesan pengguna via Telegram, WhatsApp, atau Desktop Bot Mode. Memilih Profile yang aktif dan mengarahkan instruksi awal ke agen.', loc: 'Chat Adapters & Messaging Gateway', cmd: 'hermes chat --profile <nama>' },
+        profile: { title: '2. Profile (Identitas & Memori)', role: 'Rumah & Memori Permanen Agen', desc: 'Menyimpan identitas unik (SOUL.md), konfigurasi model (config.yaml), variabel lingkungan (.env), memori jangka panjang (MEMORY.md), dan basis data riwayat (state.db).', loc: '~/.hermes/profiles/<nama>/', cmd: 'hermes profile create <nama>' },
+        orchestrator: { title: '3. Orchestrator (Manajer Proyek)', role: 'Pemecah & Pengatur Dependensi Tugas', desc: 'Membaca tujuan besar dari prompt, memecahnya menjadi kartu tugas individual (kanban_create), serta mendefinisikan hubungan ketergantungan antar tugas (kanban_link).', loc: 'Core Orchestrator Engine', cmd: "kanban_create --title 'Tugas' --profile worker1" },
+        kanban: { title: '4. Kanban Board & Dispatcher', role: 'Papan Antrean & Dispatcher Otomatis', desc: 'Papan tugas SQLite permanen dengan 6 fase (Triage → Todo → Ready → In Progress → Blocked → Done). Dispatcher di Gateway memeriksa tugas Ready tiap 60 detik.', loc: '~/.hermes/kanban.db', cmd: 'hermes kanban status' },
+        worker: { title: '5. Worker (Eksekutor Tugas)', role: 'Pelaksana Aktif / Subagent', desc: 'Eksekutor yang menjalankan tugas. Dapat berupa Kanban Worker mandiri (proses OS terpisah dengan HERMES_KANBAN_TASK) atau Subagent sementara (delegate_task).', loc: 'OS Process / Worker Subagents', cmd: 'hermes kanban worker --profile dev' },
+        swarm: { title: '6. Swarm (Formasi Paralel)', role: 'Topologi Keroyokan Otomatis', desc: 'Pola eksekusi paralel terkoordinasi: Root Blackboard → Parallel Workers → Gated Verifier → Gated Synthesizer untuk merangkum hasil kerja tim.', loc: 'Swarm Coordinator Matrix', cmd: 'hermes kanban swarm --task <id>' }
+      };
+
+      const STEPS = [
+        { desc: 'Pengguna Mengirim Instruksi via Chat/Bot', nodes: ['bot', 'profile'], edges: ['e-bot-profile'] },
+        { desc: 'Orchestrator Memecah Tugas ke Kanban DB', nodes: ['profile', 'orchestrator', 'kanban'], edges: ['e-profile-orch', 'e-orch-kanban'] },
+        { desc: 'Dispatcher Membagikan Tugas ke Worker', nodes: ['kanban', 'worker'], edges: ['e-kanban-worker'] },
+        { desc: 'Eksekusi Paralel Topologi Swarm & Selesai', nodes: ['worker', 'swarm'], edges: ['e-worker-swarm'] }
+      ];
+
+      const SCENARIOS = {
+        all: { nodes: ['bot', 'profile', 'orchestrator', 'kanban', 'worker', 'swarm'], edges: ['e-bot-profile', 'e-profile-orch', 'e-orch-kanban', 'e-kanban-worker', 'e-worker-swarm'] },
+        kanban: { nodes: ['orchestrator', 'kanban', 'worker'], edges: ['e-orch-kanban', 'e-kanban-worker'] },
+        swarm: { nodes: ['worker', 'swarm'], edges: ['e-worker-swarm'] },
+        direct: { nodes: ['bot', 'worker'], edges: ['e-bot-worker'] }
+      };
+
+      let scenario = 'all';
+      let stepIdx = 0;
+      let picked = 'bot';
+
+      const chips = Array.from(root.querySelectorAll('#arch-chips .arch-chip'));
+      const nodeEls = Array.from(root.querySelectorAll('.arch-node'));
+      const edgeEls = Array.from(root.querySelectorAll('.arch-edge'));
+      const elTitle = root.querySelector('#arch-title');
+      const elRole = root.querySelector('#arch-role');
+      const elDesc = root.querySelector('#arch-desc');
+      const elLoc = root.querySelector('#arch-loc');
+      const elCmd = root.querySelector('#arch-cmd');
+      const elStep = root.querySelector('#arch-stepinfo');
+      const btnPrev = root.querySelector('#arch-prev');
+      const btnNext = root.querySelector('#arch-next');
+
+      function paint() {
+        chips.forEach(c => c.classList.toggle('is-on', c.dataset.scenario === scenario));
+
+        const onNodes = new Set();
+        const onEdges = new Set();
+        if (scenario === 'all') {
+          STEPS[stepIdx].nodes.forEach(n => onNodes.add(n));
+          STEPS[stepIdx].edges.forEach(e => onEdges.add(e));
+        } else {
+          SCENARIOS[scenario].nodes.forEach(n => onNodes.add(n));
+          SCENARIOS[scenario].edges.forEach(e => onEdges.add(e));
+        }
+
+        nodeEls.forEach(g => {
+          const id = g.dataset.node;
+          g.classList.toggle('is-on', onNodes.has(id));
+          g.classList.toggle('is-dim', !onNodes.has(id));
+          g.classList.toggle('is-pick', id === picked);
+        });
+
+        edgeEls.forEach(p => {
+          const on = onEdges.has(p.id);
+          p.classList.toggle('is-on', on);
+          p.setAttribute('marker-end', on ? 'url(#arch-caret-on)' : 'url(#arch-caret)');
+        });
+
+        elStep.innerHTML = '<b>Langkah ' + (stepIdx + 1) + '/' + STEPS.length + '</b> · ' + STEPS[stepIdx].desc;
+        btnPrev.disabled = stepIdx === 0;
+        btnNext.disabled = stepIdx === STEPS.length - 1;
+
+        const d = NODE_DATA[picked];
+        elTitle.textContent = d.title;
+        elRole.textContent = d.role;
+        elDesc.textContent = d.desc;
+        elLoc.textContent = d.loc;
+        elCmd.textContent = d.cmd;
+      }
+
+      root.querySelector('#arch-chips').addEventListener('click', e => {
+        const chip = e.target.closest('.arch-chip');
+        if (!chip) return;
+        scenario = chip.dataset.scenario;
+        stepIdx = 0;
+        paint();
+      });
+
+      btnPrev.addEventListener('click', () => { if (stepIdx > 0) { stepIdx--; paint(); } });
+      btnNext.addEventListener('click', () => { if (stepIdx < STEPS.length - 1) { stepIdx++; paint(); } });
+
+      nodeEls.forEach(g => g.addEventListener('click', () => { picked = g.dataset.node; paint(); }));
+
+      paint();
+    })();
   </script>
 </body>
 </html>
