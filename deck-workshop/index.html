@@ -237,6 +237,134 @@
       gap: 10px; margin-bottom: 4px;
     }
 
+    /* ==================== COVER ==================== */
+    .slide.cover { max-width: 1180px; }
+    .cover__inner {
+      display: grid; grid-template-columns: 1.15fr 0.95fr;
+      gap: clamp(24px, 4vw, 56px); align-items: center;
+    }
+    .cover__eyebrow {
+      display: inline-flex; align-items: center; gap: 9px;
+      font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--green); margin-bottom: 18px;
+      padding: 6px 13px; border-radius: 999px;
+      background: var(--green-dim); border: 1px solid var(--line-strong);
+    }
+    .cover__dot {
+      width: 7px; height: 7px; border-radius: 999px; background: var(--green);
+      box-shadow: 0 0 10px var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.8); } }
+
+    .cover__title {
+      font-family: var(--font-display);
+      font-size: clamp(2.3rem, 5.2vw, 4.1rem);
+      font-weight: 700; line-height: 1.02; letter-spacing: -0.04em;
+      margin-bottom: 20px;
+    }
+    .cover__title em {
+      font-family: var(--font-serif); font-style: italic; font-weight: 400;
+      color: var(--green); font-size: 1.1em;
+    }
+    .cover__grad {
+      background: linear-gradient(100deg, var(--green) 0%, var(--cyan) 100%);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 22px rgba(0, 255, 136, 0.3));
+    }
+
+    .cover__sub {
+      color: var(--muted); font-size: clamp(0.95rem, 1.4vw, 1.08rem);
+      max-width: 520px; margin-bottom: 26px;
+    }
+
+    .cover__stats { display: flex; align-items: center; gap: 18px; margin-bottom: 28px; }
+    .cover__stat { display: flex; flex-direction: column; }
+    .cover__stat strong {
+      font-family: var(--font-display); font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+      font-weight: 700; color: var(--green); line-height: 1.1; letter-spacing: -0.02em;
+    }
+    .cover__stat span {
+      font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted-dim); margin-top: 2px;
+    }
+    .cover__stat-sep { width: 1px; height: 30px; background: var(--line); }
+
+    .cover__cta { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .cover__right { position: relative; display: flex; justify-content: center; }
+
+    .cover__glow, .cover__glow2 {
+      position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
+    }
+    .cover__glow {
+      width: 340px; height: 340px; top: -70px; right: -80px;
+      background: radial-gradient(circle, rgba(0, 255, 136, 0.16), transparent 68%);
+      filter: blur(28px);
+    }
+    .cover__glow2 {
+      width: 260px; height: 260px; bottom: -80px; left: -60px;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.12), transparent 68%);
+      filter: blur(28px);
+    }
+
+    /* ---- terminal window ---- */
+    .term {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px;
+      background: #020604; border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), 0 0 42px rgba(0, 255, 136, 0.09);
+      overflow: hidden;
+      animation: termIn 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes termIn { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+
+    .term__bar {
+      display: flex; align-items: center; gap: 7px;
+      padding: 11px 14px; background: var(--bg-3);
+      border-bottom: 1px solid var(--line);
+    }
+    .term__dot { width: 10px; height: 10px; border-radius: 999px; }
+    .term__dot.r { background: #ff5f57; }
+    .term__dot.y { background: #febc2e; }
+    .term__dot.g { background: #28c840; }
+    .term__title {
+      margin-left: auto; font-family: var(--font-mono); font-size: 0.7rem;
+      color: var(--muted-dim); letter-spacing: 0.03em;
+    }
+
+    .term__body { padding: 16px 18px; font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.85; }
+    .term__line { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .term__line.dim { color: var(--muted); padding-left: 14px; }
+    .term__line.gap { height: 8px; }
+    .term__line .ok { color: var(--green); }
+    .term__p { color: var(--cyan); }
+    .term__cmd { color: var(--text); }
+    .term__cursor {
+      display: inline-block; width: 8px; height: 15px; vertical-align: -2px;
+      background: var(--green); box-shadow: 0 0 8px var(--green);
+      animation: blink 1.1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .term__line.ok {
+      color: var(--green); padding-left: 14px;
+      opacity: 0; animation: lineIn 0.4s ease forwards;
+    }
+    .term__line.ok:nth-child(7) { animation-delay: 0.5s; }
+    .term__line.ok:nth-child(8) { animation-delay: 0.75s; }
+    .term__line.ok:nth-child(9) { animation-delay: 1s; }
+
+    @keyframes lineIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cover__dot, .term__cursor { animation: none; }
+      .term, .term__line.ok { animation: none; opacity: 1; }
+    }
+
     /* ==================== IMAGES ==================== */
     .shot {
       width: 100%; border-radius: var(--radius-sm);
@@ -434,6 +562,10 @@
       .split .shot { max-height: 240px; }
     }
     @media (max-width: 860px) {
+      .cover__inner { grid-template-columns: 1fr; gap: 26px; }
+      .cover__right { order: -1; }
+      .term { max-width: 100%; }
+      .cover__stats { gap: 14px; }
       .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .step { grid-template-columns: 1fr; gap: 2px; }
       .table-card { overflow-x: auto; }
@@ -441,6 +573,11 @@
       .split { grid-template-columns: 200px 1fr; gap: 18px; }
     }
     @media (max-width: 560px) {
+      .cover__stats { flex-wrap: wrap; gap: 12px; }
+      .cover__stat-sep { height: 22px; }
+      .term__body { font-size: 0.72rem; padding: 12px 13px; }
+      .term__line { white-space: normal; }
+      .cover__sub { margin-bottom: 18px; }
       .grid-2, .grid-3, .grid-4, .vs-grid, .shot-grid { grid-template-columns: 1fr; }
       .split { grid-template-columns: 1fr; gap: 16px; }
       .split .shot { max-width: 220px; margin-inline: auto; }
@@ -478,19 +615,60 @@
   <main class="stage" id="stage">
 
     <!-- 01 COVER -->
-    <section class="slide is-center" data-nav="Cover">
-      <div class="eyebrow-row">
-        <span class="pill">● Live Workshop · 20 Oktober 2026</span>
-        <span class="pill cyan">Tanpa Coding</span>
+    <section class="slide cover" data-nav="Cover">
+      <div class="cover__inner">
+        <div class="cover__left">
+          <div class="cover__eyebrow">
+            <span class="cover__dot"></span>
+            Live Workshop · 20 Oktober 2026 · Zoom
+          </div>
+          <h1 class="cover__title">
+            Bangun<br />
+            <span class="cover__grad">Hermes Agent</span><br />
+            lo dari <em>nol.</em>
+          </h1>
+          <p class="cover__sub">
+            Tujuh modul. Dari mindset sampai agent yang punya kepribadian —
+            bisa mikir, bertindak, dan memperbaiki diri sendiri. Tanpa coding.
+          </p>
+          <div class="cover__stats">
+            <div class="cover__stat"><strong>7</strong><span>Modul</span></div>
+            <div class="cover__stat-sep"></div>
+            <div class="cover__stat"><strong>24/7</strong><span>Agent aktif</span></div>
+            <div class="cover__stat-sep"></div>
+            <div class="cover__stat"><strong>0</strong><span>Baris kode</span></div>
+          </div>
+          <div class="cover__cta">
+            <button class="btn btn--primary" onclick="goSlide(1)">Mulai Deck →</button>
+            <a class="btn btn--secondary" href="https://xindelabs-workshop.vercel.app/" target="_blank" rel="noopener">Workshop Utama ↗</a>
+          </div>
+        </div>
+
+        <div class="cover__right" aria-hidden="true">
+          <div class="term">
+            <div class="term__bar">
+              <span class="term__dot r"></span><span class="term__dot y"></span><span class="term__dot g"></span>
+              <span class="term__title">hermes — agent</span>
+            </div>
+            <div class="term__body">
+              <div class="term__line"><span class="term__p">$</span> <span class="term__cmd">hermes setup</span></div>
+              <div class="term__line dim">◆ Membaca SOUL.md ... <span class="ok">ok</span></div>
+              <div class="term__line dim">◆ Menghubungkan model ... <span class="ok">ok</span></div>
+              <div class="term__line dim">◆ Gateway Telegram ... <span class="ok">ok</span></div>
+              <div class="term__line gap"></div>
+              <div class="term__line"><span class="term__p">$</span> <span class="term__cmd">hermes doctor</span></div>
+              <div class="term__line ok">✓ Instalasi sehat</div>
+              <div class="term__line ok">✓ Memory persisten aktif</div>
+              <div class="term__line ok">✓ 12 skill tersedia</div>
+              <div class="term__line gap"></div>
+              <div class="term__line"><span class="term__p">$</span> <span class="term__cursor">_</span></div>
+            </div>
+          </div>
+          <div class="cover__glow"></div>
+          <div class="cover__glow2"></div>
+        </div>
       </div>
-      <h1 class="display">Bangun <em>Hermes Agent</em><br />lo dari 0.</h1>
-      <p class="lead">7 modul — dari mindset, instalasi, sampai agent yang punya kepribadian dan bisa memperbaiki diri sendiri.</p>
-      <div class="cta-row">
-        <button class="btn btn--primary" onclick="goSlide(1)">Mulai Deck →</button>
-        <a class="btn btn--secondary" href="https://xindelabs-workshop.vercel.app/" target="_blank" rel="noopener">Workshop Utama ↗</a>
-      </div>
-      <div class="shot-wrap"><img class="shot" src="/deck-workshop/assets/cover-shot.jpeg" alt="Landing page Xinde Labs Workshop" loading="lazy" /></div>
-      <p class="foot">Geser / tekan ← → · klik titik di bawah buat loncat · F = fullscreen</p>
+      <p class="foot" style="text-align:center;">← → buat pindah slide · klik titik di bawah buat loncat · F = fullscreen</p>
     </section>
 
     <!-- 02 WHO AM I -->
