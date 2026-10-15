@@ -1,0 +1,30 @@
+[Unit]
+Description=Xinde Labs Access Gate (login + proteksi /deck-workshop & /pre-session)
+Documentation=https://classai.id
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/xinde-access-gate
+ExecStart=/usr/bin/node /home/ubuntu/xinde-access-gate/server.js
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/log/xinde-gate.log
+StandardError=append:/var/log/xinde-gate.log
+
+# Pengerasan dasar
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/log
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target
