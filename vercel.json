@@ -13,14 +13,47 @@
       ]
     },
     {
-      "source": "/(deck-workshop|pre-session)/(.*)",
+      "source": "/auth",
       "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     },
     {
-      "source": "/(deck-workshop|pre-session)",
+      "source": "/deck-workshop",
       "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "Vary", "value": "Cookie" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/deck-workshop/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "Vary", "value": "Cookie" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/deck-workshop/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    },
+    {
+      "source": "/pre-session",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "Vary", "value": "Cookie" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/pre-session/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, private" },
+        { "key": "Vary", "value": "Cookie" },
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     }
