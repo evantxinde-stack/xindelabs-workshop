@@ -31,6 +31,8 @@
       --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
       --font-serif: "Instrument Serif", Georgia, serif;
       --nav-h: 60px;
+      --dock-h: 56px;
+      --mobile: 0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -108,19 +110,21 @@
     }
 
     /* ==================== STAGE ==================== */
+    /* DESKTOP: slide di-center, konten wajib FIT 1 layar (tidak ada scroll). */
     .stage {
       position: fixed;
       top: var(--nav-h); bottom: 56px; left: 0; right: 0;
-      display: flex; align-items: center; justify-content: center;
-      padding: 28px clamp(18px, 5vw, 64px);
-      overflow-y: auto;
-      align-items: safe center;
+      display: flex; align-items: safe center; justify-content: center;
+      padding: 24px clamp(18px, 5vw, 64px);
+      overflow: hidden;
     }
 
     .slide {
       display: none;
       width: 100%; max-width: 1080px;
       animation: slideIn 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+      /* Dekorasi absolute (glow, dsb) tidak boleh menciptakan scroll horizontal. */
+      overflow-x: clip;
     }
     .slide.active { display: block; }
 
@@ -242,7 +246,12 @@
     .cover__inner {
       display: grid; grid-template-columns: 1.15fr 0.95fr;
       gap: clamp(24px, 4vw, 56px); align-items: center;
+      /* glow dekoratif TIDAK boleh menambah lebar scroll */
+      position: relative;
     }
+    /* Cegah dekorasi absolut (glow) melebarkan area scroll slide */
+    .slide.cover, .cover__left, .cover__right { min-width: 0; }
+    .cover__glow, .cover__glow2 { max-width: 100%; }
     .cover__eyebrow {
       display: inline-flex; align-items: center; gap: 9px;
       font-family: var(--font-mono); font-size: 0.74rem; font-weight: 600;
@@ -300,12 +309,12 @@
       position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
     }
     .cover__glow {
-      width: 340px; height: 340px; top: -70px; right: -80px;
+      width: 340px; height: 340px; top: -70px; right: 0;
       background: radial-gradient(circle, rgba(0, 255, 136, 0.16), transparent 68%);
       filter: blur(28px);
     }
     .cover__glow2 {
-      width: 260px; height: 260px; bottom: -80px; left: -60px;
+      width: 260px; height: 260px; bottom: -80px; left: 0;
       background: radial-gradient(circle, rgba(0, 229, 255, 0.12), transparent 68%);
       filter: blur(28px);
     }
@@ -729,20 +738,119 @@
       .card p, .card li { font-size: 0.8rem; }
       .foot { display: none; }
     }
+    /* ============================================================
+       MODE MOBILE (<=860px): deck berubah jadi ALIRAN VERTIKAL.
+       Tiap slide jadi kartu full-width yang di-scroll & snap satu-satu.
+       Navigasi tetap: swipe, tombol ‹ ›, dan dot.
+       ============================================================ */
     @media (max-width: 860px) {
+      :root { --nav-h: 52px; --dock-h: 62px; --mobile: 1; }
+
+      html, body { overflow: hidden; }
+
+      /* topbar lebih ramping, brand tetap kebaca */
+      .topbar { padding: 0 14px; height: var(--nav-h); }
+      .wordmark { font-size: 1.05rem; }
+      .counter { font-size: 0.72rem; }
+      .btn-fullscreen { padding: 6px 10px; font-size: 0.68rem; }
+
+      /* stage = SATU slide aktif, bisa discroll di dalam kalau kontennya panjang.
+         Sama seperti desktop, jadi navigasi tetap 100% bisa diprediksi. */
+      .stage {
+        top: var(--nav-h); bottom: var(--dock-h);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 16px 14px 22px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+      }
+
+      /* satu slide per layar; kalau konten lebih tinggi, slide-nya yang discroll */
+      .slide {
+        display: none;
+        max-width: 100%;
+        width: 100%;
+        padding: 0;
+        animation: slideIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+        border-bottom: none;
+      }
+      .slide.active { display: block; }
+
+      /* tipografi mobile: headline lebih besar relatif, lead lebih terbaca */
+      h2.headline { font-size: clamp(1.5rem, 7vw, 2rem); line-height: 1.18; margin-bottom: 12px; }
+      h1.display { font-size: clamp(1.9rem, 9vw, 2.9rem); }
+      .lead { font-size: 1rem; max-width: 100%; }
+      .kicker { font-size: 0.7rem; margin-bottom: 10px; }
+      .foot { font-size: 0.72rem; margin-top: 16px; }
+
+      /* kartu & tabel: layout satu kolom, padding nyaman di jempol */
+      .card { padding: 16px; }
+      .card__num { font-size: 0.66rem; }
+      .card__title { font-size: 1rem; }
+      .steps { margin-top: 16px; }
+      .step { padding: 11px 0; }
+      .step__t { font-size: 0.7rem; }
+      .step__b strong { font-size: 0.96rem; }
+      .step__b span { font-size: 0.84rem; }
+
+      /* screenshot: rasio tetap, tidak melebar aneh */
+      .shot { max-height: 220px; }
+      .shot-grid { gap: 10px; margin-top: 14px; }
+      .shot-grid .shot { height: 150px; }
+      .split { margin-top: 14px; }
+
+      /* tabel bisa di-geser horizontal, dengan petunjuk visual */
+      .table-card { overflow-x: auto; margin-top: 16px; -webkit-overflow-scrolling: touch; }
+      table { min-width: 520px; }
+
+      /* terminal: kode panjang jangan merusak layout */
+      .terminal { padding: 11px 12px; }
+      .terminal code { font-size: 0.72rem; word-break: break-word; }
+
+      /* kanban: tetap satu baris bisa di-scroll, atau wrap rapi */
+      .kanban-flow { gap: 6px; margin-top: 14px; }
+      .kb-step { padding: 8px 12px; font-size: 0.74rem; }
+      .kb-arrow { font-size: 0.8rem; }
+
+      /* panel interaktif: nyaman di layar sempit (target sentuh >= 36px) */
+      .arch-card { margin-top: 14px; padding: 12px; gap: 10px; }
+      .arch-svg { max-height: 200px; }
+      .arch-chips { gap: 7px; }
+      .arch-chip { font-size: 0.7rem; padding: 9px 12px; min-height: 36px; display: inline-flex; align-items: center; }
+      .arch-btn { font-size: 0.74rem; padding: 10px 13px; min-height: 40px; }
+      .arch-detail { padding: 11px 12px; }
+      .arch-detail__grid { grid-template-columns: 1fr; }
+      .arch-detail__desc { font-size: 0.82rem; }
+
+      /* dock jadi kontrol terapung yang lebih besar & gampang dijangkau */
+      .dock {
+        height: var(--dock-h);
+        padding: 0 12px;
+        gap: 8px;
+      }
+      .dock__btn {
+        padding: 11px 17px; font-size: 0.88rem;
+        border-radius: 12px; min-width: 54px; min-height: 42px;
+      }
+      /* dot: area sentuh 32px, visual tetap kecil */
+      .dot { width: 8px; height: 8px; position: relative; }
+      .dot::after { content: ""; position: absolute; inset: -12px -6px; }
+      .dot.active { width: 24px; }
+
       .cover__inner { grid-template-columns: 1fr; gap: 26px; }
       .cover__right { order: -1; }
       .term { max-width: 100%; }
       .cover__stats { gap: 14px; }
       .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
       .step { grid-template-columns: 1fr; gap: 2px; }
-      .table-card { overflow-x: auto; }
-      table { min-width: 560px; }
       .split { grid-template-columns: 200px 1fr; gap: 18px; }
-      .arch-detail__grid { grid-template-columns: 1fr; }
       .arch-stage { justify-content: center; }
       .arch-pre { justify-content: center; }
     }
+    /* Ponsel sempit (<=560px) */
     @media (max-width: 560px) {
       .cover__stats { flex-wrap: wrap; gap: 12px; }
       .cover__stat-sep { height: 22px; }
@@ -752,24 +860,17 @@
       .grid-2, .grid-3, .grid-4, .vs-grid, .shot-grid { grid-template-columns: 1fr; }
       .split { grid-template-columns: 1fr; gap: 16px; }
       .split .shot { max-width: 220px; margin-inline: auto; }
-      .stage { padding: 14px 14px; bottom: 52px; }
       .nav-pill { display: none; }
-      .dock { padding: 0 10px; }
-      .counter { display: none; }
       .card { padding: 14px; gap: 6px; }
-      .card p, .card li { font-size: 0.82rem; }
-      .step { padding: 8px 0; }
-      .step__b span { font-size: 0.8rem; }
-      table { min-width: 480px; }
-      th, td { padding: 8px 10px; font-size: 0.78rem; }
-      .foot { margin-top: 14px; }
+      .card p, .card li { font-size: 0.84rem; }
+      .step__b span { font-size: 0.82rem; }
+      table { min-width: 460px; }
+      th, td { padding: 9px 11px; font-size: 0.78rem; }
       .bignum { font-size: clamp(3.2rem, 18vw, 5rem); }
-      .shot-grid .shot { height: 190px; }
-      .arch-card { padding: 12px; }
-      .arch-svg { max-height: 172px; }
-      .arch-chip { font-size: 0.66rem; padding: 5px 10px; }
-      .arch-btn { font-size: 0.7rem; padding: 7px 11px; }
-      .arch-detail__grid { grid-template-columns: 1fr; }
+      .shot-grid .shot { height: 172px; }
+      .arch-svg { max-height: 178px; }
+      .arch-detail__desc { font-size: 0.78rem; }
+      .kb-step { padding: 6px 9px; font-size: 0.68rem; }
     }
   </style>
 </head>
@@ -1578,15 +1679,22 @@ hermes gateway start</code>
     });
     const dots = Array.from(dotsWrap.children);
 
-    function render() {
-      slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    const mqMobile = window.matchMedia('(max-width: 860px)');
+    const isMobile = () => mqMobile.matches;
+
+    function paintUI() {
       dots.forEach((d, i) => d.classList.toggle('active', i === cur));
       document.getElementById('c-cur').textContent = cur + 1;
       const pct = Math.round(((cur + 1) / slides.length) * 100);
       document.getElementById('prog-fill').style.width = pct + '%';
       document.getElementById('btn-prev').disabled = cur === 0;
       document.getElementById('btn-next').disabled = cur === slides.length - 1;
-      document.getElementById('stage').scrollTop = 0;
+    }
+
+    function render() {
+      slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+      document.getElementById('stage').scrollTop = 0;   // mulai tiap slide dari atas
+      paintUI();
     }
 
     function goSlide(i) {
@@ -1595,25 +1703,41 @@ hermes gateway start</code>
     }
     function stepSlide(d) { goSlide(cur + d); }
 
+    // Tidak ada observer: satu slide aktif per layar, sama seperti desktop.
+    // Di mobile, kalau konten slide lebih tinggi dari layar, isinya yang discroll —
+    // pindah slide tetap lewat swipe / tombol / dot.
+
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') stepSlide(1);
-      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') stepSlide(-1);
+      // Di mobile, spasi & panah atas/bawah diserahkan ke scroll konten slide.
+      const contentScroll = isMobile() && e.key === ' ';
+      if (!contentScroll && (e.key === 'ArrowRight' || e.key === 'PageDown')) stepSlide(1);
+      else if (!contentScroll && (e.key === 'ArrowLeft' || e.key === 'PageUp')) stepSlide(-1);
       else if (e.key === 'Home') goSlide(0);
       else if (e.key === 'End') goSlide(slides.length - 1);
       else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
     });
 
-    let touchX = null;
-    document.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    /* ============================================================
+       NAVIGASI SENTUH
+       Horizontal (kiri/kanan)  -> pindah slide
+       Vertikal (atas/bawah)    -> digulirkan ke konten slide (native)
+       ============================================================ */
+    let touchX = null, touchY = null;
+    document.addEventListener('touchstart', (e) => {
+      touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+    }, { passive: true });
     document.addEventListener('touchend', (e) => {
       if (touchX === null) return;
       const dx = e.changedTouches[0].clientX - touchX;
-      if (Math.abs(dx) > 50) stepSlide(dx < 0 ? 1 : -1);
-      touchX = null;
+      const dy = e.changedTouches[0].clientY - touchY;
+      const horizontal = Math.abs(dx) > Math.abs(dy) * 1.2;
+      if (Math.abs(dx) > 55 && horizontal) stepSlide(dx < 0 ? 1 : -1);
+      touchX = null; touchY = null;
     }, { passive: true });
 
     let wheelLock = false;
     document.addEventListener('wheel', (e) => {
+      if (isMobile()) return;   // mobile: gulir konten slide secara native
       if (wheelLock) return;
       const stage = document.getElementById('stage');
       const canScroll = stage.scrollHeight > stage.clientHeight + 4;
@@ -1645,6 +1769,12 @@ hermes gateway start</code>
       if (!isNaN(h)) goSlide(h - 1);
     }
     window.addEventListener('hashchange', syncHash);
+
+    // Pindah mode (rotate HP / resize window): render ulang sesuai mode.
+    const onModeChange = () => render();
+    if (mqMobile.addEventListener) mqMobile.addEventListener('change', onModeChange);
+    else if (mqMobile.addListener) mqMobile.addListener(onModeChange);
+
     syncHash();
     document.getElementById('c-total').textContent = slides.length;
     render();
