@@ -199,8 +199,8 @@
 
     <div class="badge"><i></i> Akses Member</div>
 
-    <h1>Halaman ini cuma<br />buat yang udah <em>beli</em>.</h1>
-    <p class="sub">Masukin email yang kamu pakai pas checkout, plus kode akses yang dikirim ke email kamu.</p>
+    <h1>Masuk dulu ya<br />buat yang udah <em>beli</em>.</h1>
+    <p class="sub">Masukkan kode akses yang dikirim ke kamu lewat email/Discord setelah checkout.</p>
 
     <div class="err" id="err" hidden></div>
 
@@ -208,16 +208,10 @@
       <input type="hidden" name="next" id="next-field" value="" />
 
       <div class="field">
-        <label for="email">Email</label>
-        <input id="email" name="email" type="email" autocomplete="email"
-               placeholder="nama@email.com" required autofocus />
-      </div>
-
-      <div class="field">
         <label for="code">Kode Akses</label>
         <div class="wrap-code">
           <input id="code" name="code" type="password" autocomplete="current-password"
-                 placeholder="••••••••••" required />
+                 placeholder="XINDE-XXXX-XXXX" required autofocus />
           <button type="button" class="toggle-code" id="toggle">Lihat</button>
         </div>
       </div>
@@ -226,7 +220,7 @@
     </form>
 
     <p class="help">
-      Belum punya akses? <a href="https://xindelabs-workshop.vercel.app/preorder" target="_blank" rel="noopener">Ambil workshop-nya di sini ↗</a>
+      Belum punya kode akses? <a href="https://xindelabs-workshop.vercel.app/preorder" target="_blank" rel="noopener">Ambil workshop-nya di sini ↗</a>
     </p>
     <p class="foot">xindelabs. — belajar bikin AI agent sendiri</p>
   </main>
@@ -236,6 +230,8 @@
       var box = document.getElementById('err');
       var q = new URLSearchParams(location.search);
       var e = q.get('e') || '';
+      if (e === 'Email dan kode akses wajib diisi.') e = 'Kode akses wajib diisi.';
+      if (e === 'Email atau kode akses salah.') e = 'Kode akses salah.';
       if (e && e.trim()) { box.textContent = e; box.hidden = false; }
       var n = document.getElementById('next-field').value || q.get('next') || '';
       // Cuma izinkan path relatif — cegah open-redirect.
