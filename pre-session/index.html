@@ -847,7 +847,7 @@
       -webkit-backdrop-filter: blur(18px);
       border-top: 1px solid var(--line-strong);
       padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 4px;
     }
 
@@ -927,6 +927,7 @@
         <button class="nav__tab" data-target="tab-fokus1" onclick="activateTab('tab-fokus1')">1. Persiapan</button>
         <button class="nav__tab" data-target="tab-fokus2" onclick="activateTab('tab-fokus2')">2. Lokal vs VPS</button>
         <button class="nav__tab" data-target="tab-fokus3" onclick="activateTab('tab-fokus3')">3. Hermes Agent</button>
+        <button class="nav__tab" data-target="tab-fokus4" onclick="activateTab('tab-fokus4')">4. Prompt & Plan</button>
       </nav>
 
       <div class="nav__right">
@@ -1519,6 +1520,98 @@ hermes doctor</code>
       </div>
     </section>
 
+    <!-- TAB 4: PROMPT & ACTION PLAN -->
+    <section id="tab-fokus4" class="tab-panel">
+      <div class="section-head">
+        <h2>Fokus 4: Susun <em>Prompt & Action Plan</em></h2>
+        <p>
+          Kenali file Markdown Hermes. Lalu ubah pekerjaan berulang menjadi alur otomatisasi dan struktur tim AI yang jelas.
+        </p>
+      </div>
+
+      <div class="card card--highlight" style="margin-bottom:24px;">
+        <div>
+          <div class="card__top">
+            <span class="card__num">ARSITEKTUR KONTEKS</span>
+            <span class="pill">File Markdown Hermes</span>
+          </div>
+          <h3 class="card__title">Setiap File Punya Tugas Berbeda</h3>
+          <p>Bayangkan Hermes punya beberapa buku petunjuk. Pilih buku yang tepat agar instruksi tidak tercampur.</p>
+          <div class="table-card" style="margin-top:16px;">
+            <table>
+              <thead><tr><th>File</th><th>Isi</th><th>Dipakai untuk</th></tr></thead>
+              <tbody>
+                <tr><td><strong>SOUL.md</strong></td><td>Identitas, karakter, nada bicara</td><td>Aturan yang ikut agen ke semua proyek</td></tr>
+                <tr><td><strong>USER.md</strong></td><td>Profil, kebiasaan, preferensi kamu</td><td>Personalisasi jawaban</td></tr>
+                <tr><td><strong>MEMORY.md</strong></td><td>Fakta environment, proyek, pelajaran</td><td>Catatan teknis jangka panjang</td></tr>
+                <tr><td><strong>SKILL.md</strong></td><td>Prosedur langkah demi langkah</td><td>Pekerjaan berulang atau SOP</td></tr>
+                <tr><td><strong>AGENTS.md</strong></td><td>Arsitektur dan aturan repositori</td><td>Satu proyek tertentu</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top:14px;color:var(--green);font-weight:600;">Rule of thumb: lintas proyek → SOUL.md · fakta singkat → USER/MEMORY.md · SOP → SKILL.md · aturan repositori → AGENTS.md.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div>
+            <div class="card__top"><span class="card__num">ACTION 01</span><span class="pill">Petakan</span></div>
+            <h3 class="card__title">List Pekerjaan Berulang</h3>
+            <p>Tulis pekerjaan yang sering diulang dan paling menguras waktu. Contoh: riset konten, follow-up lead, laporan, atau balas komentar.</p>
+          </div>
+          <label class="check-card" id="row-chk-plan-workflows">
+            <input type="checkbox" id="chk-plan-workflows" onchange="toggleCheck('chk-plan-workflows')" />
+            <span>Saya sudah menulis pekerjaan berulang saya</span>
+          </label>
+        </div>
+
+        <div class="card">
+          <div>
+            <div class="card__top"><span class="card__num">ACTION 02</span><span class="pill cyan">Otomatiskan</span></div>
+            <h3 class="card__title">Petakan Alurnya</h3>
+            <p>Urutkan: input apa yang masuk, siapa yang mengerjakan, alat apa yang dipakai, dan output apa yang harus jadi.</p>
+          </div>
+          <label class="check-card" id="row-chk-plan-automation">
+            <input type="checkbox" id="chk-plan-automation" onchange="toggleCheck('chk-plan-automation')" />
+            <span>Saya sudah menggambar alur otomatisasi</span>
+          </label>
+        </div>
+
+        <div class="card">
+          <div>
+            <div class="card__top"><span class="card__num">ACTION 03</span><span class="pill gold">Bentuk Tim</span></div>
+            <h3 class="card__title">Tentukan Struktur Agent</h3>
+            <p>Pilih satu agent utama atau beberapa worker. Contoh: Researcher → Writer → Reviewer → Publisher.</p>
+          </div>
+          <label class="check-card" id="row-chk-plan-team">
+            <input type="checkbox" id="chk-plan-team" onchange="toggleCheck('chk-plan-team')" />
+            <span>Saya sudah menentukan struktur tim AI</span>
+          </label>
+        </div>
+
+        <div class="card card--highlight">
+          <div>
+            <div class="card__top"><span class="card__num">ACTION 04</span><span class="pill">Prompt Pertama</span></div>
+            <h3 class="card__title">Tulis Brief Agent</h3>
+            <p>Isi siapa agent ini, apa pekerjaannya, inputnya, outputnya, batasannya, dan kapan tugas dianggap selesai.</p>
+          </div>
+          <label class="check-card" id="row-chk-plan-prompt">
+            <input type="checkbox" id="chk-plan-prompt" onchange="toggleCheck('chk-plan-prompt')" />
+            <span>Saya sudah membuat brief prompt agent</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:24px;">
+        <div class="card__top"><span class="card__num">LATIHAN</span><span class="pill">Simpan di Browser</span></div>
+        <h3 class="card__title">Pekerjaan Apa yang Mau Kamu Delegasikan?</h3>
+        <p>Tulis satu pekerjaan dulu. Jangan mulai dari sistem besar. Mulai dari satu alur yang jelas.</p>
+        <textarea id="action-plan-note" class="input-cyber" rows="5" placeholder="Contoh: setiap pagi, riset 5 berita AI, ringkas, lalu kirim ke Telegram..." oninput="saveActionPlanNote()"></textarea>
+        <small id="action-plan-status" style="display:block;margin-top:8px;color:var(--green);min-height:1.2em;" aria-live="polite"></small>
+      </div>
+    </section>
+
   </main>
 
   <!-- ==================== FOOTER (EXACT XINDE LABS COPY) ==================== -->
@@ -1546,6 +1639,10 @@ hermes doctor</code>
       <span class="icon">3️⃣</span>
       <span>Hermes</span>
     </button>
+    <button class="dock-btn" data-target="tab-fokus4" onclick="activateTab('tab-fokus4')">
+      <span class="icon">4️⃣</span>
+      <span>Prompt/Plan</span>
+    </button>
   </nav>
 
   <script>
@@ -1558,7 +1655,11 @@ hermes doctor</code>
       'chk-vps',
       'chk-hermes-install',
       'chk-hermes-model',
-      'chk-hermes-gw'
+      'chk-hermes-gw',
+      'chk-plan-workflows',
+      'chk-plan-automation',
+      'chk-plan-team',
+      'chk-plan-prompt'
     ];
 
     function activateTab(tabId) {
@@ -1702,8 +1803,29 @@ curl -X POST https://api.atria-asi.ai/v1/chat/completions \
       }
     }
 
+    function saveActionPlanNote() {
+      const note = document.getElementById('action-plan-note');
+      const status = document.getElementById('action-plan-status');
+      try {
+        localStorage.setItem('xindelabs_v2_action_plan_note', note.value);
+        status.textContent = 'Tersimpan otomatis ✓';
+        clearTimeout(saveActionPlanNote.timer);
+        saveActionPlanNote.timer = setTimeout(() => { status.textContent = ''; }, 1500);
+      } catch (e) {
+        status.textContent = 'Penyimpanan browser tidak tersedia.';
+      }
+    }
+
+    function loadActionPlanNote() {
+      try {
+        const saved = localStorage.getItem('xindelabs_v2_action_plan_note');
+        if (saved !== null) document.getElementById('action-plan-note').value = saved;
+      } catch (e) {}
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       loadProgress();
+      loadActionPlanNote();
       recalcVps(false);
     });
   </script>
