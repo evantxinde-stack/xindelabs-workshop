@@ -9,3 +9,11 @@ graphify-out/
 presession/
 workshop.html
 backup-*.json
+
+.env*
+
+# apex (Next.js app)
+apex/.next/
+apex/node_modules/
+.next/
+*.tsbuildinfo

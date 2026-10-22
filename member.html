@@ -81,7 +81,12 @@
         ⚠️ Course sementara <b style="color:inherit">ditutup</b> oleh admin. Member aktif tetap bisa nonton modul yang sudah ada.
       </div>
 
-      <div class="lms">
+      <div class="mtabs" id="memTabs">
+        <button type="button" class="mtab is-active" data-view="learn">Materi Course</button>
+        <button type="button" class="mtab" data-view="affiliate">Program Affiliate</button>
+      </div>
+
+      <div class="lms" id="learnView">
         <!-- Sidebar: progress + daftar modul -->
         <aside class="lms-side">
           <div class="lms-progress">
@@ -117,6 +122,52 @@
             <button type="button" class="btn btn--ghost" id="prevBtn" disabled>← Sebelumnya</button>
             <button type="button" class="btn btn--primary" id="completeBtn">✓ Mark as Complete</button>
             <button type="button" class="btn btn--ghost" id="nextBtn" disabled>Selanjutnya →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AFFILIATE view ============ -->
+      <div id="affState" style="display:none">
+        <div class="aff-card">
+          <div class="aff-top">
+            <div>
+              <h2 class="aff-title">Program Affiliate</h2>
+              <p class="aff-sub">Ajak orang beli course ini pakai link referral lo. Tiap penjualan yang berhasil, lo dapat komisi.</p>
+            </div>
+            <span class="aff-badge" id="affStatusBadge">—</span>
+          </div>
+
+          <div class="aff-note" id="affLoading">Memuat data affiliate…</div>
+
+          <div id="affEmpty" style="display:none">
+            <p class="aff-note">Lo belum ikut program affiliate. Aktifin dulu (gratis, khusus member berbayar) buat dapet link referral &amp; pantau komisi masuk.</p>
+            <button type="button" class="btn btn--primary" id="affJoinBtn">Aktifkan Program Affiliate</button>
+            <div class="notice notice--warn form-error" id="affJoinErr"></div>
+          </div>
+
+          <div id="affBody" style="display:none">
+            <div class="field">
+              <label>Link referral lo</label>
+              <div class="aff-linkrow">
+                <input type="text" id="affLink" readonly />
+                <button type="button" class="pw-tool" id="affCopy">Salin</button>
+              </div>
+              <div class="hint" id="affCommissionHint">—</div>
+            </div>
+
+            <div class="aff-stats" id="affStats"></div>
+
+            <h3 class="aff-subhead">Riwayat Komisi</h3>
+            <div class="aff-table-wrap">
+              <table class="aff-table">
+                <thead>
+                  <tr><th>Tanggal</th><th>Pembeli</th><th>Paket</th><th>Nilai</th><th>Komisi</th><th>Status</th></tr>
+                </thead>
+                <tbody id="affCommBody"></tbody>
+              </table>
+            </div>
+            <p class="aff-note" id="affCommEmpty" style="display:none">Belum ada penjualan dari link lo.</p>
+            <p class="hint" style="margin-top:14px">Komisi dicairkan manual oleh admin. Status <b>belum dibayar</b> = belum ditransfer, <b>dibayar</b> = sudah ditransfer.</p>
           </div>
         </div>
       </div>
@@ -515,6 +566,10 @@
     }
     function showAcct() { document.getElementById('acct').style.display = 'flex'; }
     function showErr(box, msg) { box.textContent = '⚠️ ' + msg; box.classList.add('show'); }
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
 
     var acctMenu = document.getElementById('acctMenu');
     document.getElementById('acctBtn').addEventListener('click', function (e) {
@@ -620,6 +675,178 @@
         }
         apply();
       });
+    });
+
+    // ============ Affiliate ============
+    var affData = null;
+    var affComms = [];
+
+    function affMoney(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+    function maskEmail(e) {
+      e = String(e || '');
+      var at = e.indexOf('@');
+      if (at < 1) return e || '—';
+      var user = e.slice(0, at);
+      var domain = e.slice(at);
+      var keep = user.slice(0, Math.min(2, user.length));
+      return keep + '•••' + domain;
+    }
+    function tierLabel(t) { return t === 'lifetime' ? 'Lifetime' : (t === 'yearly' ? 'Tahunan' : (t || '—')); }
+    function commStatusLabel(s) {
+      if (s === 'paid') return { text: 'Dibayar', cls: 'is-paid' };
+      if (s === 'void') return { text: 'Batal', cls: 'is-void' };
+      return { text: 'Belum dibayar', cls: 'is-pending' };
+    }
+
+    function switchView(view) {
+      document.getElementById('learnView').style.display = view === 'learn' ? '' : 'none';
+      document.getElementById('affState').style.display = view === 'affiliate' ? 'block' : 'none';
+      if (view === 'affiliate') loadAffiliate();
+    }
+
+    document.querySelectorAll('#memTabs .mtab').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('#memTabs .mtab').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        switchView(b.dataset.view);
+      });
+    });
+
+    function loadAffiliate() {
+      var loading = document.getElementById('affLoading');
+      var empty = document.getElementById('affEmpty');
+      var body = document.getElementById('affBody');
+      var errBox = document.getElementById('affJoinErr');
+
+      if (!cfg.supabaseConfigured() || typeof supabaseClient === 'undefined' || !memberEmail || memberEmail.indexOf('@') < 0) {
+        loading.style.display = 'none';
+        empty.style.display = 'block';
+        body.style.display = 'none';
+        showErr(errBox, 'Program affiliate butuh koneksi Supabase & login member.');
+        return;
+      }
+
+      loading.style.display = 'block';
+      empty.style.display = 'none';
+      body.style.display = 'none';
+
+      supabaseClient.from('affiliates').select('*').eq('email', memberEmail).maybeSingle().then(function (r) {
+        loading.style.display = 'none';
+        if (r.error) {
+          empty.style.display = 'block';
+          showErr(errBox, r.error.message || 'Gagal memuat data affiliate.');
+          return;
+        }
+        if (!r.data) { empty.style.display = 'block'; return; }
+        affData = r.data;
+        renderAffiliate();
+        loadAffComms();
+      });
+    }
+
+    function loadAffComms() {
+      supabaseClient.from('affiliate_commissions')
+        .select('*').eq('affiliate_email', memberEmail)
+        .order('created_at', { ascending: false }).limit(200)
+        .then(function (r) {
+          affComms = (!r.error && r.data) ? r.data : [];
+          renderAffStats();
+          renderAffComm();
+        });
+    }
+
+    function renderAffiliate() {
+      document.getElementById('affBody').style.display = 'block';
+      document.getElementById('affEmpty').style.display = 'none';
+      document.getElementById('affLink').value = siteOrigin() + '/?ref=' + affData.code;
+
+      var badge = document.getElementById('affStatusBadge');
+      var on = affData.status === 'active';
+      badge.textContent = on ? 'Aktif' : 'Nonaktif';
+      badge.className = 'aff-badge ' + (on ? 'is-on' : 'is-off');
+
+      var cv = affData.commission_type === 'amount'
+        ? affMoney(affData.commission_value) + ' per penjualan'
+        : affData.commission_value + '% per penjualan';
+      document.getElementById('affCommissionHint').textContent =
+        'Kode lo: ' + affData.code + ' · Komisi: ' + cv + '.';
+    }
+
+    function renderAffStats() {
+      var valid = affComms.filter(function (c) { return c.status !== 'void'; });
+      var sum = function (arr) {
+        return arr.reduce(function (s, c) { return s + Number(c.commission_amount || 0); }, 0);
+      };
+      var paid = valid.filter(function (c) { return c.status === 'paid'; });
+      var pending = valid.filter(function (c) { return c.status === 'pending'; });
+      function stat(label, value, big) {
+        return '<div class="aff-stat' + (big ? ' is-big' : '') + '"><span>' + label + '</span><b>' + value + '</b></div>';
+      }
+      document.getElementById('affStats').innerHTML = [
+        stat('Klik link', affData ? affData.clicks : 0),
+        stat('Penjualan', valid.length),
+        stat('Komisi total', affMoney(sum(valid)), true),
+        stat('Belum dibayar', affMoney(sum(pending))),
+        stat('Sudah dibayar', affMoney(sum(paid)))
+      ].join('');
+    }
+
+    function renderAffComm() {
+      var body = document.getElementById('affCommBody');
+      var empty = document.getElementById('affCommEmpty');
+      if (!affComms.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = affComms.map(function (c) {
+        var st = commStatusLabel(c.status);
+        var date = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        return '<tr>' +
+          '<td data-label="Tanggal">' + date + '</td>' +
+          '<td data-label="Pembeli">' + esc(maskEmail(c.customer_email)) + '</td>' +
+          '<td data-label="Paket">' + esc(tierLabel(c.tier)) + '</td>' +
+          '<td data-label="Nilai">' + affMoney(c.sale_amount) + '</td>' +
+          '<td data-label="Komisi"><b>' + affMoney(c.commission_amount) + '</b></td>' +
+          '<td data-label="Status"><span class="aff-comm-st ' + st.cls + '">' + st.text + '</span></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    document.getElementById('affJoinBtn').addEventListener('click', function () {
+      var btn = this;
+      var errBox = document.getElementById('affJoinErr');
+      errBox.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Mengaktifkan…';
+      supabaseClient.rpc('affiliate_self_enroll').then(function (r) {
+        btn.disabled = false;
+        btn.textContent = 'Aktifkan Program Affiliate';
+        if (r.error) { showErr(errBox, r.error.message || 'Gagal mengaktifkan affiliate.'); return; }
+        loadAffiliate();
+      });
+    });
+
+    document.getElementById('affCopy').addEventListener('click', function () {
+      var btn = this;
+      var inp = document.getElementById('affLink');
+      var done = function () {
+        var t = btn.textContent;
+        btn.textContent = 'Tersalin ✓';
+        setTimeout(function () { btn.textContent = t; }, 1400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(inp.value).then(done).catch(function () {
+          inp.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          done();
+        });
+      } else {
+        inp.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        done();
+      }
     });
 
     // ============ Load modul + progress ============

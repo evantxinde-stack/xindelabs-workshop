@@ -12,7 +12,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/theme.css" />
   <script src="js/config.js"></script>
+  <script src="js/affiliate.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/pixel.js"></script>
 </head>
@@ -40,6 +42,12 @@
 
   <main id="lpRoot"></main>
 
+  <!-- ============ HUB: Hero Branding + Katalog + Portofolio + Blog + Kerjasama ============ -->
+  <div id="hubRoot"></div>
+
+  <!-- ============ FUNNEL: [subdomain].xindelabs.web.id ============ -->
+  <div id="funnelRoot"></div>
+
   <div id="lpFooter"></div>
 
   <script src="js/lp-render.js"></script>
@@ -49,5 +57,30 @@
   </script>
   <script src="js/countdown.js"></script>
   <script src="js/notif.js"></script>
+
+  <!-- ============ ROUTER + MODUL HUB ============ -->
+  <script type="module">
+    import { initRouter } from './js/router/subdomain-router.js';
+
+    // Deteksi route dari hostname / ?subdomain= (localhost)
+    const route = initRouter();
+    window.__XINDE_ROUTE__ = route;
+
+    if (route.type === 'root') {
+      // Root domain (xindelabs.web.id) → render Main Hub
+      const { render } = await import('./js/modules/main-hub.js');
+      await render('hubRoot');
+    } else if (route.type === 'member') {
+      // Member subdomain → halaman member app
+      window.location.replace('/member-app.html');
+    } else if (route.type === 'admin') {
+      // Admin subdomain → dashboard
+      window.location.replace('/admin.html');
+    } else if (route.type === 'funnel') {
+      // Wildcard subdomain → Multi-Step Funnel
+      const { initFunnel } = await import('./js/modules/funnel-engine.js');
+      await initFunnel(route);
+    }
+  </script>
 </body>
 </html>

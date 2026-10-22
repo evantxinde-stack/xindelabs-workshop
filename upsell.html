@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upsell - Xindelabs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./css/theme.css">
+</head>
+<body class="bg-[#050b07] text-white min-h-screen">
+  <main class="max-w-4xl mx-auto px-4 py-12 text-center">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-400/40 text-emerald-300 text-sm mb-6" id="up-eyebrow">ONE-TIME OFFER</div>
+    <h1 class="text-4xl md:text-5xl font-bold mb-6" id="up-headline">Tunggu Dulu, Ada Penawaran Khusus Untuk Kamu</h1>
+    <p class="text-lg text-white/70 mb-10" id="up-sub">Tambahkan ini ke pesanan kamu dengan harga spesial sebelum melanjutkan</p>
+
+    <div class="max-w-xl mx-auto rounded-2xl border border-emerald-400/40 bg-gradient-to-b from-emerald-400/10 to-transparent p-8 text-left">
+      <h2 class="text-2xl font-bold mb-4" id="up-title">VIP Upgrade Bundle</h2>
+      <ul class="space-y-2 text-white/80 mb-6" id="up-items">
+        <li>✓ Akses Template Eksklusif</li>
+        <li>✓ Swipe File Siap Pakai</li>
+        <li>✓ Prioritas Support 30 Hari</li>
+        <li>✓ Bonus Group Private</li>
+      </ul>
+      <div class="flex items-center gap-4 mb-6">
+        <div class="text-3xl font-bold" id="up-price">Rp 497.000</div>
+        <div class="text-white/40 line-through" id="up-compare">Rp 997.000</div>
+      </div>
+      <div class="flex flex-col gap-3">
+        <button id="accept-upsell" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 text-black font-semibold">Ya, Tambahkan ke Pesanan</button>
+        <a href="./thankyou.html" id="skip-upsell" class="w-full py-4 rounded-xl border border-white/20 block">Tidak, Terima Kasih</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { supabase } from './js/config/supabase-client.js';
+
+    const params = new URLSearchParams(location.search);
+    const funnelSlug =
+      params.get('funnel') ||
+      params.get('subdomain') ||
+      (localStorage.getItem('xinde_funnel_slug') || '');
+    const leadId = localStorage.getItem('xinde_lead_id');
+
+    const $ = (id) => document.getElementById(id);
+    const esc = (s = '') =>
+      String(s == null ? '' : s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+    const rp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+
+    let offer = {
+      title: 'VIP Upgrade Bundle',
+      price: 497000,
+      compare_price: 997000,
+      items: ['Akses Template Eksklusif', 'Swipe File Siap Pakai', 'Prioritas Support 30 Hari', 'Bonus Group Private']
+    };
+
+    function applyOffer(cfg) {
+      if (!cfg || typeof cfg !== 'object') return;
+      offer = {
+        ...offer,
+        ...cfg,
+        items: Array.isArray(cfg.items) && cfg.items.length ? cfg.items : offer.items
+      };
+      if (offer.headline) $('up-headline').textContent = offer.headline;
+      if (offer.description) $('up-sub').textContent = offer.description;
+      if (offer.eyebrow) $('up-eyebrow').textContent = offer.eyebrow;
+      if (offer.title) $('up-title').textContent = offer.title;
+      if (offer.cta) $('accept-upsell').textContent = offer.cta;
+      $('up-items').innerHTML = offer.items.map((it) => `<li>✓ ${esc(it)}</li>`).join('');
+      $('up-price').textContent = rp(offer.price);
+      if (offer.compare_price) $('up-compare').textContent = rp(offer.compare_price);
+      else $('up-compare').style.display = 'none';
+      if (funnelSlug) {
+        $('skip-upsell').href = `/thankyou?funnel=${encodeURIComponent(funnelSlug)}`;
+      }
+    }
+
+    async function loadOffer() {
+      if (!supabase || !funnelSlug) return;
+      try {
+        const { data } = await supabase
+          .from('funnels')
+          .select('slug,subdomain,settings,upsell_url')
+          .or(`slug.eq.${funnelSlug},subdomain.eq.${funnelSlug}`)
+          .maybeSingle();
+        if (!data) return;
+        localStorage.setItem('xinde_funnel_slug', data.slug || funnelSlug);
+        const settings = data.settings || {};
+        applyOffer(settings.upsell);
+        if (settings.skip_upsell || settings.upsell?.enabled === false) {
+          $('accept-upsell').style.display = 'none';
+        }
+      } catch (e) {
+        console.warn('[upsell] gagal load funnel:', e);
+      }
+    }
+
+    $('accept-upsell').onclick = async () => {
+      try {
+        if (leadId) {
+          await supabase.from('pipeline_events').insert({
+            lead_id: leadId,
+            event_type: 'upsell_accepted',
+            meta: { product: offer.title, amount: offer.price, funnel: funnelSlug }
+          });
+        }
+        alert('Upsell berhasil ditambahkan!');
+      } catch (e) {}
+      const next = funnelSlug ? `/thankyou?funnel=${encodeURIComponent(funnelSlug)}` : './thankyou.html';
+      window.location.href = next;
+    };
+
+    loadOffer();
+  </script>
+</body>
+</html>

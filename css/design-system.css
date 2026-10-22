@@ -1,0 +1,346 @@
+/* ============================================================
+   XINDELABS UNIFIED DESIGN SYSTEM
+   Source: xindelabs-workshop (lms-xinde) aesthetic
+   Dark Green / Neon Green / Cyan / Gold
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  /* Core palette - unified */
+  --bg: #040b08;
+  --bg-2: #081410;
+  --bg-3: #0b1a14;
+  --bg-4: #0e221b;
+  
+  --color-bg: #040b08;
+  --color-bg-2: #081410;
+  --color-bg-3: #0b1a14;
+  
+  /* Lines */
+  --line: rgba(234, 255, 245, 0.08);
+  --line-strong: rgba(0, 255, 136, 0.35);
+  --color-line: rgba(234, 255, 245, 0.08);
+  --color-line-strong: rgba(0, 255, 136, 0.35);
+  
+  /* Accent colors */
+  --green: #00ff88;
+  --green-dim: #00cc6e;
+  --cyan: #00e5ff;
+  --gold: #ffd60a;
+  --danger: #ff5c7a;
+  
+  --color-green: #00ff88;
+  --color-green-dim: #00cc6e;
+  --color-cyan: #00e5ff;
+  --color-gold: #ffd60a;
+  --color-danger: #ff5c7a;
+  --color-fg: #eafff5;
+  --color-text: #eafff5;
+  --text: #eafff5;
+  
+  /* Muted */
+  --muted: #8fb8a3;
+  --muted-dim: #5f8070;
+  --color-muted: #8fb8a3;
+  --color-muted-dim: #5f8070;
+  
+  /* Typography */
+  --font-display: "Space Grotesk", "SF Pro Display", system-ui, -apple-system, sans-serif;
+  --font-body: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  --font-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  
+  /* Sizing */
+  --radius: 14px;
+  --radius-sm: 9px;
+  --radius-lg: 18px;
+  --max: 1140px;
+  --max-wide: 1280px;
+}
+
+/* Reset & base */
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html { 
+  scroll-behavior: smooth; 
+}
+
+html, body { 
+  overflow-x: clip; 
+}
+
+body {
+  background:
+    radial-gradient(1100px 560px at 82% -12%, rgba(0, 255, 136, 0.055), transparent 62%),
+    radial-gradient(800px 400px at 18% 10%, rgba(0, 229, 255, 0.03), transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.7;
+  text-rendering: optimizeLegibility;
+  padding-bottom: 40px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection { 
+  background: rgba(0, 255, 136, 0.25); 
+  color: #fff; 
+}
+
+::-webkit-scrollbar { 
+  width: 10px; 
+  height: 10px;
+}
+
+::-webkit-scrollbar-track { 
+  background: var(--bg); 
+}
+
+::-webkit-scrollbar-thumb { 
+  background: #123026; 
+  border-radius: 5px; 
+  border: 2px solid var(--bg); 
+}
+
+::-webkit-scrollbar-thumb:hover { 
+  background: var(--green-dim); 
+}
+
+a { 
+  color: var(--green); 
+  text-decoration: none; 
+  transition: color .18s ease; 
+}
+
+a:hover { 
+  color: var(--text); 
+}
+
+img { 
+  max-width: 100%; 
+  display: block; 
+}
+
+button { 
+  font-family: inherit; 
+  cursor: pointer;
+}
+
+a, button, label, .faq__q, .tier-opt label, .tutorial-toggle, .tut-tab { 
+  touch-action: manipulation; 
+}
+
+/* Utilities */
+.wrap { 
+  max-width: var(--max); 
+  margin: 0 auto; 
+  padding: 0 24px; 
+}
+
+.wrap-wide {
+  max-width: var(--max-wide);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.mono { 
+  font-family: var(--font-mono); 
+}
+
+.serif { 
+  font-family: var(--font-serif); 
+  font-style: italic; 
+  font-weight: 400; 
+}
+
+/* Serif italic accent highlight */
+.hl {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--green);
+  text-shadow: 0 0 30px rgba(0, 255, 136, 0.35);
+}
+
+/* Gradient text */
+.grad {
+  background: linear-gradient(90deg, #00ff88, #00e5ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Eyebrow */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+.eyebrow--center { justify-content: center; width: 100%; }
+
+.dot { 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  background: var(--green); 
+  flex-shrink: 0; 
+}
+
+.dot--pulse { 
+  animation: pulse 2.2s ease-in-out infinite; 
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.7); 
+}
+
+@keyframes pulse { 
+  0%,100% { opacity: 1; transform: scale(1); } 
+  50% { opacity: .4; transform: scale(.78); } 
+}
+
+/* Headings */
+h1, h2, h3, h4, .display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.12;
+}
+
+.h1 { font-size: clamp(40px, 6.2vw, 68px); }
+.h2 { font-size: clamp(28px, 4vw, 42px); margin-bottom: 18px; }
+.h3 { font-size: clamp(22px, 3vw, 32px); }
+.h4 { font-size: clamp(18px, 2.2vw, 24px); }
+
+.lead { color: var(--muted); font-size: 17px; max-width: 620px; line-height: 1.7; }
+.lead--center { margin-left: auto; margin-right: auto; text-align: center; }
+
+/* Section */
+.section { padding: 116px 0; position: relative; }
+.section-head { text-align: center; margin-bottom: 56px; }
+.section-head .eyebrow { justify-content: center; width: 100%; }
+.mb-head { margin-bottom: 48px; }
+
+/* Buttons - unified */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: 0.1px;
+  padding: 15px 28px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+  position: relative;
+  -webkit-tap-highlight-color: rgba(0,255,136,0.15);
+  text-decoration: none;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: var(--green);
+  color: #02150b;
+  box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.35), 0 8px 28px rgba(0, 255, 136, 0.22);
+}
+
+.btn--primary:hover {
+  background: #14ff92;
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(0, 255, 136, 0.5), 0 12px 34px rgba(0, 255, 136, 0.3);
+  color: #02150b;
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.btn--ghost:hover { 
+  border-color: var(--green); 
+  color: var(--green); 
+  transform: translateY(-1px); 
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line);
+}
+
+.btn--outline:hover {
+  border-color: var(--line-strong);
+  color: var(--green);
+  transform: translateY(-1px);
+}
+
+.btn--block { width: 100%; }
+.btn--sm { padding: 10px 18px; font-size: 13.5px; border-radius: 9px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+
+/* Arrow hint */
+.arw { display: inline-flex; align-items: center; gap: 6px; }
+.arw__glyph { transition: transform .2s ease; }
+.btn:hover .arw__glyph { transform: translateX(4px); }
+
+/* Cards */
+.card {
+  background: linear-gradient(180deg, rgba(0, 255, 136, 0.02) 0%, transparent 100%), var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.card:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 255, 136, 0.08);
+}
+
+/* Reveal animations */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+html.js .reveal.in {
+  opacity: 1;
+  transform: none;
+}
+.reveal.d1 { transition-delay: 0.08s; }
+.reveal.d2 { transition-delay: 0.16s; }
+.reveal.d3 { transition-delay: 0.24s; }
+
+/* Scrollbar for horizontal */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Grid pattern background */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(0, 255, 136, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 136, 0.04) 1px, transparent 1px);
+  background-size: 64px 64px;
+}

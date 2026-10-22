@@ -20,6 +20,23 @@ window.LandingBoot = (function () {
   var IS_PREVIEW = new URLSearchParams(window.location.search).get('preview') === '1';
   var CURRENT = { main: false, slug: 'utama' };
 
+  // ---------------- route guard ----------------
+  // Landing CMS "utama" hanya untuk root domain (dan preview di admin).
+  // Subdomain funnel (workshop./kelas./hermes./promo.) handled oleh funnel-engine,
+  // jadi jangan render landing utama di sana (menghindari flash + duplikasi).
+  var RESERVED_SUBDOMAINS = ['www', 'admin', 'member'];
+  function isFunnelHost() {
+    var host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      var q = new URLSearchParams(window.location.search).get('subdomain');
+      return !!(q && q.trim());
+    }
+    var parts = host.split('.');
+    if (parts.length < 3) return false;
+    var sub = parts[0].toLowerCase();
+    return RESERVED_SUBDOMAINS.indexOf(sub) === -1;
+  }
+
   // ---------------- helpers form leads ----------------
   function normPhone(p) {
     var d = String(p).replace(/[^\d]/g, '');
@@ -237,6 +254,13 @@ window.LandingBoot = (function () {
   function init(opts) {
     opts = opts || {};
     document.documentElement.classList.add('js');
+
+    // Subdomain funnel → biarkan funnel-engine yang Handles render.
+    if (!IS_PREVIEW && isFunnelHost()) {
+      document.body.classList.add('funnel-mode');
+      return;
+    }
+
     loadLanding(opts.slug || 'utama', !!opts.main);
   }
 

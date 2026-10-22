@@ -1821,3 +1821,87 @@ html.js .reveal.d3 { transition-delay: .24s; }
   .pc-cell { min-width: 54px; padding: 8px 4px; }
   .pc-num { font-size: 20px; }
 }
+
+   AFFILIATE (member area)
+   ============================================================ */
+.mtabs { display: flex; gap: 8px; margin-bottom: 22px; }
+.mtab {
+  font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .02em;
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--muted);
+  border: 1px solid var(--line);
+}
+.mtab:hover { color: var(--text); border-color: var(--line-strong); }
+.mtab.is-active { color: var(--green); border-color: var(--green); background: rgba(0,255,136,.07); font-weight: 600; }
+
+.aff-card {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--bg); padding: 28px; max-width: 900px;
+}
+.aff-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.aff-title { font-family: var(--font-display); font-size: 22px; margin: 0 0 6px; color: var(--text); }
+.aff-sub { color: var(--muted); margin: 0; font-size: 14.5px; max-width: 560px; }
+.aff-badge {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .04em;
+  padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line);
+  color: var(--muted); white-space: nowrap;
+}
+.aff-badge.is-on { color: var(--green); border-color: rgba(0,255,136,.45); background: rgba(0,255,136,.06); }
+.aff-badge.is-off { color: var(--danger); border-color: rgba(255,90,90,.45); background: rgba(255,90,90,.06); }
+
+.aff-note { color: var(--muted); font-size: 14px; margin: 18px 0; }
+.aff-subhead { font-family: var(--font-display); font-size: 16px; margin: 30px 0 14px; color: var(--text); }
+
+.aff-linkrow { display: flex; gap: 8px; align-items: stretch; }
+.aff-linkrow input {
+  flex: 1; min-width: 0; font-family: var(--font-mono); font-size: 13px;
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+.aff-stats {
+  display: grid; gap: 12px; margin-top: 22px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.aff-stat {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px;
+  background: rgba(255,255,255,.02);
+}
+.aff-stat span { display: block; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); letter-spacing: .03em; }
+.aff-stat b { display: block; margin-top: 6px; font-family: var(--font-display); font-size: 20px; color: var(--text); }
+.aff-stat.is-big b { color: var(--green); }
+
+.aff-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.aff-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 620px; }
+.aff-table th {
+  text-align: left; font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: .05em; text-transform: uppercase; color: var(--muted-dim);
+  padding: 0 12px 10px; border-bottom: 1px solid var(--line);
+}
+.aff-table td { padding: 12px; border-bottom: 1px solid var(--line); color: var(--text); }
+.aff-table tr:last-child td { border-bottom: 0; }
+
+.aff-comm-st { font-family: var(--font-mono); font-size: 11.5px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); }
+.aff-comm-st.is-pending { color: var(--gold); border-color: rgba(255,200,87,.45); background: rgba(255,200,87,.06); }
+.aff-comm-st.is-paid { color: var(--green); border-color: rgba(0,255,136,.45); background: rgba(0,255,136,.06); }
+.aff-comm-st.is-void { color: var(--muted-dim); }
+
+@media (max-width: 720px) {
+  .aff-card { padding: 20px; }
+  .aff-linkrow { flex-direction: column; }
+}
+
+/* ============================================================
+   MEMBER APP STYLES
+   ============================================================ */
+.lrow {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:10px;
+  border:1px solid var(--line); background:transparent;
+  color:var(--text); text-align:left; font-family:var(--font-body);
+  cursor:pointer; transition: all .18s ease;
+}
+.lrow:hover:not(.locked) { border-color:var(--line-strong); color:var(--green); }
+.lrow.active { border-color:var(--line-strong); background:rgba(0,255,136,0.06); color:var(--green); }
+.lrow.locked { opacity:.4; cursor:not-allowed; }
+.mnav.active { border-color:var(--line-strong); color:var(--green); }
+.player-frame iframe { width:100%; height:100%; }

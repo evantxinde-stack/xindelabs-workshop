@@ -1,368 +1,98 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Checkout — Build Your Own Personalized Agent</title>
-  <meta name="robots" content="noindex" />
-  <link rel="icon" type="image/png" href="favicon.png" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Xindelabs</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <script src="js/config.js"></script>
-  <script src="js/pixel.js"></script>
+  <script src="js/affiliate.js"></script>
+  <link rel="stylesheet" href="./css/theme.css">
 </head>
-<body>
-
-  <!-- ============ COUNTDOWN TIMER (sticky) ============ -->
-  <div class="timer-sticky" id="timerSticky" style="display:none">
-    <span class="timer-sticky__dot"></span>
-    <span class="timer-sticky__label">Promo berakhir dalam</span>
-    <span class="timer__countdown">--:--:--</span>
-  </div>
-
-  <!-- ============ SALES NOTIFICATION ============ -->
-  <div class="sales-notif" id="salesNotif">
-    <div class="notif__icon">🛒</div>
-    <div class="notif__body">
-      <span class="notif__name">—</span>
-      <span class="notif__city">—</span>
-      <span class="notif__time">—</span>
-    </div>
-  </div>
-
-  <header class="nav">
-    <div class="nav__in">
-      <a href="index.html" class="wordmark">xindelabs<span>.</span></a>
-      <div class="nav__right">
-        <a href="index.html" class="btn btn--ghost btn--sm">← Kembali</a>
-      </div>
+<body class="bg-[#050b07] text-white min-h-screen">
+  <header class="border-b border-white/10">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <a href="/" class="text-lg font-semibold tracking-tight">XINDELABS</a>
+      <div class="text-sm text-white/60 font-mono">Secure Checkout</div>
     </div>
   </header>
 
-  <div class="page">
-    <div class="auth-wrap">
-      <div class="promo-banner" id="promoBannerCheckout" style="display:none">
-        <img id="promoBannerCheckoutImg" src="" alt="Banner promo" />
-      </div>
-      <div class="voucher-tiers voucher-tiers--sm">
-        <h3 class="voucher-tiers__title">Voucher Diskon</h3>
-        <div class="voucher-tiers__table">
-          <div class="vtier vtier--head">
-            <span class="vtier__code">Kode</span>
-            <span class="vtier__slots">Kuota</span>
-            <span class="vtier__orig">Harga</span>
-            <span class="vtier__disc">Harga Diskon</span>
-          </div>
-          <div class="vtier vtier--hot">
-            <span class="vtier__code">EARLYBIRD</span>
-            <span class="vtier__slots">5 orang</span>
-            <span class="vtier__orig"><s>Rp 599.000</s></span>
-            <span class="vtier__disc">Rp 199.000</span>
-          </div>
-          <div class="vtier">
-            <span class="vtier__code">FASE01</span>
-            <span class="vtier__slots">10 orang</span>
-            <span class="vtier__orig"><s>Rp 599.000</s></span>
-            <span class="vtier__disc">Rp 299.000</span>
-          </div>
-          <div class="vtier">
-            <span class="vtier__code">FASE02</span>
-            <span class="vtier__slots">20 orang</span>
-            <span class="vtier__orig"><s>Rp 599.000</s></span>
-            <span class="vtier__disc">Rp 399.000</span>
-          </div>
-          <div class="vtier">
-            <span class="vtier__code">FASE03</span>
-            <span class="vtier__slots">30 orang</span>
-            <span class="vtier__orig"><s>Rp 599.000</s></span>
-            <span class="vtier__disc">Rp 499.000</span>
-          </div>
-          <div class="vtier vtier--full">
-            <span class="vtier__code">FULL PRICE</span>
-            <span class="vtier__slots">—</span>
-            <span class="vtier__orig"></span>
-            <span class="vtier__disc">Rp 599.000</span>
-          </div>
-          <div class="vtier vtier--life">
-            <span class="vtier__code">LIFETIME50</span>
-            <span class="vtier__slots">2 orang</span>
-            <span class="vtier__orig"><s>Rp 999.000</s></span>
-            <span class="vtier__disc">Rp 599.000</span>
-          </div>
-        </div>
-      </div>
-      <!-- Inline countdown timer -->
-      <div class="timer-inline" id="timerInlineCheckout" style="display:none">
-        <span class="timer-inline__icon">⏰</span>
-        <span class="timer-inline__label">Promo berakhir dalam</span>
-        <span class="timer__countdown">--:--:--</span>
-      </div>
-      <div class="form-card form-card--wide">
-        <h1 class="form-title">Daftar Course</h1>
-        <p class="form-sub">Isi data lo — link pembayaran langsung dikirim otomatis.</p>
-
-        <div class="trust-grid">
-          <div class="trust-item"><span class="trust-icon">🔒</span><span>Data lo aman</span></div>
-          <div class="trust-item"><span class="trust-icon">💳</span><span>Diproses Mayar</span></div>
-          <div class="trust-item"><span class="trust-icon">🚫</span><span>Ga simpan data kartu</span></div>
-        </div>
-
-        <form id="checkoutForm" novalidate>
-          <!-- ============ Tier selector ============ -->
-          <div class="field">
-            <label>Pilih Paket</label>
-            <div class="tier-options" id="tierOptions">
-              <div class="tier-opt">
-                <input type="radio" name="tier" id="tierYearly" value="yearly" checked />
-                <label for="tierYearly">
-                  <div class="tier-price">Rp 599.000</div>
-                  <div class="tier-period">1 tahun · ≈Rp 1.600/hari</div>
-                </label>
-              </div>
-              <div class="tier-opt">
-                <input type="radio" name="tier" id="tierLifetime" value="lifetime" />
-                <label for="tierLifetime">
-                  <div class="tier-price">Rp 999.000</div>
-                  <div class="tier-period">Lifetime · sekali bayar</div>
-                  <span class="tier-badge">TERBAIK</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- ============ Voucher ============ -->
-          <div class="field" data-field="voucher">
-            <label for="voucher">Kode Voucher</label>
-            <div class="voucher-row">
-              <input type="text" id="voucher" placeholder="cth: DISKON50" autocomplete="off" maxlength="30" style="text-transform:uppercase" />
-              <button type="button" class="btn btn--ghost btn--sm" id="applyVoucher">Gunakan</button>
-            </div>
-            <div class="hint" id="voucherHint">Punya kode voucher? Masukkan di atas untuk dapat diskon.</div>
-            <div class="voucher-result" id="voucherResult" style="display:none"></div>
-          </div>
-
-          <!-- ============ Lead form ============ -->
-          <div class="field" data-field="nama">
-            <label for="nama">Nama Lengkap *</label>
-            <input type="text" id="nama" name="nama" placeholder="cth: Budi Santoso" autocomplete="name" required />
-            <div class="err-msg">Nama lengkap wajib diisi.</div>
-          </div>
-
-          <div class="field" data-field="email">
-            <label for="email">Email Aktif *</label>
-            <input type="email" id="email" name="email" placeholder="cth: budi@gmail.com" autocomplete="email" required />
-            <div class="hint">Link course + invite Discord dikirim ke email ini.</div>
-            <div class="err-msg">Email wajib diisi dan harus valid.</div>
-          </div>
-
-          <div class="field" data-field="wa">
-            <label for="wa">No. WhatsApp *</label>
-            <input type="tel" id="wa" name="wa" placeholder="cth: 08123456789" autocomplete="tel" inputmode="numeric" required />
-            <div class="hint">Format 08xx, minimal 9 digit.</div>
-            <div class="err-msg">No. WhatsApp harus diawali 08 dan minimal 9 digit.</div>
-          </div>
-
-          <!-- ============ Discord ID + tutorial ============ -->
-          <div class="field" data-field="discord">
-            <label for="discord">Discord User ID *</label>
-            <input type="text" id="discord" name="discord" placeholder="cth: 1234567890123456789" inputmode="numeric" maxlength="20" autocomplete="off" spellcheck="false" required />
-            <div class="hint">Angka 17–20 digit. Butuh bantuan? Buka tutorial di bawah.</div>
-            <div class="err-msg">Discord User ID harus berupa angka 17–20 digit.</div>
-          </div>
-
-          <div class="tutorial" id="discordTutorial">
-            <button type="button" class="tutorial-toggle">Cara cari Discord User ID lo 📱/💻</button>
-            <div class="tutorial-body">
-              <div class="tutorial-inner">
-                <div class="tut-tabs">
-                  <button type="button" class="tut-tab active" data-tab="mobile">📱 Mobile</button>
-                  <button type="button" class="tut-tab" data-tab="desktop">💻 Desktop</button>
-                </div>
-                <div class="tut-pane active" data-pane="mobile">
-                  <ol>
-                    <li>Buka Discord, ketuk avatar lo (kanan bawah).</li>
-                    <li>Ketuk <b>User Profile</b> → ikon <b>⋯</b> (titik tiga).</li>
-                    <li>Ketuk <b>Developer Mode</b> → nyalakan toggle-nya.</li>
-                    <li>Tutup menu, ketuk lagi avatar lo → <b>Copy User ID</b>.</li>
-                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
-                  </ol>
-                </div>
-                <div class="tut-pane" data-pane="desktop">
-                  <ol>
-                    <li>Buka Discord (app/desktop), buka <b>User Settings</b> (ikon ⚙️).</li>
-                    <li>Sidebar kiri → <b>Advanced</b>.</li>
-                    <li>Nyalakan toggle <b>Developer Mode</b>.</li>
-                    <li>Klik kanan nama lo → <b>Copy User ID</b>.</li>
-                    <li>Tempel angka (17–20 digit) di kolom atas.</li>
-                  </ol>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="notice notice--warn form-error" id="formError"></div>
-
-          <button type="submit" class="btn btn--primary btn--block" id="payBtn">
-            Bayar &amp; Daftar → <span id="payAmount">Rp 599.000</span>
-          </button>
-          <p class="hint" style="text-align:center;margin-top:12px">Setelah bayar, link course + Discord invite dikirim otomatis ke email.</p>
-        </form>
-      </div>
+  <main class="max-w-3xl mx-auto px-4 py-10">
+    <div class="mb-8">
+      <div class="funnel-eyebrow">CHECKOUT</div>
+      <h1 class="funnel-h1" style="font-size:2.25rem">Selesaikan Pembayaranmu</h1>
     </div>
-  </div>
+    <div id="checkout-app" class="co-checkout-host"></div>
+  </main>
 
-  <footer class="footer">
-    <div class="wrap footer__in">
-      <span class="footer__copy">© 2026 Xinde Labs · Pembayaran diproses Mayar</span>
+  <footer class="border-t border-white/10 mt-12">
+    <div class="max-w-4xl mx-auto px-4 py-6 text-sm text-white/40">
+      Butuh bantuan? Hubungi tim kami via WhatsApp.
     </div>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    fbq('track', 'InitiateCheckout');
+  <script type="module">
+    import { supabase } from './js/config/supabase-client.js';
+    import { renderCheckout, trackCheckoutStage, redirectAfterCheckout } from './js/modules/checkout.js';
 
-    var cfg = window.XINDE;
-    var form = document.getElementById('checkoutForm');
-    var payBtn = document.getElementById('payBtn');
-    var payAmount = document.getElementById('payAmount');
-    var formError = document.getElementById('formError');
+    const params = new URLSearchParams(location.search);
+    const funnelSlug = params.get('funnel') || 'default';
 
-    // ---------- Voucher state ----------
-    var appliedVoucher = null;
-    var voucherResult = document.getElementById('voucherResult');
-    var voucherHint = document.getElementById('voucherHint');
-
-    // ---------- Preselect tier dari URL ----------
-    (function () {
-      var t = new URLSearchParams(location.search).get('tier');
-      if (t === 'lifetime' || t === 'yearly') {
-        document.getElementById(t === 'lifetime' ? 'tierLifetime' : 'tierYearly').checked = true;
+    // Load funnel (untuk tier list + webhook url + thank you/upsell)
+    let funnel = { slug: funnelSlug, subdomain: funnelSlug, settings: {}, _steps: [] };
+    try {
+      const { data } = await supabase
+        .from('funnels')
+        .select('*')
+        .or(`slug.eq.${funnelSlug},subdomain.eq.${funnelSlug}`)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (data) funnel = data;
+      if (data) {
+        const { data: steps } = await supabase
+          .from('funnel_steps')
+          .select('*')
+          .eq('funnel_id', data.id)
+          .eq('is_active', true)
+          .order('sort', { ascending: true });
+        funnel._steps = steps || [];
       }
-      updatePrice();
-    })();
-
-    function selectedTier() {
-      return document.querySelector('input[name="tier"]:checked');
-    }
-    function fmtRp(n) {
-      return 'Rp ' + Number(n).toLocaleString('id-ID');
-    }
-    function calcDiskon(tier, v) {
-      var base = cfg.PRICES[tier].harga;
-      if (!v) return 0;
-      if (v.type === 'percent') return Math.round(base * v.value / 100);
-      return Math.min(v.value, base);
+    } catch (e) {
+      console.warn('Gagal memuat funnel:', e);
     }
 
-    function updatePrice() {
-      var tier = selectedTier().value;
-      var base = cfg.PRICES[tier].harga;
-      var diskon = calcDiskon(tier, appliedVoucher);
-      var final_ = Math.max(1000, base - diskon);
-      payAmount.textContent = fmtRp(final_);
-    }
+    const tier = {
+      id: params.get('tier') || 'default',
+      name: params.get('tier_name') || '',
+      price: Number(params.get('tier_price') || 0)
+    };
 
-    document.querySelectorAll('input[name="tier"]').forEach(function (r) {
-      r.addEventListener('change', function () {
-        if (appliedVoucher) checkVoucher();
-        updatePrice();
+    const app = document.getElementById('checkout-app');
+
+    // Tidak ada tier & tidak ada funnel aktif -> arahkan ke beranda
+    const hasTiers = (funnel._steps || []).some(
+      (s) => (s.blocks || []).some((b) => b.type === 'pricing' && b.data && Array.isArray(b.data.tiers) && b.data.tiers.length)
+    );
+    if (!params.get('tier') && !hasTiers) {
+      app.innerHTML = `
+        <div class="funnel-empty" style="padding:3rem 0">
+          <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:0.75rem">Belum ada paket dipilih</h2>
+          <p style="color:rgba(255,255,255,0.55);margin-bottom:1.5rem">Silakan pilih paket dari halaman penawaran terlebih dahulu.</p>
+          <a href="/" class="co-btn co-btn--primary">Kembali ke Beranda</a>
+        </div>
+      `;
+    } else {
+      trackCheckoutStage(funnel, tier);
+
+      renderCheckout(app, {
+        funnel,
+        tier,
+        onSuccess: (result) => redirectAfterCheckout(result, funnel)
       });
-    });
-
-    // ---------- Discord tutorial ----------
-    document.querySelector('.tutorial-toggle').addEventListener('click', function () {
-      var t = document.getElementById('discordTutorial');
-      t.classList.toggle('open');
-    });
-    document.querySelectorAll('.tut-tab').forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        document.querySelectorAll('.tut-tab').forEach(function (t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        var name = tab.dataset.tab;
-        document.querySelectorAll('.tut-pane').forEach(function (p) {
-          p.classList.toggle('active', p.dataset.pane === name);
-        });
-      });
-    });
-
-    // ---------- Voucher logic ----------
-    document.getElementById('applyVoucher').addEventListener('click', checkVoucher);
-    document.getElementById('voucher').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.preventDefault(); checkVoucher(); }
-    });
-
-    function checkVoucher() {
-      var code = document.getElementById('voucher').value.trim().toUpperCase();
-      voucherResult.style.display = 'none';
-      voucherHint.style.display = 'block';
-      appliedVoucher = null;
-      if (!code) { updatePrice(); return; }
-
-      var tier = selectedTier().value;
-      if (!cfg.supabaseConfigured() || !window.supabase) {
-        showVoucherResult('Sistem belum siap, coba lagi.', true);
-        return;
-      }
-
-      var btn = document.getElementById('applyVoucher');
-      btn.disabled = true;
-      btn.textContent = 'Cek…';
-
-var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-      var COLS_WITH_TIER = 'code,type,value,tier,max_uses,used_count,active,expires_at';
-      var COLS_NO_TIER = 'code,type,value,max_uses,used_count,active,expires_at';
-
-      function applyVoucherResult(res) {
-        btn.disabled = false;
-        btn.textContent = 'Gunakan';
-        if (res.error || !res.data) {
-          showVoucherResult('Kode voucher tidak ditemukan atau sudah tidak aktif.', true);
-          updatePrice(); return;
-        }
-        var v = res.data;
-        // kolom 'tier' opsional (tidak selalu ada di DB) — default berlaku untuk semua paket
-        var vTier = v.tier || 'all';
-        if (vTier !== 'all' && vTier !== tier) {
-          showVoucherResult('Voucher ini hanya berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime') + '.', true);
-          updatePrice(); return;
-        }
-        if (v.expires_at && new Date(v.expires_at) < new Date()) {
-          showVoucherResult('Kode voucher ini sudah kadaluarsa.', true);
-          updatePrice(); return;
-        }
-        if (v.max_uses !== null && v.used_count >= v.max_uses) {
-          showVoucherResult('Kode voucher ini sudah mencapai batas penggunaan.', true);
-          updatePrice(); return;
-        }
-        appliedVoucher = v;
-        var diskon = calcDiskon(tier, v);
-        var diskonLabel = v.type === 'percent' ? v.value + '%' : fmtRp(v.value);
-        showVoucherResult('✓ Voucher <b>' + v.code + '</b> aktif — diskon ' + diskonLabel + ' (' + fmtRp(diskon) + ')', false);
-        updatePrice();
-      }
-
-      // Kolom 'tier' baru ada setelah migrasi DB. PostgREST menggagalkan SELURUH
-      // query kalau satu kolom tidak dikenal, jadi coba yang lengkap dulu, lalu
-      // ulangi tanpa 'tier' (voucher jadi berlaku untuk semua paket).
-      client.from('vouchers').select(COLS_WITH_TIER)
-        .eq('code', code).eq('active', true).maybeSingle()
-        .then(function (res) {
-          var msg = (res.error && res.error.message) || '';
-          if (res.error && /tier|column/i.test(msg)) {
-            return client.from('vouchers').select(COLS_NO_TIER)
-              .eq('code', code).eq('active', true).maybeSingle();
-          }
-          return res;
-        })
-        .then(applyVoucherResult)
-        .catch(function () {
-          btn.disabled = false;
-          btn.textContent = 'Gunakan';
-          showVoucherResult('Gagal cek voucher, coba lagi.', true);
-          updatePrice();
-        });
     }
 
     function showVoucherResult(msg, isErr) {
@@ -508,7 +238,5 @@ var client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
       }).catch(function () {});
     })();
   </script>
-  <script src="js/countdown.js"></script>
-  <script src="js/notif.js"></script>
 </body>
 </html>

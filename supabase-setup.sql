@@ -89,9 +89,50 @@ create table if not exists public.vouchers (
   created_at timestamptz default now()
 );
 
+-- 9. Tabel affiliates (program referral — member berbayar)
+create table if not exists public.affiliates (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,               -- harus email member berbayar
+  code text not null unique,                -- kode referral (dipakai di ?ref=)
+  status text not null default 'active',    -- 'active' | 'disabled'
+  commission_type text not null default 'percent', -- 'percent' | 'amount'
+  commission_value numeric not null default 20,    -- 20 = 20% atau 20000 = Rp 20.000
+  clicks integer not null default 0,        -- jumlah klik link referral
+  note text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- 10. Tabel affiliate_commissions (komisi per penjualan yang berhasil)
+create table if not exists public.affiliate_commissions (
+  id uuid primary key default gen_random_uuid(),
+  affiliate_code text not null,
+  affiliate_email text default '',
+  customer_email text default '',
+  order_ref text default '',                -- referensi transaksi Mayar (anti dobel)
+  tier text default '',
+  sale_amount numeric not null default 0,   -- harga yang dibayar customer
+  commission_amount numeric not null default 0,
+  status text not null default 'pending',   -- 'pending' | 'paid' | 'void'
+  paid_at timestamptz,
+  note text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+-- Leads: simpan kode referral yang dipakai saat checkout
+alter table public.leads add column if not exists ref text default '';
+
+create index if not exists idx_affiliate_commissions_code on public.affiliate_commissions (affiliate_code);
+create unique index if not exists affiliate_commissions_order_ref_key
+  on public.affiliate_commissions (order_ref)
+  where coalesce(order_ref, '') <> '';
+
 -- ============================================================
 -- ROW LEVEL SECURITY
 -- ============================================================
+alter table public.affiliates enable row level security;
+alter table public.affiliate_commissions enable row level security;
 alter table public.members enable row level security;
 alter table public.admins enable row level security;
 alter table public.site_content enable row level security;
@@ -250,6 +291,49 @@ create policy "vouchers delete admin" on public.vouchers for delete
     select 1 from public.admins where email = auth.jwt() ->> 'email'
   ));
 
+-- affiliates: member cuma bisa baca barisnya sendiri, admin kelola semua.
+-- Baris affiliate BARU dibuat lewat RPC affiliate_self_enroll() (anti tamper:
+-- member tidak boleh nentuin commission_value sendiri).
+drop policy if exists "affiliates read own" on public.affiliates;
+create policy "affiliates read own" on public.affiliates for select
+  using (auth.jwt() ->> 'email' = email);
+
+drop policy if exists "affiliates read admin" on public.affiliates;
+create policy "affiliates read admin" on public.affiliates for select
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "affiliates write admin" on public.affiliates;
+create policy "affiliates write admin" on public.affiliates for all
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+-- affiliate_commissions: member baca komisi sendiri, admin kelola semua.
+-- Baris komisi dibuat oleh n8n lewat RPC record_affiliate_commission() (service_role).
+drop policy if exists "affiliate_commissions read own" on public.affiliate_commissions;
+create policy "affiliate_commissions read own" on public.affiliate_commissions for select
+  using (auth.jwt() ->> 'email' = affiliate_email);
+
+drop policy if exists "affiliate_commissions read admin" on public.affiliate_commissions;
+create policy "affiliate_commissions read admin" on public.affiliate_commissions for select
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
+drop policy if exists "affiliate_commissions write admin" on public.affiliate_commissions;
+create policy "affiliate_commissions write admin" on public.affiliate_commissions for all
+  using (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ))
+  with check (exists (
+    select 1 from public.admins where email = auth.jwt() ->> 'email'
+  ));
+
 -- ============================================================
 -- SEED: konten default + admin pertama
 -- ============================================================
@@ -328,6 +412,14 @@ drop trigger if exists trg_vouchers_updated on public.vouchers;
 create trigger trg_vouchers_updated before update on public.vouchers
   for each row execute function public.set_updated_at();
 
+drop trigger if exists trg_affiliates_updated on public.affiliates;
+create trigger trg_affiliates_updated before update on public.affiliates
+  for each row execute function public.set_updated_at();
+
+drop trigger if exists trg_affiliate_commissions_updated on public.affiliate_commissions;
+create trigger trg_affiliate_commissions_updated before update on public.affiliate_commissions
+  for each row execute function public.set_updated_at();
+
 -- Index
 create index if not exists idx_members_email on public.members (email);
 create index if not exists idx_admins_email on public.admins (email);
@@ -336,6 +428,161 @@ create index if not exists idx_leads_status on public.leads (status);
 create index if not exists idx_leads_created on public.leads (created_at desc);
 create index if not exists idx_modules_sort on public.modules (sort);
 create index if not exists idx_member_progress_email on public.member_progress (email);
+create index if not exists idx_affiliates_email on public.affiliates (email);
+create index if not exists idx_affiliates_code on public.affiliates (code);
+create index if not exists idx_affiliate_commissions_email on public.affiliate_commissions (affiliate_email);
+
+-- ============================================================
+-- FUNGSI AFFILIATE (lihat bagian AFFILIATE di bawah untuk penjelasan)
+-- ============================================================
+create or replace function public.affiliate_track_click(p_code text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(p_code, '') = '' then return; end if;
+  update public.affiliates
+     set clicks = clicks + 1
+   where upper(code) = upper(p_code)
+     and status = 'active';
+end;
+$$;
+
+create or replace function public.affiliate_self_enroll()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text;
+  v_paid boolean;
+  v_row public.affiliates;
+  v_local text;
+  v_code text;
+  v_try integer := 0;
+begin
+  v_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+  if v_email = '' then
+    raise exception 'Harus login dulu buat jadi affiliate';
+  end if;
+
+  select true into v_paid from public.members
+   where lower(email) = v_email and status = 'paid'
+   limit 1;
+  if v_paid is distinct from true then
+    raise exception 'Cuma member berbayar yang bisa jadi affiliate';
+  end if;
+
+  select * into v_row from public.affiliates where lower(email) = v_email limit 1;
+  if found then
+    if v_row.status = 'disabled' then
+      raise exception 'Affiliate akun lo lagi dinonaktifkan admin';
+    end if;
+    return jsonb_build_object('ok', true, 'created', false,
+      'code', v_row.code, 'status', v_row.status,
+      'commission_type', v_row.commission_type, 'commission_value', v_row.commission_value);
+  end if;
+
+  v_local := regexp_replace(split_part(v_email, '@', 1), '[^a-z0-9]', '', 'g');
+  if length(v_local) < 3 then v_local := 'member'; end if;
+
+  loop
+    v_try := v_try + 1;
+    v_code := upper(left(v_local, 6)) || lpad(floor(random() * 10000)::text, 4, '0');
+    exit when not exists (select 1 from public.affiliates where code = v_code);
+    if v_try > 20 then v_code := 'AFF' || upper(substr(md5(random()::text), 1, 7)); exit; end if;
+  end loop;
+
+  insert into public.affiliates (email, code)
+  values (v_email, v_code)
+  returning * into v_row;
+
+  return jsonb_build_object('ok', true, 'created', true,
+    'code', v_row.code, 'status', v_row.status,
+    'commission_type', v_row.commission_type, 'commission_value', v_row.commission_value);
+end;
+$$;
+
+create or replace function public.record_affiliate_commission(
+  p_email text, p_reference text, p_tier text, p_amount numeric
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text;
+  v_aff public.affiliates;
+  v_commission numeric;
+  v_ref text;
+begin
+  if coalesce(trim(p_email), '') = '' then
+    return jsonb_build_object('ok', false, 'reason', 'no_email');
+  end if;
+
+  -- Cari kode referral dari lead terakhir dengan email yang sama (diisi saat checkout)
+  select ref into v_code
+    from public.leads
+   where lower(email) = lower(trim(p_email))
+     and coalesce(ref, '') <> ''
+   order by created_at desc
+   limit 1;
+
+  if coalesce(v_code, '') = '' then
+    return jsonb_build_object('ok', false, 'reason', 'no_ref');
+  end if;
+
+  select * into v_aff from public.affiliates where upper(code) = upper(trim(v_code)) limit 1;
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'affiliate_not_found', 'code', v_code);
+  end if;
+  if v_aff.status <> 'active' then
+    return jsonb_build_object('ok', false, 'reason', 'affiliate_disabled', 'code', v_code);
+  end if;
+
+  if v_aff.commission_type = 'amount' then
+    v_commission := least(greatest(v_aff.commission_value, 0), greatest(coalesce(p_amount, 0), 0));
+  else
+    v_commission := round(greatest(coalesce(p_amount, 0), 0) * greatest(v_aff.commission_value, 0) / 100.0, 0);
+  end if;
+
+  -- order_ref: kalau kosong, bikin kunci fallback supaya tetap anti-dobel
+  v_ref := trim(coalesce(p_reference, ''));
+  if v_ref = '' then
+    v_ref := lower(trim(p_email)) || ':' || coalesce(p_tier, '') || ':' ||
+             coalesce(p_amount, 0)::text || ':' || to_char(now(), 'YYYYMMDD');
+  end if;
+
+  insert into public.affiliate_commissions
+    (affiliate_code, affiliate_email, customer_email, order_ref, tier, sale_amount, commission_amount, status)
+  values
+    (upper(v_aff.code), lower(v_aff.email), lower(trim(p_email)), v_ref,
+     coalesce(p_tier, ''), greatest(coalesce(p_amount, 0), 0), v_commission, 'pending')
+  on conflict do nothing;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'duplicate', 'ref', v_ref);
+  end if;
+
+  return jsonb_build_object('ok', true, 'code', upper(v_aff.code), 'commission', v_commission);
+end;
+$$;
+
+-- Hak akses fungsi (penting: commission cuma boleh dipanggil service_role/n8n)
+revoke all on function public.affiliate_track_click(text) from public;
+grant execute on function public.affiliate_track_click(text) to anon, authenticated;
+
+revoke all on function public.affiliate_self_enroll() from public;
+grant execute on function public.affiliate_self_enroll() to authenticated;
+
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from public;
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from anon;
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from authenticated;
+grant execute on function public.record_affiliate_commission(text, text, text, numeric) to service_role;
 
 -- ============================================================
 -- STORAGE: bucket 'banners' untuk promo banner upload
@@ -386,3 +633,228 @@ create policy "modules read member/admin" on public.modules for select
       )
     )
   );
+
+-- ============================================================
+-- MIGRATION 2026-10-03 — SISTEM AFFILIATE
+-- Jalankan blok ini di DB yang SUDAH live (bagian atas file juga
+-- memuat definisi yang sama untuk instalasi baru).
+-- Ringkas: tabel affiliates & affiliate_commissions, kolom leads.ref,
+-- RLS, dan 3 fungsi (track click, self-enroll, catat komisi).
+-- ============================================================
+create table if not exists public.affiliates (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  code text not null unique,
+  status text not null default 'active',
+  commission_type text not null default 'percent',
+  commission_value numeric not null default 20,
+  clicks integer not null default 0,
+  note text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists public.affiliate_commissions (
+  id uuid primary key default gen_random_uuid(),
+  affiliate_code text not null,
+  affiliate_email text default '',
+  customer_email text default '',
+  order_ref text default '',
+  tier text default '',
+  sale_amount numeric not null default 0,
+  commission_amount numeric not null default 0,
+  status text not null default 'pending',
+  paid_at timestamptz,
+  note text default '',
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+alter table public.leads add column if not exists ref text default '';
+
+create index if not exists idx_affiliate_commissions_code on public.affiliate_commissions (affiliate_code);
+create index if not exists idx_affiliates_email on public.affiliates (email);
+create index if not exists idx_affiliates_code on public.affiliates (code);
+create index if not exists idx_affiliate_commissions_email on public.affiliate_commissions (affiliate_email);
+create unique index if not exists affiliate_commissions_order_ref_key
+  on public.affiliate_commissions (order_ref)
+  where coalesce(order_ref, '') <> '';
+
+alter table public.affiliates enable row level security;
+alter table public.affiliate_commissions enable row level security;
+
+drop policy if exists "affiliates read own" on public.affiliates;
+create policy "affiliates read own" on public.affiliates for select
+  using (auth.jwt() ->> 'email' = email);
+drop policy if exists "affiliates read admin" on public.affiliates;
+create policy "affiliates read admin" on public.affiliates for select
+  using (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'));
+drop policy if exists "affiliates write admin" on public.affiliates;
+create policy "affiliates write admin" on public.affiliates for all
+  using (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'))
+  with check (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'));
+
+drop policy if exists "affiliate_commissions read own" on public.affiliate_commissions;
+create policy "affiliate_commissions read own" on public.affiliate_commissions for select
+  using (auth.jwt() ->> 'email' = affiliate_email);
+drop policy if exists "affiliate_commissions read admin" on public.affiliate_commissions;
+create policy "affiliate_commissions read admin" on public.affiliate_commissions for select
+  using (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'));
+drop policy if exists "affiliate_commissions write admin" on public.affiliate_commissions;
+create policy "affiliate_commissions write admin" on public.affiliate_commissions for all
+  using (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'))
+  with check (exists (select 1 from public.admins where email = auth.jwt() ->> 'email'));
+
+drop trigger if exists trg_affiliates_updated on public.affiliates;
+create trigger trg_affiliates_updated before update on public.affiliates
+  for each row execute function public.set_updated_at();
+drop trigger if exists trg_affiliate_commissions_updated on public.affiliate_commissions;
+create trigger trg_affiliate_commissions_updated before update on public.affiliate_commissions
+  for each row execute function public.set_updated_at();
+
+-- Fungsi affiliate (definisi sama seperti di bagian atas file)
+create or replace function public.affiliate_track_click(p_code text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if coalesce(p_code, '') = '' then return; end if;
+  update public.affiliates
+     set clicks = clicks + 1
+   where upper(code) = upper(p_code)
+     and status = 'active';
+end;
+$$;
+
+create or replace function public.affiliate_self_enroll()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text;
+  v_paid boolean;
+  v_row public.affiliates;
+  v_local text;
+  v_code text;
+  v_try integer := 0;
+begin
+  v_email := lower(coalesce(auth.jwt() ->> 'email', ''));
+  if v_email = '' then
+    raise exception 'Harus login dulu buat jadi affiliate';
+  end if;
+
+  select true into v_paid from public.members
+   where lower(email) = v_email and status = 'paid'
+   limit 1;
+  if v_paid is distinct from true then
+    raise exception 'Cuma member berbayar yang bisa jadi affiliate';
+  end if;
+
+  select * into v_row from public.affiliates where lower(email) = v_email limit 1;
+  if found then
+    if v_row.status = 'disabled' then
+      raise exception 'Affiliate akun lo lagi dinonaktifkan admin';
+    end if;
+    return jsonb_build_object('ok', true, 'created', false,
+      'code', v_row.code, 'status', v_row.status,
+      'commission_type', v_row.commission_type, 'commission_value', v_row.commission_value);
+  end if;
+
+  v_local := regexp_replace(split_part(v_email, '@', 1), '[^a-z0-9]', '', 'g');
+  if length(v_local) < 3 then v_local := 'member'; end if;
+
+  loop
+    v_try := v_try + 1;
+    v_code := upper(left(v_local, 6)) || lpad(floor(random() * 10000)::text, 4, '0');
+    exit when not exists (select 1 from public.affiliates where code = v_code);
+    if v_try > 20 then v_code := 'AFF' || upper(substr(md5(random()::text), 1, 7)); exit; end if;
+  end loop;
+
+  insert into public.affiliates (email, code)
+  values (v_email, v_code)
+  returning * into v_row;
+
+  return jsonb_build_object('ok', true, 'created', true,
+    'code', v_row.code, 'status', v_row.status,
+    'commission_type', v_row.commission_type, 'commission_value', v_row.commission_value);
+end;
+$$;
+
+create or replace function public.record_affiliate_commission(
+  p_email text, p_reference text, p_tier text, p_amount numeric
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_code text;
+  v_aff public.affiliates;
+  v_commission numeric;
+  v_ref text;
+begin
+  if coalesce(trim(p_email), '') = '' then
+    return jsonb_build_object('ok', false, 'reason', 'no_email');
+  end if;
+
+  select ref into v_code
+    from public.leads
+   where lower(email) = lower(trim(p_email))
+     and coalesce(ref, '') <> ''
+   order by created_at desc
+   limit 1;
+
+  if coalesce(v_code, '') = '' then
+    return jsonb_build_object('ok', false, 'reason', 'no_ref');
+  end if;
+
+  select * into v_aff from public.affiliates where upper(code) = upper(trim(v_code)) limit 1;
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'affiliate_not_found', 'code', v_code);
+  end if;
+  if v_aff.status <> 'active' then
+    return jsonb_build_object('ok', false, 'reason', 'affiliate_disabled', 'code', v_code);
+  end if;
+
+  if v_aff.commission_type = 'amount' then
+    v_commission := least(greatest(v_aff.commission_value, 0), greatest(coalesce(p_amount, 0), 0));
+  else
+    v_commission := round(greatest(coalesce(p_amount, 0), 0) * greatest(v_aff.commission_value, 0) / 100.0, 0);
+  end if;
+
+  v_ref := trim(coalesce(p_reference, ''));
+  if v_ref = '' then
+    v_ref := lower(trim(p_email)) || ':' || coalesce(p_tier, '') || ':' ||
+             coalesce(p_amount, 0)::text || ':' || to_char(now(), 'YYYYMMDD');
+  end if;
+
+  insert into public.affiliate_commissions
+    (affiliate_code, affiliate_email, customer_email, order_ref, tier, sale_amount, commission_amount, status)
+  values
+    (upper(v_aff.code), lower(v_aff.email), lower(trim(p_email)), v_ref,
+     coalesce(p_tier, ''), greatest(coalesce(p_amount, 0), 0), v_commission, 'pending')
+  on conflict do nothing;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'reason', 'duplicate', 'ref', v_ref);
+  end if;
+
+  return jsonb_build_object('ok', true, 'code', upper(v_aff.code), 'commission', v_commission);
+end;
+$$;
+
+revoke all on function public.affiliate_track_click(text) from public;
+grant execute on function public.affiliate_track_click(text) to anon, authenticated;
+
+revoke all on function public.affiliate_self_enroll() from public;
+grant execute on function public.affiliate_self_enroll() to authenticated;
+
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from public;
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from anon;
+revoke all on function public.record_affiliate_commission(text, text, text, numeric) from authenticated;
+grant execute on function public.record_affiliate_commission(text, text, text, numeric) to service_role;

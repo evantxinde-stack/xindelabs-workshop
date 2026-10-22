@@ -10,6 +10,13 @@ window.XINDE = (function () {
   // n8n webhook (SUDAH LIVE — contract PRD §5)
   const N8N_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/create-payment";
 
+  // Hermes Agent (Tugas Keenam) — webhook n8n "hermes-agent".
+  // Contract: POST JSON { action, payload, source } -> { output | reply | text | ... }
+  const HERMES_WEBHOOK = "https://n8n.43-133-131-126.sslip.io/webhook/hermes-agent";
+  const HERMES_ENABLED = true;
+  const HERMES_TIMEOUT_MS = 180000; // AI sinkron butuh waktu lama (n8n timeout >= 180s)
+  const HERMES_AGENT_NAME = "hermes";
+
   // Supabase (project live)
   const SUPABASE_URL = "https://qxzvmnbhplgmspdxdbmg.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4enZtbmJocGxnbXNwZHhkYm1nIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDQyMjksImV4cCI6MjEwMjE4MDIyOX0.19lSzSLuNeFyDQ1r-3hYP50j01f1GeaC4ZSqWI-ajs8";
@@ -391,6 +398,10 @@ window.XINDE = (function () {
   return {
     PIXEL_ID,
     N8N_WEBHOOK,
+    HERMES_WEBHOOK,
+    HERMES_ENABLED,
+    HERMES_TIMEOUT_MS,
+    HERMES_AGENT_NAME,
     SUPABASE_URL,
     SUPABASE_ANON_KEY,
     VIDEO_YOUTUBE_ID,

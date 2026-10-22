@@ -1,0 +1,368 @@
+{
+  "name": "Hermes Agent - Command Bridge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hermes-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-hermes-agent",
+      "name": "Webhook: Hermes Agent",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        0
+      ],
+      "webhookId": "hermes-agent-bridge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===========================================================\n// Hermes Agent — Router & Prompt Builder\n// Input (dari admin dashboard):\n//   { action, payload, source, agent, requested_at }\n// Output: { action, system, user, payload }\n// ===========================================================\nconst body = $input.first().json.body || {};\nconst action = String(body.action || 'chat');\nconst payload = body.payload || {};\n\nconst BLOCK_SCHEMA = payload.block_schema || {};\nconst BASE = 'Kamu adalah Hermes Agent milik Xinde Labs. Kamu membantu admin sebuah course online yang menjual produk \"Build Your Own Personalized Agent\". Bahasa Indonesia, santai tapi presisi, tanpa basa-basi. Jangan mengarang angka/statistik.';\n\nconst SYSTEM = {\n  chat: BASE + ' Jawab pertanyaan admin secara ringkas dan konkret (maks 250 kata).',\n  ping: 'Jawab hanya dengan JSON: {\"ok\":true,\"message\":\"Hermes aktif\"}',\n  generate_seo_article: BASE + ' Tulis artikel SEO yang jujur dan berguna. Format output: JSON {\"title\",\"slug\",\"excerpt\",\"tags\":[],\"content\"}. content = Markdown (## heading, list, bold).',\n  generate_blog_article: BASE + ' Tulis artikel blog dari brief admin. Format output: JSON {\"title\",\"slug\",\"excerpt\",\"tags\":[],\"content\"}. content = Markdown. Jangan pakai kode fences di luar JSON.',\n  analyze_leads_daily: BASE + ' Analisa data lead funnel. Kembalikan ringkasan singkat + 3 rekomendasi aksi konkret. Format output: Markdown teks biasa.',\n  analyze_funnel_bottleneck: BASE + ' Analisa bottleneck funnel (stage mana yang paling bocor). Sertakan angka stage, drop-off rate, dan 3 perbaikan spesifik. Format output: Markdown teks biasa.',\n  draft_landing_copy: BASE + ' Susun draft copy landing page. Format output: JSON {\"blocks\":[{type,data}]} dengan type hanya dari: ' + Object.keys(BLOCK_SCHEMA).join(', '),\n  generate_funnel_blocks: BASE + ' Susun susunan blok modular untuk satu step funnel. Format output PENTING: JSON array (tanpa teks lain) berisi objek {type, data}. type hanya dari: ' + Object.keys(BLOCK_SCHEMA).join(', ') + '. Ikuti schema di payload.block_schema. Jangan keluarkan teks lain selain JSON.'\n};\n\nlet user = '';\nif (action === 'generate_funnel_blocks') {\n  user = [\n    'Buat blok untuk step funnel berikut.',\n    'Funnel: ' + JSON.stringify(payload.funnel || {}),\n    'Step: ' + JSON.stringify(payload.step || {}),\n    'Instruksi admin: ' + (payload.brief || '(tidak ada)'),\n    'Target CTA: ' + (payload.cta || '(tidak ada)'),\n    'Tipe yang diizinkan: ' + JSON.stringify(payload.allowed_block_types || Object.keys(BLOCK_SCHEMA)),\n    'Schema tiap tipe: ' + JSON.stringify(BLOCK_SCHEMA),\n    'Blok existing: ' + JSON.stringify(payload.existing_blocks || [])\n  ].join('\\n');\n} else if (action === 'generate_blog_article' || action === 'generate_seo_article') {\n  user = [\n    'Topik: ' + (payload.topic || payload.subject || ''),\n    'Keyword: ' + (payload.keyword || ''),\n    'Tone: ' + (payload.tone || 'santai, Bahasa Indonesia'),\n    'Panjang: ' + (payload.length || '800-1200 kata'),\n    'Instruksi tambahan: ' + (payload.extra || payload.instruction || '(tidak ada)'),\n    payload.publish ? 'Langsung simpan artikel ke blog_posts lalu kembalikan JSON artikelnya.' : ''\n  ].filter(Boolean).join('\\n');\n} else if (action === 'draft_landing_copy') {\n  user = [\n    'Tujuan landing: ' + (payload.goal || ''),\n    'Tone: ' + (payload.tone || 'santai'),\n    'Buat 3-5 blok: hero, benefit, pricing, faq, cta.',\n    'Schema: ' + JSON.stringify(BLOCK_SCHEMA)\n  ].join('\\n');\n} else if (action === 'chat') {\n  user = 'Instruksi admin: ' + (payload.message || '') + '\\n\\nRiwayat:\\n' + JSON.stringify(payload.history || []);\n} else if (action === 'analyze_leads_daily') {\n  user = 'Rentang hari: ' + (payload.range_days || 1) + '. Analisa lead funnel hari ini.';\n} else if (action === 'analyze_funnel_bottleneck') {\n  user = 'Rentang hari: ' + (payload.range_days || 7) + '. Cari bottleneck funnel & rekomendasi perbaikan.';\n} else {\n  user = JSON.stringify(payload);\n}\n\nreturn { json: { action, system: SYSTEM[action] || SYSTEM.chat, user, payload } };"
+      },
+      "id": "code-hermes-prompt",
+      "name": "Code: Route & Build Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.OPENAI_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: $env.HERMES_MODEL || 'gpt-4o-mini', temperature: 0.7, messages: [{ role: 'system', content: $json.system }, { role: 'user', content: $json.user }] }) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "http-hermes-llm",
+      "name": "HTTP: Hermes LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalisasi output LLM sesuai action.\nconst req = $('Code: Route & Build Prompt').first().json;\nconst resp = $input.first().json;\nlet content = '';\ntry {\n  content = (resp.choices && resp.choices[0] && resp.choices[0].message && resp.choices[0].message.content) || resp.output || resp.text || '';\n} catch (e) { content = ''; }\ncontent = String(content || '').trim();\n\n// Buang kode fences markdown yang sering dipakai LLM\nconst fence = content.match(/^```(?:json)?\\s*([\\s\\S]*?)```$/i);\nif (fence) content = fence[1].trim();\n\nlet output = content;\nif (req.action === 'generate_funnel_blocks' || req.action === 'draft_landing_copy') {\n  try {\n    const parsed = JSON.parse(content);\n    output = Array.isArray(parsed) ? parsed : (parsed.blocks || parsed);\n  } catch (e) {\n    output = content;\n  }\n} else if (req.action === 'generate_blog_article' || req.action === 'generate_seo_article') {\n  try {\n    const parsed = JSON.parse(content);\n    output = parsed;\n  } catch (e) {\n    output = { content };\n  }\n}\n\nreturn { json: { action: req.action, output, duration_hint: 'llm' } };"
+      },
+      "id": "code-hermes-normalize",
+      "name": "Code: Normalize Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL || 'https://qxzvmnbhplgmspdxdbmg.supabase.co' }}/rest/v1/agent_logs",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ agent_name: 'hermes', action: $json.action, status: 'success', trigger_source: 'n8n', summary: String($json.output).slice(0, 240), output: String($json.output).slice(0, 4000) }) }}",
+        "options": {}
+      },
+      "id": "http-hermes-log",
+      "name": "HTTP: Catat agent_logs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "notes": "Gagal menulis log tidak boleh membatalkan respons ke admin."
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.response) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-hermes",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===========================================================\n// Hermes — Siapkan data publikasi artikel\n// ===========================================================\nconst norm = $('Code: Normalize Output').first().json;\nconst req = $('Code: Route & Build Prompt').first().json;\nconst payload = req.payload || {};\nconst isArticle = norm.action === 'generate_seo_article' || norm.action === 'generate_blog_article';\nconst wantPublish = isArticle && !!payload.publish;\nconst a = (norm.output && typeof norm.output === 'object' && !Array.isArray(norm.output)) ? norm.output : {};\nconst slugify = (s) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9\\s-]/g, '').replace(/[\\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 90);\nconst title = String(a.title || payload.title || 'Artikel Hermes').trim();\nconst slug = slugify(a.slug || title);\nconst article = {\n  title: title,\n  slug: slug,\n  excerpt: a.excerpt ? String(a.excerpt) : (payload.excerpt ? String(payload.excerpt) : null),\n  content: String(a.content || ''),\n  tags: Array.isArray(a.tags) ? a.tags.map((t) => String(t)).slice(0, 10) : [],\n  status: wantPublish ? 'published' : 'draft',\n  published_at: wantPublish ? new Date().toISOString() : null,\n  author: 'Xinde Labs'\n};\n\nreturn { json: { action: norm.action, output: norm.output, publish: wantPublish, article } };"
+      },
+      "id": "code-hermes-prepare-publish",
+      "name": "Code: Siapkan Publish",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-publish",
+              "leftValue": "={{ $json.publish }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-hermes-publish",
+      "name": "IF: Publish Artikel?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        -120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL || 'https://qxzvmnbhplgmspdxdbmg.supabase.co' }}/rest/v1/blog_posts?on_conflict=slug",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer ={{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.article) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "http-hermes-publish-blog",
+      "name": "HTTP: Publish blog_posts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1100,
+        -120
+      ],
+      "onError": "continueRegularOutput",
+      "continueOnFail": true,
+      "notes": "Upsert artikel ke blog_posts (slug unik). Gagal tidak membatalkan respons."
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===========================================================\n// Hermes — Susun respons final ke admin dashboard\n// ===========================================================\nconst prep = $('Code: Siapkan Publish').first().json;\nlet published = null;\nlet publishError = null;\nif (prep.publish) {\n  try {\n    const r = $('HTTP: Publish blog_posts').first().json || {};\n    const sc = r.statusCode || (r.headers && (r.headers['status-code'] || r.headers['Status-Code'])) || 0;\n    published = sc >= 200 && sc < 300;\n    if (!published) publishError = r.error || r.message || ('HTTP ' + sc);\n  } catch (e) {\n    published = false;\n    publishError = String((e && e.message) || e);\n  }\n}\n\nreturn { json: { response: {\n  ok: true,\n  action: prep.action,\n  output: prep.output,\n  publish_requested: !!prep.publish,\n  published: published,\n  publish_error: publishError,\n  article: prep.publish ? prep.article : undefined\n} } };"
+      },
+      "id": "code-hermes-build-response",
+      "name": "Code: Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook: Hermes Agent": {
+      "main": [
+        [
+          {
+            "node": "Code: Route & Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Route & Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Hermes LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Hermes LLM": {
+      "main": [
+        [
+          {
+            "node": "Code: Normalize Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Normalize Output": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Catat agent_logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Catat agent_logs": {
+      "main": [
+        [
+          {
+            "node": "Code: Siapkan Publish",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Publish": {
+      "main": [
+        [
+          {
+            "node": "IF: Publish Artikel?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Publish Artikel?": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Publish blog_posts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Publish blog_posts": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "executionTimeout": 180
+  },
+  "pinData": {}
+}

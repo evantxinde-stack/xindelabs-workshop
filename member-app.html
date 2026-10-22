@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Member Dashboard — Xinde Labs</title>
+  <meta name="theme-color" content="#040b08" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav__in">
+      <a href="/" class="wordmark">xindelabs<span>.</span></a>
+      <div class="nav__right">
+        <a href="/member.html" class="nav__link">Member LMS</a>
+        <a href="/member-app.html" class="nav__link">Dashboard Baru</a>
+        <button class="btn btn--ghost btn--sm" onclick="supabase.auth.signOut().then(()=>location.href='/login.html')">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main style="padding-top:90px;">
+    <div class="wrap" id="memberApp">
+      <header style="display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; margin-bottom:28px;">
+        <div>
+          <span class="eyebrow"><span class="dot dot--pulse"></span> member area</span>
+          <h1 class="h2" style="margin-bottom:8px;">Dashboard Member</h1>
+          <p style="color:var(--muted);">Katalog kelas, pembelajaran bertahap, sertifikat &amp; Bimbingan VIP 1-on-1</p>
+        </div>
+      </header>
+
+      <nav style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px;">
+        <button class="btn btn--ghost btn--sm mnav active" data-panel="katalog">Katalog Kelas</button>
+        <button class="btn btn--ghost btn--sm mnav" data-panel="vip">Bimbingan VIP 1-on-1</button>
+      </nav>
+
+      <section id="panel-katalog" class="mpanel">
+        <div id="viewKatalog">
+          <div id="classGrid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px;"></div>
+        </div>
+        <div id="viewClass" style="display:none; grid-template-columns:280px 1fr; gap:22px;">
+          <aside class="card" style="padding:18px; display:grid; gap:14px; align-content:start;">
+            <button id="backToKatalog" class="btn btn--ghost btn--sm">← Kembali ke Katalog</button>
+            <div>
+              <div style="font-family:var(--font-mono); font-size:12px; color:var(--muted);">Progress Kelas</div>
+              <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0;">
+                <b id="classPct">0%</b>
+              </div>
+              <div style="height:6px; background:var(--bg-3); border-radius:99px; overflow:hidden;">
+                <div id="classBar" style="height:100%; background:linear-gradient(90deg,var(--green),var(--cyan)); width:0%;"></div>
+              </div>
+            </div>
+            <div id="lessonList" style="display:grid; gap:6px;"></div>
+            <button id="certBtn" class="btn btn--primary btn--sm" style="display:none;">Cetak Sertifikat PDF</button>
+          </aside>
+          <div>
+            <div class="card" style="overflow:hidden; margin-bottom:18px;">
+              <div class="player-frame" style="position:relative; width:100%; aspect-ratio:16/9; background:#000;">
+                <div id="ytHost" style="position:absolute; inset:0;"></div>
+              </div>
+            </div>
+            <div class="card" style="padding:24px;">
+              <h2 id="lessonTitle" style="font-family:var(--font-display); font-weight:700; font-size:22px; margin-bottom:16px;"></h2>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="prevLesson" class="btn btn--ghost btn--sm">← Sebelumnya</button>
+                <button id="markDone" class="btn btn--primary btn--sm">Tandai Selesai</button>
+                <button id="nextLesson" class="btn btn--ghost btn--sm">Selanjutnya →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-vip" class="mpanel" style="display:none;">
+        <div id="vipPanel"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+  <script type="module" src="js/modules/member-lms.js"></script>
+  <script type="module">
+    import { render } from './js/modules/member-lms.js';
+    render('memberApp');
+  </script>
+</body>
+</html>
+</body>
+</html>

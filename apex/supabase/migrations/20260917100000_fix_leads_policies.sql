@@ -1,0 +1,3 @@
+-- Fix RLS produksi: pulihkan policy anon di tabel leads.
+-- Detail di file _apply.sql (user menjalankan manual di SQL Editor).
+-- Form funnel butuh anon INSERT + SELECT agar lead tersimpan & terbaca kembali.

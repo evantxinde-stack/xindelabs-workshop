@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="pageTitle">Blog Hermes Agent — Xinde Labs</title>
+  <meta name="description" id="pageDesc" content="Tips membangun AI Agent, personal branding, dan sistem penjualan untuk sales person & founder. Written by Xinde Labs." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#040b08" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/config.js"></script>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav__in">
+      <a href="/" class="wordmark">xindelabs<span>.</span></a>
+      <div class="nav__right">
+        <a href="/#katalog" class="nav__link">Program</a>
+        <a href="/#portofolio" class="nav__link">Portofolio</a>
+        <a href="/blog" class="nav__link">Blog</a>
+        <a href="/#kerjasama" class="nav__link">Kerjasama</a>
+        <a href="/login.html" class="nav__link">Login</a>
+        <a href="/checkout.html" class="btn btn--primary btn--sm">Daftar</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="blogRoot" style="padding-top:110px;">
+    <div class="wrap">
+      <div id="blogLoader" style="text-align:center; padding:80px 0; color:var(--muted); font-family:var(--font-mono);">Memuat artikel…</div>
+    </div>
+  </main>
+
+  <footer style="border-top:1px solid var(--line); margin-top:90px;">
+    <div class="wrap" style="padding:40px 24px; display:flex; flex-wrap:wrap; gap:20px; justify-content:space-between; align-items:center;">
+      <div>
+        <div class="wordmark" style="margin-bottom:8px;">xindelabs<span>.</span></div>
+        <p style="color:var(--muted); font-size:14px;">© <span id="year"></span> Xinde Labs. All rights reserved.</p>
+      </div>
+      <div style="display:flex; gap:18px; flex-wrap:wrap;">
+        <a href="/#katalog" style="color:var(--muted);">Program</a>
+        <a href="/blog" style="color:var(--muted);">Blog</a>
+        <a href="/#kerjasama" style="color:var(--muted);">Kerjasama</a>
+        <a href="/member.html" style="color:var(--muted);">Member Area</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script type="module" src="js/modules/blog.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

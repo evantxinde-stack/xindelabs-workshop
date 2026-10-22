@@ -78,63 +78,30 @@
           <button type="button" class="a-menu" data-panel="content">Konten Landing</button>
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
-          <button type="button" class="a-menu" data-panel="lms">LMS Management</button>
+          <button type="button" class="a-menu" data-panel="pipeline">Pipeline &amp; Drop-off</button>
+          <button type="button" class="a-menu" data-panel="funnels">Funnel Builder</button>
+          <button type="button" class="a-menu" data-panel="blog">Blog Editor</button>
+          <button type="button" class="a-menu" data-panel="lms">LMS &amp; VIP</button>
           <button type="button" class="a-menu" data-panel="members">Members <span class="a-badge" id="countMenuMembers"></span></button>
           <button type="button" class="a-menu" data-panel="vouchers">Vouchers</button>
+          <button type="button" class="a-menu" data-panel="affiliates">Affiliate <span class="a-badge" id="countMenuAffiliates"></span></button>
           <button type="button" class="a-menu" data-panel="landingpages">Landing Pages</button>
+          <button type="button" class="a-menu a-menu--accent" data-panel="hermes">✦ Hermes AI Command Center</button>
         </aside>
 
         <main class="a-main">
 
           <!-- ============ PANEL: DASHBOARD ============ -->
-          <div id="panelDashboard">
-            <div class="section-head" style="text-align:left">
-              <p class="eyebrow"><span class="dot"></span>admin</p>
-              <h2 class="h2">Dashboard</h2>
-              <p class="lead">Pantau lead, member, dan estimasi revenue dalam satu layar.</p>
-            </div>
+          <div id="panelDashboard"></div>
 
-            <div class="notice notice--warn" id="dashNotice" style="display:none"></div>
+          <!-- ============ PANEL: PIPELINE ============ -->
+          <div id="panelPipeline" style="display:none"></div>
 
-            <div class="d-kpis" id="dashKpis"></div>
+          <!-- ============ PANEL: FUNNEL BUILDER ============ -->
+          <div id="panelFunnels" style="display:none"></div>
 
-            <div class="d-cols">
-              <div class="a-card">
-                <div class="a-card__head">
-                  <h3>14 Hari Terakhir</h3>
-                  <div class="a-topbar__right" style="gap:8px">
-                    <button type="button" class="btn btn--ghost btn--sm" id="refreshDashboard">↻ Refresh</button>
-                  </div>
-                </div>
-                <div class="d-legend">
-                  <span><i style="background:var(--green-dim)"></i>Leads masuk</span>
-                  <span><i style="background:rgba(0,229,255,.6)"></i>Member masuk</span>
-                </div>
-                <div class="d-bars" id="dashBars"></div>
-              </div>
-
-              <div class="a-card">
-                <div class="a-card__head"><h3>Pipeline Leads</h3></div>
-                <div class="d-funnel" id="dashFunnel"></div>
-                <p class="a-empty" id="dashConv"></p>
-              </div>
-            </div>
-
-            <div class="d-cols">
-              <div class="a-card">
-                <div class="a-card__head"><h3>Lead Terbaru</h3></div>
-                <table class="d-recent">
-                  <tbody id="dashRecentLeads"></tbody>
-                </table>
-              </div>
-              <div class="a-card">
-                <div class="a-card__head"><h3>Member Terbaru</h3></div>
-                <table class="d-recent">
-                  <tbody id="dashRecentMembers"></tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+          <!-- ============ PANEL: BLOG EDITOR ============ -->
+          <div id="panelBlog" style="display:none"></div>
 
           <!-- ============ PANEL: KONTEN ============ -->
           <div id="panelContent" style="display:none">
@@ -372,13 +339,22 @@
             </div>
           </div>
 
-          <!-- ============ PANEL: LMS MANAGEMENT ============ -->
+          <!-- ============ PANEL: LMS & VIP ============ -->
           <div id="panelLMS" style="display:none">
             <div class="section-head" style="text-align:left">
               <p class="eyebrow"><span class="dot"></span>admin</p>
-              <h2 class="h2">LMS Management</h2>
-              <p class="lead">Kelola modul course (tersimpan di tabel <span style="font-family:var(--font-mono)">modules</span>) &amp; status course.</p>
+              <h2 class="h2">LMS &amp; VIP</h2>
+              <p class="lead">Kelola modul course, kelas &amp; lesson, slot VIP, serta review project member.</p>
             </div>
+
+            <div class="a-tabs" id="lmsTabs">
+              <button type="button" class="a-filter is-active" data-lmstab="modul">Modul</button>
+              <button type="button" class="a-filter" data-lmstab="classes">Classes &amp; Lessons</button>
+              <button type="button" class="a-filter" data-lmstab="vip">VIP &amp; Slot</button>
+              <button type="button" class="a-filter" data-lmstab="projects">Project Review</button>
+            </div>
+
+            <div data-lmspane="modul">
 
             <div class="a-card">
               <div class="a-card__head">
@@ -407,6 +383,114 @@
               <div class="admin-tools">
                 <button type="button" class="btn btn--primary" id="saveModulesBtn">Simpan Modul</button>
                 <span class="hint" id="modulesSaveState">Belum ada perubahan.</span>
+              </div>
+            </div>
+            </div>
+
+            <!-- TAB: CLASSES & LESSONS -->
+            <div data-lmspane="classes" style="display:none">
+              <div class="notice notice--warn" id="clsNotice" style="display:none"></div>
+              <div class="a-funnel-layout">
+                <aside class="a-funnel-list">
+                  <div class="a-card__head">
+                    <h3>Kelas</h3>
+                    <button type="button" class="btn btn--primary btn--sm" id="clsAdd">+ Kelas Baru</button>
+                  </div>
+                  <div id="clsList"></div>
+                </aside>
+
+                <section class="a-funnel-editor">
+                  <div class="a-card" id="clsForm" style="display:none">
+                    <div class="a-card__head">
+                      <h3>Detail Kelas</h3>
+                      <div class="a-actions">
+                        <button type="button" class="btn btn--ghost btn--sm" id="clsDelete">Hapus</button>
+                        <button type="button" class="btn btn--primary btn--sm" id="clsSave">Simpan Kelas</button>
+                      </div>
+                    </div>
+                    <div class="admin-grid3">
+                      <div class="field"><label>Judul</label><input class="a-input" id="cls_title"></div>
+                      <div class="field"><label>Slug</label><input class="a-input" id="cls_slug"></div>
+                      <div class="field"><label>Urutan</label><input class="a-input" type="number" id="cls_sort"></div>
+                    </div>
+                    <div class="field"><label>Deskripsi</label><textarea class="a-input" id="cls_desc" rows="3"></textarea></div>
+                    <div class="admin-grid3">
+                      <div class="field"><label>Harga</label><input class="a-input" type="number" id="cls_price"></div>
+                      <div class="field"><label>Harga Member</label><input class="a-input" type="number" id="cls_mprice"></div>
+                      <div class="field"><label>Cover Image URL</label><input class="a-input" id="cls_cover"></div>
+                    </div>
+                    <label class="a-check"><input type="checkbox" id="cls_published"> Published</label>
+                  </div>
+
+                  <div class="a-card">
+                    <div class="a-card__head">
+                      <h3>Lessons</h3>
+                      <div class="a-actions">
+                        <button type="button" class="btn btn--ghost btn--sm" id="lessonAdd">+ Lesson</button>
+                        <button type="button" class="btn btn--primary btn--sm" id="lessonSave">Simpan Lessons</button>
+                      </div>
+                    </div>
+                    <p class="a-empty" id="lessonsEmpty" style="display:none">Belum ada lesson.</p>
+                    <div id="lessonRows"></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <!-- TAB: VIP -->
+            <div data-lmspane="vip" style="display:none">
+              <div class="notice notice--warn" id="vipNotice" style="display:none"></div>
+
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Slot VIP Bulan Ini</h3>
+                  <button type="button" class="btn btn--ghost btn--sm" id="vipSync">↻ Sync Slot</button>
+                </div>
+                <div class="a-slotbar"><div class="a-slotbar__fill" id="vipMeterBar" style="width:0%"></div></div>
+                <div class="a-slotbar__text"><b id="vipMeterText">0 / 0 slot terisi</b><span id="vipMeterSub"></span></div>
+              </div>
+
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Pengaturan VIP</h3>
+                  <button type="button" class="btn btn--primary btn--sm" id="vipSave">Simpan</button>
+                </div>
+                <div class="admin-grid3">
+                  <div class="field"><label>Max Slot / Bulan</label><input class="a-input" type="number" id="vip_max"></div>
+                  <div class="field"><label>Harga VIP</label><input class="a-input" type="number" id="vip_price"></div>
+                  <div class="field"><label>&nbsp;</label><label class="a-check"><input type="checkbox" id="vip_active"> VIP aktif</label></div>
+                </div>
+                <div class="field"><label>Deskripsi</label><textarea class="a-input" id="vip_desc" rows="2"></textarea></div>
+                <div class="field"><label>Benefit (satu per baris)</label><textarea class="a-input" id="vip_benefits" rows="5"></textarea></div>
+              </div>
+
+              <div class="a-card">
+                <div class="a-card__head"><h3>Booking VIP</h3></div>
+                <div class="a-table-wrap">
+                  <table class="a-table">
+                    <thead><tr><th>Member</th><th>Jadwal</th><th>Topik</th><th>Status</th><th>Dibuat</th><th></th></tr></thead>
+                    <tbody id="vipBookingsBody"></tbody>
+                  </table>
+                </div>
+                <p class="a-empty" id="vipBookingsEmpty" style="display:none">Belum ada booking.</p>
+              </div>
+            </div>
+
+            <!-- TAB: PROJECT REVIEW -->
+            <div data-lmspane="projects" style="display:none">
+              <div class="notice notice--warn" id="prjNotice" style="display:none"></div>
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Project Review</h3>
+                  <button type="button" class="btn btn--ghost btn--sm" id="prjRefresh">↻ Refresh</button>
+                </div>
+                <div class="a-table-wrap">
+                  <table class="a-table">
+                    <thead><tr><th>Project</th><th>Deskripsi</th><th>Status</th><th>Feedback</th><th></th></tr></thead>
+                    <tbody id="prjBody"></tbody>
+                  </table>
+                </div>
+                <p class="a-empty" id="prjEmpty" style="display:none">Belum ada project.</p>
               </div>
             </div>
           </div>
@@ -487,6 +571,77 @@
                 <button type="button" class="btn btn--primary" id="saveVouchersBtn">Simpan Semua</button>
                 <span class="hint" id="vouchersSaveState">Belum ada perubahan.</span>
               </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: AFFILIATES ============ -->
+          <div id="panelAffiliates" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Affiliate</h2>
+              <p class="lead">Kelola affiliate (member berbayar) &amp; komisi dari penjualan lewat link referral (kode <span style="font-family:var(--font-mono)">?ref=</span>).</p>
+            </div>
+
+            <div class="d-kpis" id="affKpis"></div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Affiliate</h3>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshAffiliates">↻ Refresh</button>
+                  <button type="button" class="btn btn--primary btn--sm" id="addAffiliate">+ Tambah Affiliate</button>
+                </div>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Kode</th>
+                      <th>Status</th>
+                      <th>Komisi</th>
+                      <th>Nilai</th>
+                      <th>Klik</th>
+                      <th>Komisi Masuk</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="affiliatesBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="affiliatesEmpty" style="display:none">Belum ada affiliate. Member berbayar bisa aktifin sendiri dari area member, atau klik "+ Tambah Affiliate".</p>
+            </div>
+
+            <div class="a-card" style="margin-top:22px">
+              <div class="a-card__head">
+                <h3>Komisi</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshCommissions">↻ Refresh</button>
+              </div>
+              <div class="a-filters" id="filtersCommissions">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntCommAll">0</span></button>
+                <button type="button" class="a-filter" data-status="pending">Belum dibayar <span class="cnt" id="cntCommPending">0</span></button>
+                <button type="button" class="a-filter" data-status="paid">Dibayar <span class="cnt" id="cntCommPaid">0</span></button>
+                <button type="button" class="a-filter" data-status="void">Batal <span class="cnt" id="cntCommVoid">0</span></button>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Affiliate</th>
+                      <th>Pembeli</th>
+                      <th>Paket</th>
+                      <th>Nilai</th>
+                      <th>Komisi</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="commissionsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="commissionsEmpty" style="display:none">Belum ada komisi.</p>
+              <p class="hint" style="margin-top:10px">Komisi dibuat otomatis oleh sistem saat pembayaran berhasil &amp; pembeli datang dari link affiliate. Pencairan dilakukan manual — setelah transfer, klik <b>Tandai dibayar</b>.</p>
             </div>
           </div>
 
@@ -760,6 +915,25 @@
     }
 
     // ============ Cek role admin + buka editor ============
+    function ensureAdminModules(done) {
+      if (window.__initAdminModules) {
+        window.__initAdminModules(client, cfg);
+        if (done) done();
+        return;
+      }
+      // Module script (type=module) belum eksekusi — tunggu sebentar.
+      var tries = 0;
+      var timer = setInterval(function () {
+        if (window.__initAdminModules) {
+          clearInterval(timer);
+          window.__initAdminModules(client, cfg);
+          if (done) done();
+        } else if (++tries > 60) {
+          clearInterval(timer);
+        }
+      }, 100);
+    }
+
     function initAdmin(user) {
       if (!client) return;
       client.from('admins').select('email').eq('email', user.email).maybeSingle().then(function (r) {
@@ -775,6 +949,7 @@
         }
         show('editorState');
         document.getElementById('logoutBtn').style.display = 'inline-flex';
+        ensureAdminModules();
         loadDashboard();
         loadContent();
         loadLms();
@@ -1123,24 +1298,104 @@
     var currentPanel = 'dashboard';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers', landingpages: 'panelLandingPages' };
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', pipeline: 'panelPipeline', funnels: 'panelFunnels', blog: 'panelBlog', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers', affiliates: 'panelAffiliates', landingpages: 'panelLandingPages' };
       return document.getElementById(map[panel]);
+    }
+
+    // Error Supabase yang berarti skema DB belum lengkap.
+    function isSchemaError(err) {
+      var code = String((err && err.code) || '');
+      var msg = String((err && (err.message || err.details || err.hint)) || err || '');
+      var all = code + ' ' + msg;
+      return /does not exist|schema cache|PGRST20[45]|42P01|42703|42883|column .* not found|not found in schema/i.test(all);
+    }
+
+    // Tampilkan error panel yang jelas (bukan panel kosong).
+    function showModuleError(modName, err) {
+      var msg = (err && err.message) ? err.message : String(err || 'error tidak diketahui');
+      console.error('[admin] modul "' + modName + '" gagal:', err);
+      var el = panelEl(currentPanel);
+      if (el) {
+        var banner = el.querySelector('[data-module-error]');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.className = 'notice notice--warn';
+          banner.setAttribute('data-module-error', '1');
+          banner.style.margin = '0 0 16px';
+          el.insertBefore(banner, el.firstChild);
+        }
+        var hint = isSchemaError(err)
+          ? '<br><b>Skema database belum lengkap.</b> Jalankan <code>sql/migrate_2026_admin.sql</code> di Supabase SQL Editor, lalu muat ulang halaman ini.'
+          : '';
+        var extra = (err && (err.code || err.hint)) ? '<br><small>' + esc(String(err.code || err.hint)) + '</small>' : '';
+        banner.innerHTML = '<b>Panel ' + esc(modName) + ' gagal dimuat.</b> ' + esc(msg) + extra + hint;
+      }
+      if (window.toast) window.toast('Panel ' + modName + ' gagal dimuat: ' + msg, 'warn');
+    }
+
+    // Panggil modul admin dengan penjaga error: 1 modul rusak tidak boleh
+    // membuat seluruh dashboard mati.
+    function modCall(modName, method) {
+      var mods = window.__ADMIN_MODULES__;
+      if (!mods || !mods[modName]) return null;
+      var m = mods[modName];
+      var fn = m[method];
+      if (typeof fn !== 'function' && typeof m[method + 'Hermes'] === 'function') fn = m[method + 'Hermes'];
+      if (typeof fn !== 'function') {
+        console.warn('[admin] modul "' + modName + '" tidak punya fungsi "' + method + '"');
+        return null;
+      }
+      try {
+        var out = fn.call(m);
+        // Modul async: error-nya berupa promise rejection, harus ditangkap.
+        if (out && typeof out.then === 'function') {
+          out.catch(function (e) { showModuleError(modName, e); });
+        }
+        return out;
+      } catch (e) {
+        showModuleError(modName, e);
+        return null;
+      }
     }
 
     document.querySelectorAll('.a-menu').forEach(function (b) {
       b.addEventListener('click', function () {
+        // Hermes AI Command Center = slide-over (drawer), bukan ganti panel.
+        if (b.dataset.panel === 'hermes') {
+          document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
+          b.classList.add('is-active');
+          if (window.__ADMIN_MODULES__) {
+            modCall('hermes', 'toggleHermes');
+          } else {
+            ensureAdminModules(function () {
+              modCall('hermes', 'openHermes');
+            });
+          }
+          return;
+        }
         document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
         b.classList.add('is-active');
         currentPanel = b.dataset.panel;
-        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'members', 'vouchers', 'landingpages'].forEach(function (p) {
-          panelEl(p).style.display = (p === currentPanel) ? 'block' : 'none';
+        modCall('hermes', 'closeHermes');
+        // Bersihkan banner error panel sebelumnya.
+        document.querySelectorAll('[data-module-error]').forEach(function (n) { n.remove(); });
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'pipeline', 'funnels', 'blog', 'members', 'vouchers', 'affiliates', 'landingpages'].forEach(function (p) {
+          var el = panelEl(p);
+          if (el) el.style.display = (p === currentPanel) ? 'block' : 'none';
         });
         if (currentPanel === 'dashboard') loadDashboard();
-        if (currentPanel === 'lms') loadLms();
+        if (currentPanel === 'pipeline') modCall('pipeline', 'load');
+        if (currentPanel === 'funnels') modCall('funnels', 'load');
+        if (currentPanel === 'blog') modCall('blog', 'load');
+        if (currentPanel === 'lms') {
+          loadLms();
+          modCall('lms', 'load');
+        }
         if (currentPanel === 'leadsCourse') loadLeads('course');
         if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
         if (currentPanel === 'members') loadMembers();
         if (currentPanel === 'vouchers') loadVouchers();
+        if (currentPanel === 'affiliates') loadAffiliates();
         if (currentPanel === 'landingpages') loadLandingPages();
       });
     });
@@ -1335,202 +1590,8 @@
     document.getElementById('exportCsvKomunitas').addEventListener('click', function () { exportCsvFor('leadsKomunitas'); });
 
     // ============ Dashboard ============
-    document.getElementById('refreshDashboard').addEventListener('click', loadDashboard);
-
     function loadDashboard() {
-      if (!client) return;
-      var notice = document.getElementById('dashNotice');
-      notice.style.display = 'none';
-      Promise.all([
-        client.from('leads').select('*').order('created_at', { ascending: false }).limit(300),
-        client.from('members').select('*').order('created_at', { ascending: false }).limit(300)
-      ]).then(function (res) {
-        if (res[0].error) {
-          renderDashError(res[0].error);
-          return;
-        }
-        var leads = res[0].data || [];
-        var members = res[1].error ? [] : (res[1].data || []);
-        renderKpis(leads, members);
-        renderBars(leads, members);
-        renderFunnel(leads);
-        renderRecent(leads, members);
-      });
-    }
-
-    function renderDashError(err) {
-      ['dashKpis', 'dashBars', 'dashFunnel', 'dashRecentLeads', 'dashRecentMembers'].forEach(function (id) {
-        document.getElementById(id).innerHTML = '';
-      });
-      var n = document.getElementById('dashNotice');
-      n.style.display = 'block';
-      n.innerHTML = '⚠️ Gagal load data: <b style="color:inherit">' + esc(err.message || '') + '</b>. ' +
-        'Pastikan tabel <span style="font-family:var(--font-mono)">leads</span> &amp; <span style="font-family:var(--font-mono)">members</span> sudah dibuat — ' +
-        'jalankan <span style="font-family:var(--font-mono)">supabase-setup.sql</span> di SQL Editor.';
-    }
-
-    function fmtRp(n) {
-      return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    }
-
-    function statusLabel(s) {
-      var map = { belum: 'Belum', follow_up: 'Follow-up', bayar: 'Bayar', paid: 'Paid', pending: 'Pending', expired: 'Expired' };
-      return map[s] || s;
-    }
-
-    function fmtShort(dt) {
-      if (!dt) return '—';
-      var d = new Date(dt);
-      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) + ' ' +
-             d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function renderKpis(leads, members) {
-      var srcC = 0, srcK = 0, belum = 0, fu = 0, bayar = 0;
-      leads.forEach(function (l) {
-        if (l.source === 'komunitas') srcK++; else srcC++;
-        if (l.status === 'belum') belum++;
-        else if (l.status === 'follow_up') fu++;
-        else if (l.status === 'bayar') bayar++;
-      });
-
-      var paid = 0, pend = 0, rev = 0;
-      members.forEach(function (m) {
-        if (m.status === 'paid') {
-          paid++;
-          var harga = m.tier === 'lifetime' ? (cfg.PRICES.lifetime.harga || 999000) : (cfg.PRICES.yearly.harga || 599000);
-          rev += harga;
-        } else if (m.status === 'pending') {
-          pend++;
-        }
-      });
-
-      var conv = leads.length ? Math.round(bayar / leads.length * 100) : 0;
-      var kpis = [
-        { label: 'Total Leads', val: leads.length, sub: 'course ' + srcC + ' · komunitas ' + srcK },
-        { label: 'Leads Belum', val: belum, sub: 'butuh follow-up' },
-        { label: 'Follow-up', val: fu, sub: 'dalam proses' },
-        { label: 'Bayar', val: bayar, sub: 'konversi ' + conv + '%' },
-        { label: 'Members', val: members.length, sub: 'paid ' + paid + ' · pending ' + pend },
-        { label: 'Member Paid', val: paid, sub: 'dari total member' },
-        { label: 'Estimasi Revenue', val: 'Rp ' + fmtRp(rev), sub: 'dari member paid', big: true }
-      ];
-
-      var el = document.getElementById('dashKpis');
-      el.innerHTML = '';
-      kpis.forEach(function (k) {
-        var d = document.createElement('div');
-        d.className = 'd-kpi' + (k.big ? ' is-big' : '');
-        d.innerHTML = '<span>' + k.label + '</span><b>' + k.val + '</b><div class="sub">' + k.sub + '</div>';
-        el.appendChild(d);
-      });
-    }
-
-    function dayKey(d) {
-      var x = d instanceof Date ? d : new Date(d);
-      return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0');
-    }
-
-    function renderBars(leads, members) {
-      var el = document.getElementById('dashBars');
-      var days = [];
-      var now = new Date();
-      for (var i = 13; i >= 0; i--) {
-        days.push(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i));
-      }
-      var counts = days.map(function (d) {
-        var k = dayKey(d);
-        return {
-          label: d.getDate(),
-          l: leads.filter(function (x) { return dayKey(x.created_at) === k; }).length,
-          m: members.filter(function (x) { return dayKey(x.created_at) === k; }).length
-        };
-      });
-
-      var hasData = counts.some(function (c) { return c.l + c.m > 0; });
-      el.innerHTML = '';
-      if (!hasData) {
-        el.innerHTML = '<p class="a-empty">Belum ada data 14 hari terakhir.</p>';
-        return;
-      }
-      var max = 1;
-      counts.forEach(function (c) { max = Math.max(max, c.l, c.m); });
-
-      counts.forEach(function (c) {
-        var bar = document.createElement('div');
-        bar.className = 'd-bar';
-        bar.innerHTML =
-          '<div class="d-bar__in">' +
-            '<i class="is-lead" style="height:' + Math.max(2, Math.round(c.l / max * 100)) + '%"></i>' +
-            '<i class="is-member" style="height:' + Math.max(2, Math.round(c.m / max * 100)) + '%"></i>' +
-          '</div>' +
-          '<small>' + c.label + '</small>';
-        el.appendChild(bar);
-      });
-    }
-
-    function renderFunnel(leads) {
-      var belum = 0, fu = 0, bayar = 0;
-      leads.forEach(function (l) {
-        if (l.status === 'belum') belum++;
-        else if (l.status === 'follow_up') fu++;
-        else if (l.status === 'bayar') bayar++;
-      });
-      var steps = [
-        ['Belum', belum, 'belum'],
-        ['Follow-up', fu, 'follow_up'],
-        ['Bayar', bayar, 'bayar']
-      ];
-      var el = document.getElementById('dashFunnel');
-      el.innerHTML = '';
-      steps.forEach(function (s, i) {
-        if (i) {
-          var ar = document.createElement('div');
-          ar.className = 'd-farrow';
-          ar.textContent = '→';
-          el.appendChild(ar);
-        }
-        var d = document.createElement('div');
-        d.className = 'd-fstep st-' + s[2];
-        d.innerHTML = '<b>' + s[1] + '</b><span>' + s[0] + '</span>';
-        el.appendChild(d);
-      });
-      var conv = leads.length ? Math.round(bayar / leads.length * 100) : 0;
-      document.getElementById('dashConv').textContent = leads.length
-        ? 'Konversi lead → bayar: ' + conv + '% (' + bayar + ' dari ' + leads.length + ' lead)'
-        : 'Belum ada lead.';
-    }
-
-    function renderRecent(leads, members) {
-      var lEl = document.getElementById('dashRecentLeads');
-      lEl.innerHTML = '';
-      leads.slice(0, 6).forEach(function (l) {
-        var src = srcOf(l);
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td>' +
-            '<div class="d-name">' + esc(l.name) + ' <span class="d-src is-' + src + '">' + src + '</span></div>' +
-            '<div class="d-sub">' + esc(l.email || '—') + ' · ' + esc(fmtShort(l.created_at)) + '</div>' +
-          '</td>' +
-          '<td><span class="d-badge st-' + esc(l.status) + '">' + esc(statusLabel(l.status)) + '</span></td>';
-        lEl.appendChild(tr);
-      });
-      if (!leads.length) lEl.innerHTML = '<tr><td class="a-empty">Belum ada lead.</td></tr>';
-
-      var mEl = document.getElementById('dashRecentMembers');
-      mEl.innerHTML = '';
-      members.slice(0, 6).forEach(function (m) {
-        var tier = m.tier === 'lifetime' ? 'Lifetime' : 'Tahunan';
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-          '<td>' +
-            '<div class="d-name">' + esc(m.email) + '</div>' +
-            '<div class="d-sub">' + tier + ' · ' + esc(fmtShort(m.created_at)) + '</div>' +
-          '</td>' +
-          '<td><span class="d-badge st-' + esc(m.status) + '">' + esc(statusLabel(m.status)) + '</span></td>';
-        mEl.appendChild(tr);
-      });
-      if (!members.length) mEl.innerHTML = '<tr><td class="a-empty">Belum ada member.</td></tr>';
+      if (window.__ADMIN_MODULES__) window.__ADMIN_MODULES__.dashboard.load();
     }
 
     // ============ LMS Management ============
@@ -1933,6 +1994,243 @@
             console.warn('[voucher] kolom "tier" tidak ada di tabel — disimpan tanpa kolom tier');
           }
           loadVouchers();
+        });
+      });
+    });
+
+    // ============ Affiliate Management ============
+    var affiliatesCache = null;
+    var commissionsCache = null;
+    var commissionFilter = 'all';
+
+    function affRp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+
+    function loadAffiliates() {
+      if (!client) return;
+      client.from('affiliates').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) {
+          document.getElementById('affiliatesBody').innerHTML =
+            '<tr><td colspan="8" class="l-meta">Gagal load affiliate: ' + esc(r.error.message || '') + '</td></tr>';
+          return;
+        }
+        affiliatesCache = r.data || [];
+        client.from('affiliate_commissions').select('*').order('created_at', { ascending: false }).then(function (r2) {
+          commissionsCache = (!r2.error && r2.data) ? r2.data : [];
+          refreshCommissionCounts();
+          renderAffiliates();
+          renderCommissions();
+          renderAffKpis();
+        });
+      });
+    }
+
+    function affCommissionSum(code) {
+      var sum = 0;
+      (commissionsCache || []).forEach(function (c) {
+        if (c.affiliate_code === code && c.status !== 'void') sum += Number(c.commission_amount || 0);
+      });
+      return sum;
+    }
+
+    function renderAffKpis() {
+      var affs = affiliatesCache || [];
+      var comms = (commissionsCache || []).filter(function (c) { return c.status !== 'void'; });
+      var sales = comms.length;
+      var pending = comms.filter(function (c) { return c.status === 'pending'; }).reduce(function (s, c) { return s + Number(c.commission_amount || 0); }, 0);
+      var paid = comms.filter(function (c) { return c.status === 'paid'; }).reduce(function (s, c) { return s + Number(c.commission_amount || 0); }, 0);
+      function kpi(label, value, big) {
+        return '<div class="d-kpi' + (big ? ' is-big' : '') + '"><span>' + label + '</span><b>' + value + '</b></div>';
+      }
+      var el = document.getElementById('affKpis');
+      if (el) {
+        el.innerHTML =
+          kpi('Affiliate', affs.length) +
+          kpi('Penjualan referral', sales) +
+          kpi('Komisi belum dibayar', affRp(pending), true) +
+          kpi('Komisi sudah dibayar', affRp(paid));
+      }
+      var badge = document.getElementById('countMenuAffiliates');
+      if (badge) badge.textContent = affs.length || '';
+    }
+
+    function renderAffiliates() {
+      var body = document.getElementById('affiliatesBody');
+      var empty = document.getElementById('affiliatesEmpty');
+      var list = affiliatesCache || [];
+      if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = list.map(function (a) {
+        var typeSel =
+          '<select class="a-select aff-type" data-id="' + a.id + '">' +
+            '<option value="percent"' + (a.commission_type === 'percent' ? ' selected' : '') + '>Persen</option>' +
+            '<option value="amount"' + (a.commission_type === 'amount' ? ' selected' : '') + '>Nominal</option>' +
+          '</select>';
+        var valInput = '<input type="number" min="0" step="1" class="aff-value" data-id="' + a.id + '" value="' + Number(a.commission_value || 0) + '" style="width:110px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--text);font-family:var(--font-mono)" />';
+        var statusSel =
+          '<select class="a-select aff-status" data-id="' + a.id + '">' +
+            '<option value="active"' + (a.status === 'active' ? ' selected' : '') + '>Aktif</option>' +
+            '<option value="disabled"' + (a.status === 'disabled' ? ' selected' : '') + '>Nonaktif</option>' +
+          '</select>';
+        var hint = a.commission_type === 'percent' ? 'Nilai = %' : 'Nilai = Rp';
+        return '<tr>' +
+          '<td data-label="Email"><div class="l-name">' + esc(a.email) + '</div><div class="l-meta">' + esc(a.code) + '</div></td>' +
+          '<td data-label="Kode"><b style="font-family:var(--font-mono)">' + esc(a.code) + '</b></td>' +
+          '<td data-label="Status">' + statusSel + '</td>' +
+          '<td data-label="Komisi">' + typeSel + '<div class="l-meta">' + hint + '</div></td>' +
+          '<td data-label="Nilai">' + valInput + '</td>' +
+          '<td data-label="Klik">' + Number(a.clicks || 0) + '</td>' +
+          '<td data-label="Komisi Masuk">' + affRp(affCommissionSum(a.code)) + '</td>' +
+          '<td><button type="button" class="btn btn--ghost btn--sm aff-del" data-id="' + a.id + '">Hapus</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function patchAffiliate(id, patch, cb) {
+      client.from('affiliates').update(patch).eq('id', id).then(function (r) {
+        if (r.error) { alert('Gagal simpan: ' + r.error.message); return; }
+        if (cb) cb();
+      });
+    }
+
+    function bindAffiliateControls() {
+      var body = document.getElementById('affiliatesBody');
+      if (!body) return;
+
+      body.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        if (t.classList.contains('aff-type')) {
+          patchAffiliate(t.dataset.id, { commission_type: t.value }, loadAffiliates);
+        } else if (t.classList.contains('aff-value')) {
+          var v = Number(t.value);
+          if (isNaN(v) || v < 0) { alert('Nilai komisi tidak valid.'); return; }
+          patchAffiliate(t.dataset.id, { commission_value: v }, renderAffiliates);
+        } else if (t.classList.contains('aff-status')) {
+          patchAffiliate(t.dataset.id, { status: t.value }, loadAffiliates);
+        }
+      });
+
+      body.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.classList || !t.classList.contains('aff-del')) return;
+        if (!confirm('Hapus affiliate ini? Riwayat komisinya tetap tersimpan.')) return;
+        client.from('affiliates').delete().eq('id', t.dataset.id).then(function (r) {
+          if (r.error) { alert('Gagal hapus: ' + r.error.message); return; }
+          loadAffiliates();
+        });
+      });
+    }
+
+    function setCommission(id, status) {
+      var patch = { status: status };
+      if (status === 'paid') patch.paid_at = new Date().toISOString();
+      client.from('affiliate_commissions').update(patch).eq('id', id).then(function (r) {
+        if (r.error) { alert('Gagal update komisi: ' + r.error.message); return; }
+        loadAffiliates();
+      });
+    }
+
+    function refreshCommissionCounts() {
+      var list = commissionsCache || [];
+      var counts = { all: list.length, pending: 0, paid: 0, void: 0 };
+      list.forEach(function (c) { if (counts[c.status] !== undefined) counts[c.status]++; });
+      document.getElementById('cntCommAll').textContent = counts.all;
+      document.getElementById('cntCommPending').textContent = counts.pending;
+      document.getElementById('cntCommPaid').textContent = counts.paid;
+      document.getElementById('cntCommVoid').textContent = counts.void;
+    }
+
+    function renderCommissions() {
+      var body = document.getElementById('commissionsBody');
+      var empty = document.getElementById('commissionsEmpty');
+      var list = (commissionsCache || []).filter(function (c) {
+        return commissionFilter === 'all' || c.status === commissionFilter;
+      });
+      if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = list.map(function (c) {
+        var date = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        var tierLabel = c.tier === 'lifetime' ? 'Lifetime' : (c.tier === 'yearly' ? 'Tahunan' : (c.tier || '—'));
+        var stLabel = c.status === 'paid' ? 'Dibayar' : (c.status === 'void' ? 'Batal' : 'Belum dibayar');
+        var statusClass = 'st-' + (c.status === 'paid' ? 'paid' : (c.status === 'void' ? 'belum' : 'pending'));
+        var actions = '';
+        if (c.status !== 'paid') actions += '<button type="button" class="btn btn--primary btn--sm comm-paid" data-id="' + c.id + '">Tandai dibayar</button> ';
+        if (c.status !== 'void') actions += '<button type="button" class="btn btn--ghost btn--sm comm-void" data-id="' + c.id + '">Batalkan</button>';
+        if (c.status === 'void') actions += '<button type="button" class="btn btn--ghost btn--sm comm-pending" data-id="' + c.id + '">Kembalikan</button>';
+        return '<tr>' +
+          '<td data-label="Tanggal">' + date + '</td>' +
+          '<td data-label="Affiliate">' + esc(c.affiliate_code) + '<div class="l-meta">' + esc(c.affiliate_email || '') + '</div></td>' +
+          '<td data-label="Pembeli">' + esc(c.customer_email || '—') + '</td>' +
+          '<td data-label="Paket">' + esc(tierLabel) + '</td>' +
+          '<td data-label="Nilai">' + affRp(c.sale_amount) + '</td>' +
+          '<td data-label="Komisi"><b>' + affRp(c.commission_amount) + '</b></td>' +
+          '<td data-label="Status"><span class="a-select ' + statusClass + '" style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px">' + stLabel + '</span></td>' +
+          '<td>' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function bindCommissionControls() {
+      var body = document.getElementById('commissionsBody');
+      if (!body) return;
+      body.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        if (t.classList.contains('comm-paid')) setCommission(t.dataset.id, 'paid');
+        else if (t.classList.contains('comm-void')) setCommission(t.dataset.id, 'void');
+        else if (t.classList.contains('comm-pending')) setCommission(t.dataset.id, 'pending');
+      });
+    }
+
+    document.getElementById('refreshAffiliates').addEventListener('click', loadAffiliates);
+    document.getElementById('refreshCommissions').addEventListener('click', loadAffiliates);
+    bindAffiliateControls();
+    bindCommissionControls();
+
+    document.querySelectorAll('#filtersCommissions .a-filter').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#filtersCommissions .a-filter').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        commissionFilter = btn.dataset.status;
+        renderCommissions();
+      });
+    });
+
+    document.getElementById('addAffiliate').addEventListener('click', function () {
+      var email = (prompt('Email member (harus terdaftar & status paid):') || '').trim().toLowerCase();
+      if (!email || email.indexOf('@') < 0) return;
+      client.from('members').select('status').eq('email', email).maybeSingle().then(function (mr) {
+        if (mr.error) { alert('Gagal cek member: ' + mr.error.message); return; }
+        if (!mr.data || mr.data.status !== 'paid') {
+          alert('Email ini bukan member berbayar (status: ' + (mr.data ? mr.data.status : 'tidak terdaftar') + ').');
+          return;
+        }
+        var code = (prompt('Kode referral (huruf/angka, kosongkan = otomatis):') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!code) {
+          code = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 6) +
+            String(Math.floor(Math.random() * 9000) + 1000);
+        }
+        var type = prompt('Tipe komisi:\n1 = Persen (%)\n2 = Nominal (Rp)\n\nKetik 1 atau 2:', '1');
+        if (type !== '1' && type !== '2') return;
+        var val = prompt(type === '1' ? 'Berapa persen komisi? (cth: 20)' : 'Berapa rupiah per penjualan? (cth: 100000)', type === '1' ? '20' : '100000');
+        if (!val || isNaN(val)) return;
+        client.from('affiliates').insert({
+          email: email,
+          code: code,
+          commission_type: type === '1' ? 'percent' : 'amount',
+          commission_value: Number(val),
+          status: 'active'
+        }).then(function (r) {
+          if (r.error) { alert('Gagal tambah affiliate: ' + r.error.message); return; }
+          loadAffiliates();
         });
       });
     });
@@ -2718,6 +3016,22 @@
         if (r.error) { console.error('[lp] del', r.error); alert('Gagal hapus: ' + r.error.message); return; }
         loadLandingPages();
       });
+    }
+  </script>
+
+  <script type="module">
+    import { initAdminModules } from './js/admin/index.js';
+
+    window.__initAdminModules = function (client, cfg) {
+      initAdminModules(client, cfg);
+    };
+
+    if (window.client && !window.__ADMIN_MODULES__) {
+      var editor = document.getElementById('editorState');
+      if (editor && editor.style.display === 'block') {
+        window.__initAdminModules(window.client, window.cfg);
+        if (window.__ADMIN_MODULES__ && window.__ADMIN_MODULES__.dashboard) window.__ADMIN_MODULES__.dashboard.load();
+      }
     }
   </script>
 </body>
