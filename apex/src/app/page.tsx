@@ -11,8 +11,7 @@ export const metadata = {
     "Xinde Labs membangun sistem AI yang menjalankan operasional bisnis: agent otonom, funnel yang menutup penjualan sendiri, dan konten yang terbit tanpa kamu pegang satu-satu.",
 };
 
-// ponytail: sementara arahkan ke kelas. (subdomain live) — balik ke learn. setelah DNS terbit
-const LEARN_URL = "https://kelas.xindelabs.web.id";
+const LEARN_URL = "https://learn.xindelabs.web.id";
 
 type ClassRow = {
   slug: string;
