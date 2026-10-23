@@ -152,6 +152,30 @@ export function renderCheckout(el, opts) {
           <input id="co-wa" name="whatsapp" required placeholder="08xxxxxxxxxx" class="co-input" autocomplete="tel">
         </div>
 
+        <div class="co-field">
+          <label class="co-label" for="co-discord">ID Discord <span class="co-req">*</span></label>
+          <input id="co-discord" name="discord" required inputmode="numeric" pattern="[0-9]{17,20}"
+                 placeholder="cth. 751387646030381068" class="co-input" autocomplete="off">
+          <div id="co-discord-msg" class="co-note"></div>
+          <details class="co-help">
+            <summary>Cara cari ID Discord lo</summary>
+            <p class="co-help__lead">Akses kelas dikirim otomatis ke akun Discord ini, jadi harus ID yang bener (17–20 angka). Bukan username, bukan link invite.</p>
+            <p class="co-help__title">Desktop / browser</p>
+            <ol>
+              <li>Buka Discord, klik ikon <strong>gear</strong> (User Settings) di kiri bawah.</li>
+              <li>Pilih tab <strong>Advanced</strong> → aktifkan <strong>Developer Mode</strong>.</li>
+              <li>Klik kanan foto profil atau nama lo → <strong>Copy User ID</strong>.</li>
+            </ol>
+            <p class="co-help__title">Mobile (Android / iOS)</p>
+            <ol>
+              <li>Tap foto profil lo di kanan bawah → tap ikon <strong>gear / Settings</strong>.</li>
+              <li>Pilih <strong>Advanced</strong> → aktifkan <strong>Developer Mode</strong>.</li>
+              <li>Balik ke tab profil lo → tap ikon <strong>⋯ (titik tiga)</strong> → <strong>Copy User ID</strong>.</li>
+            </ol>
+            <p class="co-help__lead">Tempel di kolom atas. Contoh bentuk yang benar: <code>751387646030381068</code></p>
+          </details>
+        </div>
+
         <label class="co-bump flex items-start gap-3 p-4 rounded-xl border border-emerald-400/30 bg-emerald-400/5 cursor-pointer" id="co-bump-wrap" ${bumpCfg.enabled ? '' : 'style="display:none"'}>
           <input type="checkbox" id="co-bump" class="mt-1 co-checkbox">
           <div>
@@ -233,6 +257,16 @@ export function renderCheckout(el, opts) {
   $('#co-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = $('#co-submit');
+    const errEl = $('#co-error');
+    errEl.textContent = '';
+    errEl.className = 'co-note';
+    const discordVal = ($('#co-discord') ? $('#co-discord').value : '').trim();
+    if ($('#co-discord') && !/^\d{17,20}$/.test(discordVal)) {
+      $('#co-discord-msg').textContent = 'ID Discord harus 17–20 angka. Klik "Cara cari ID Discord lo" di atas.';
+      $('#co-discord-msg').className = 'co-note co-note--error';
+      $('#co-discord').focus();
+      return;
+    }
     btn.disabled = true;
     btn.textContent = 'Memproses...';
     try {
@@ -298,6 +332,7 @@ export async function submitCheckout(data, funnel) {
     name: data.name,
     email: data.email,
     whatsapp: data.whatsapp,
+    discord_id: (data.discord || '').trim(),
     status: 'belum',
     source: 'funnel-checkout',
     current_stage: 'unpaid_invoice',

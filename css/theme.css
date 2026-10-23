@@ -689,6 +689,14 @@ html.js .reveal.in {
 .co-note { font-size: 0.82rem; min-height: 1.2em; color: rgba(255, 255, 255, 0.5); }
 .co-note--ok { color: #6ee7b7; }
 .co-note--error { color: #fca5a5; }
+.co-req { color: #fca5a5; }
+.co-help { margin-top: 0.4rem; font-size: 0.82rem; color: rgba(255, 255, 255, 0.62); }
+.co-help summary { cursor: pointer; color: #00ff88; font-weight: 500; user-select: none; }
+.co-help[open] summary { margin-bottom: 0.5rem; }
+.co-help__lead { margin: 0 0 0.5rem; }
+.co-help__title { margin: 0.6rem 0 0.25rem; font-weight: 600; color: rgba(255, 255, 255, 0.85); }
+.co-help ol { margin: 0 0 0.25rem 1.1rem; padding: 0; display: grid; gap: 0.2rem; }
+.co-help code { padding: 0.05rem 0.35rem; border-radius: 0.35rem; background: rgba(255,255,255,0.08); color: #eafff5; font-size: 0.78rem; }
 .co-bump { cursor: pointer; transition: border-color 0.2s ease; }
 .co-bump:hover { border-color: rgba(52, 211, 153, 0.5); }
 .co-totals { font-size: 0.9rem; }
