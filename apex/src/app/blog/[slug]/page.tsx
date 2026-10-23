@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
-  if (!data) return { title: "Artikel — Xinde Labs" };
+  if (!data) return { title: "Artikel — XindeLabs" };
   return {
     title: data.seo_title || data.title,
     description: data.seo_description || stripTags(data.excerpt) || undefined,

@@ -493,7 +493,8 @@ function renderCTA(block) {
   const ctaBtn = el.querySelector('[data-funnel-cta]');
   if (ctaBtn) {
     ctaBtn.addEventListener('click', () => {
-      handleCheckoutIntent({ id: 'default', name: d.primary_text || 'Paket Xindelabs', price: 0 });
+      const tier = d.primary_tier ? { ...d.primary_tier } : { id: 'default', name: d.primary_text || 'Paket Xindelabs', price: 0 };
+      handleCheckoutIntent(tier);
     });
   }
 

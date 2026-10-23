@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Syarat & Ketentuan | Xinde Labs",
-  description: "Syarat dan ketentuan penggunaan layanan Xinde Labs",
+  title: "Syarat & Ketentuan | XindeLabs",
+  description: "Syarat dan ketentuan penggunaan layanan XindeLabs",
 };
 
 export default function Terms() {
@@ -13,7 +13,7 @@ export default function Terms() {
 
       <h2>1. Penerimaan Ketentuan</h2>
       <p>
-        Dengan mengakses atau menggunakan layanan Xinde Labs (termasuk kursus, workshop,
+        Dengan mengakses atau menggunakan layanan XindeLabs (termasuk kursus, workshop,
         dan materi digital), Anda menyetujui syarat dan ketentuan ini.
       </p>
 
@@ -39,7 +39,7 @@ export default function Terms() {
 
       <h2>5. Batasan Tanggung Jawab</h2>
       <p>
-        Xinde Labs tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari
+        XindeLabs tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari
         penggunaan atau ketidakmampuan menggunakan layanan, sejauh diizinkan oleh hukum yang berlaku.
       </p>
 

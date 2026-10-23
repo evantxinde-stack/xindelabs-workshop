@@ -6,9 +6,9 @@ import { formatIDR, stripTags } from "@/lib/content";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Xinde Labs — AI Automation & Digital Selling",
+  title: "XindeLabs — AI Automation & Digital Selling",
   description:
-    "Xinde Labs membangun sistem AI yang menjalankan operasional bisnis: agent otonom, funnel yang menutup penjualan sendiri, dan konten yang terbit tanpa kamu pegang satu-satu.",
+    "XindeLabs membangun sistem AI yang menjalankan operasional bisnis: agent otonom, funnel yang menutup penjualan sendiri, dan konten yang terbit tanpa kamu pegang satu-satu.",
 };
 
 const LEARN_URL = "https://learn.xindelabs.web.id";
@@ -122,7 +122,7 @@ export default async function Home() {
               <span className="text-[#00ff88]">semua yang lo kerjain ulang tiap hari.</span>
             </h1>
             <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-white/60 md:text-lg">
-              Xinde Labs bikin agent AI yang ambil alih kerjaan berulang: follow-up leads, funnel
+              XindeLabs bikin agent AI yang ambil alih kerjaan berulang: follow-up leads, funnel
               yang nutup penjualan, konten yang terbit tiap hari.{" "}
               <span className={`${hand} text-[1.35rem] leading-[1.15] text-[#00ff88]`}>Biar lo balik ngurus growth.</span>
             </p>
@@ -149,7 +149,7 @@ export default async function Home() {
             <div className="overflow-hidden rounded-2xl border border-white/10">
               <img
                 src="/founder.jpg"
-                alt="Evant Danamaya — founder Xinde Labs"
+                alt="Evant Danamaya — founder XindeLabs"
                 className="aspect-[4/5] w-full object-cover"
                 width={1080}
                 height={1350}
@@ -191,7 +191,7 @@ export default async function Home() {
                 hitung — menghabiskan waktu yang seharusnya dipakai untuk tumbuh.
               </p>
               <p>
-                Sekarang Xinde Labs membangun lapisan itu dengan AI: agent otonom yang mengambil
+                Sekarang XindeLabs membangun lapisan itu dengan AI: agent otonom yang mengambil
                 pekerjaan operasional, funnel yang mengurus pembayaran sampai akses produk, dan
                 sistem konten yang menjaga brand tetap hidup.
               </p>
@@ -304,7 +304,7 @@ export default async function Home() {
             Cara bangunnya, <span className="text-[#00ff88]">diajarkan kebuka.</span>
           </h2>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
-            Semua yang dipakai di project nyata ditulis dan diajarkan di classroom Xinde Labs: kelas
+            Semua yang dipakai di project nyata ditulis dan diajarkan di classroom XindeLabs: kelas
             online, tantangan praktik, dan mentoring.
           </p>
 
@@ -415,7 +415,7 @@ export default async function Home() {
               <span className={`${hand} font-bold text-[#00ff88]`}>Dibangun,</span> bukan dipresentasikan.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.14em] text-white/60">
-              <span>© {new Date().getFullYear()} xinde labs</span>
+              <span>© {new Date().getFullYear()} xindelabs</span>
               <nav className="flex gap-5">
                 <Link href="/blog" className="lowercase hover:text-[#00ff88]">blog</Link>
                 <Link href="/portofolio" className="lowercase hover:text-[#00ff88]">portofolio</Link>

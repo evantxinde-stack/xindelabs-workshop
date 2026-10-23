@@ -28,11 +28,11 @@ const caveat = Caveat({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://xindelabs.web.id"),
   title: {
-    default: "Xinde Labs — Personal Branding, AI Agent, dan Digital Business",
-    template: "%s · Xinde Labs",
+    default: "XindeLabs — Personal Branding, AI Agent, dan Digital Business",
+    template: "%s · XindeLabs",
   },
   description:
-    "Xinde Labs bantu lo bangun personal branding, sistem AI agent, dan digital business yang jalan sendiri — kelas, workshop, dan pendampingan.",
+    "XindeLabs bantu lo bangun personal branding, sistem AI agent, dan digital business yang jalan sendiri — kelas, workshop, dan pendampingan.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

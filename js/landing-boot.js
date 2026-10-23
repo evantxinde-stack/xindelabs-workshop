@@ -196,7 +196,7 @@ window.LandingBoot = (function () {
     if (!label) label = 'Custom';
     var st = R.defaultStyles();
     return {
-      meta: { slug: slug, title: label, page_title: label + ' — Xinde Labs', accent: '#00ff88', is_custom: true },
+      meta: { slug: slug, title: label, page_title: label + ' — XindeLabs', accent: '#00ff88', is_custom: true },
       sections: [
         { id: 'hero', type: 'hero', anchor: 'hero', style: st, data: {
           eyebrow: 'xindelabs · landing page',
@@ -257,7 +257,7 @@ window.LandingBoot = (function () {
 
     // Subdomain funnel → biarkan funnel-engine yang Handles render.
     if (!IS_PREVIEW && isFunnelHost()) {
-      document.title = 'Xinde Labs — Kelas & Workshop';
+      document.title = 'XindeLabs — Kelas Online & Workshop';
       document.body.classList.add('funnel-mode');
       return;
     }

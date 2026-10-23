@@ -6,9 +6,9 @@ import { stripTags } from "@/lib/content";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Portofolio — Xinde Labs",
+  title: "Portofolio — XindeLabs",
   description:
-    "Karya nyata Xinde Labs: website, brand identity, dan sistem AI agent untuk bisnis di Indonesia.",
+    "Karya nyata XindeLabs: website, brand identity, dan sistem AI agent untuk bisnis di Indonesia.",
 };
 
 type Item = {

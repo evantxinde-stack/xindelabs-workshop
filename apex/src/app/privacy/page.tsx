@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Kebijakan Privasi | Xinde Labs",
-  description: "Kebijakan privasi Xinde Labs",
+  title: "Kebijakan Privasi | XindeLabs",
+  description: "Kebijakan privasi XindeLabs",
 };
 
 export default function PrivacyPolicy() {
@@ -12,7 +12,7 @@ export default function PrivacyPolicy() {
       <p className="text-sm text-neutral-500">Terakhir diperbarui: 25 September 2026</p>
 
       <p>
-        Xinde Labs (&quot;kami&quot;) menghargai privasi Anda. Kebijakan ini menjelaskan data
+        XindeLabs (&quot;kami&quot;) menghargai privasi Anda. Kebijakan ini menjelaskan data
         apa yang kami kumpulkan, bagaimana kami menggunakannya, dan hak Anda atas data tersebut.
       </p>
 
@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
       <h2>2. Cara Kami Menggunakan Data</h2>
       <ul>
         <li>Mengirimkan materi pembelian, akses LMS, dan email onboarding.</li>
-        <li>Mengirimkan follow-up edukatif dan penawaran terkait produk Xinde Labs (Anda bisa berhenti berlangganan kapan saja melalui link unsubscribe di setiap email).</li>
+        <li>Mengirimkan follow-up edukatif dan penawaran terkait produk XindeLabs (Anda bisa berhenti berlangganan kapan saja melalui link unsubscribe di setiap email).</li>
         <li>Meningkatkan kualitas produk dan layanan kami.</li>
       </ul>
 

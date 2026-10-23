@@ -7,9 +7,9 @@ import { formatDate, stripTags } from "@/lib/content";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Blog — Xinde Labs",
+  title: "Blog — XindeLabs",
   description:
-    "Artikel soal AI agent, personal branding, dan sistem penjualan dari Xinde Labs.",
+    "Artikel soal AI agent, personal branding, dan sistem penjualan dari XindeLabs.",
 };
 
 type Post = {

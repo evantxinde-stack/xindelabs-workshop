@@ -58,7 +58,7 @@ export function SiteFooter() {
             </Link>
           ))}
         </div>
-        <p>© {new Date().getFullYear()} Xinde Labs</p>
+        <p>© {new Date().getFullYear()} XindeLabs</p>
       </div>
     </footer>
   );

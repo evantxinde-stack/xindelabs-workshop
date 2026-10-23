@@ -701,7 +701,7 @@ html.js .reveal.in {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.4rem;
-  border-radius: 0.75rem;
+  border-radius: 999px;
   font-weight: 600;
   font-size: 0.92rem;
   cursor: pointer;
@@ -711,8 +711,8 @@ html.js .reveal.in {
 }
 .co-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .co-btn--primary {
-  background: linear-gradient(90deg, #34d399, #22d3ee);
-  color: #04110b;
+  background: #00ff88;
+  color: #0a1f12;
 }
 .co-btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
 .co-btn--ghost {
