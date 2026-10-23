@@ -1,654 +1,654 @@
 {
- "name": "BYOPA - Create Payment (Mayar, 2 Tier + Voucher)",
- "description": null,
- "isArchived": false,
- "nodes": [
-  {
-   "parameters": {
-    "httpMethod": "POST",
-    "path": "create-payment",
-    "responseMode": "responseNode",
-    "options": {}
-   },
-   "id": "webhook-create-payment",
-   "name": "Webhook: Checkout Page",
-   "type": "n8n-nodes-base.webhook",
-   "typeVersion": 2,
-   "position": [
-    -420,
-    0
-   ],
-   "webhookId": "create-payment-workshop-mayar"
-  },
-  {
-   "parameters": {
-    "jsCode": "// \ud83d\udd11 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = $env.MAYAR_API_KEY;\n\n// \ud83c\udff7\ufe0f PRODUCT ID per TIER (produk membership Mayar)\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  }\n};\n\n// \ud83d\uddc4\ufe0f SUPABASE (service_role \u2014 cuma di server)\nconst SUPABASE_URL = 'https://qxzvmnbhplgmspdxdbmg.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// ============================================================\n// HELPER: fetch ke Supabase\n// ============================================================\nasync function supabaseFetch(path, options) {\n  const resp = await this.helpers.httpRequest({\n    method: options.method || 'GET',\n    url: SUPABASE_URL + path,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': 'Bearer ' + SUPABASE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: options.body ? JSON.stringify(options.body) : undefined,\n    json: true,\n    timeout: 10000\n  });\n  return resp;\n}\n\n// ============================================================\n// VALIDASI VOUCHER di server (anti-hack \u2014 jangan percaya harga dari browser)\n// ============================================================\nasync function validateVoucher(code, tier, baseAmount) {\n  if (!code) return { valid: false, diskon: 0, voucher_code: '' };\n\n  // 1. Cari voucher di Supabase\n  const rows = await supabaseFetch(\n    '/rest/v1/vouchers?select=*&code=eq.' + encodeURIComponent(code) + '&active=eq.true',\n    { method: 'GET' }\n  );\n  const v = (Array.isArray(rows) && rows.length > 0) ? rows[0] : null;\n  if (!v) return { valid: false, reason: 'Kode voucher tidak ditemukan atau tidak aktif', diskon: 0, voucher_code: code };\n\n  // 3. Cek tier paket (voucher yearly jangan dipakai untuk lifetime, atau sebaliknya)\n  const vTier = (v.tier || 'all').toString().trim().toLowerCase();\n  if (vTier !== 'all' && vTier !== tier) {\n    return {\n      valid: false,\n      reason: 'Kode voucher tidak berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime'),\n      diskon: 0,\n      voucher_code: code\n    };\n  }\n\n  // 4. Cek expired\n  if (v.expires_at) {\n    const exp = new Date(v.expires_at);\n    if (exp < new Date()) {\n      return { valid: false, reason: 'Kode voucher sudah kedaluwarsa', diskon: 0, voucher_code: code };\n    }\n  }\n\n  // 5. Cek kuota\n  const maxUses = v.max_uses;\n  if (maxUses !== null && maxUses !== undefined && Number(v.used_count || 0) >= Number(maxUses)) {\n    return { valid: false, reason: 'Kode voucher sudah habis dipakai', diskon: 0, voucher_code: code };\n  }\n\n  // 6. Hitung diskon\n  let diskon = 0;\n  if (v.type === 'percent') {\n    diskon = Math.round(baseAmount * Number(v.value) / 100);\n  } else {\n    diskon = Math.min(Number(v.value) || 0, baseAmount);\n  }\n\n  return { valid: true, diskon: diskon, voucher_code: code, voucher_id: v.id };\n}\n\n// ============================================================\n// CATAT PEMAKAIAN VOUCHER (used_count + 1)\n// ============================================================\nasync function recordVoucherUse(voucherId) {\n  if (!voucherId) return;\n  try {\n    // Read current used_count\n    const rows = await supabaseFetch(\n      '/rest/v1/vouchers?select=used_count&id=eq.' + voucherId,\n      { method: 'GET' }\n    );\n    const current = (Array.isArray(rows) && rows.length > 0) ? Number(rows[0].used_count || 0) : 0;\n    // Increment\n    await supabaseFetch(\n      '/rest/v1/vouchers?id=eq.' + voucherId,\n      { method: 'PATCH', body: { used_count: current + 1 } }\n    );\n  } catch (err) {\n    console.log('voucher use record warn: ' + err.message);\n  }\n}\n\n// ============================================================\n// MAIN\n// ============================================================\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// Nomor HP Mayar (08... min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// ============ VALIDASI VOUCHER (server-side) ============\nconst voucherCode = (body.voucher_code || '').toString().trim().toUpperCase();\nconst voucherCheck = await validateVoucher(voucherCode, tier, t.amount);\n\n// Voucher DIKIRIM tapi TIDAK VALID -> tolak di sini (jangan bikin invoice nyasar).\n// Browser sudah cek duluan; ini pagar anti-tamper.\nif (voucherCode && !voucherCheck.valid) {\n  throw new Error(voucherCheck.reason || 'Kode voucher tidak valid untuk paket ini');\n}\n\n\n// Harga final: HARGA SELALU DARI SERVER (TIERS[tier].amount) \u2014\n// harga/diskon dari browser diabaikan sepenuhnya supaya tidak bisa dimanipulasi.\nconst baseAmount = t.amount;\nlet finalAmount = baseAmount - voucherCheck.diskon;\n// Guard: Mayar min amount \u2014 kalau diskon bikin <= 0, set ke 1000\nif (finalAmount < 1000) finalAmount = 1000;\n// Sanity: harga final tidak boleh melebihi harga paket\nif (finalAmount > baseAmount) finalAmount = baseAmount;\n\n// URL return \u2014 bawa tier, harga final, & voucher (buat Pixel + tracking)\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html?tier=' + tier + '&harga=' + finalAmount +\n  (voucherCheck.valid ? '&voucher=' + voucherCode : '');\n\n// Payload ke Mayar (amount = harga SETELAH diskon)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: finalAmount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: (t.label + ' ' + (discord || '-')).slice(0, 24)\n};\n\n// Catat pemakaian voucher (used_count + 1) \u2014 fire and forget\nif (voucherCheck.valid && voucherCheck.voucher_id) {\n  await recordVoucherUse(voucherCheck.voucher_id);\n}\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: finalAmount,\n    amountBase: t.amount,\n    diskon: voucherCheck.diskon,\n    voucher: voucherCheck.valid ? voucherCode : '',\n    voucherValid: voucherCheck.valid,\n    voucherReason: voucherCheck.reason || '',\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
-   },
-   "id": "code-build-payload",
-   "name": "Code: Build Mayar Payload",
-   "type": "n8n-nodes-base.code",
-   "typeVersion": 2,
-   "position": [
-    -180,
-    0
-   ],
-   "onError": "continueErrorOutput"
-  },
-  {
-   "parameters": {
-    "method": "POST",
-    "url": "={{ $json.endpoint }}",
-    "sendHeaders": true,
-    "headerParameters": {
-     "parameters": [
-      {
-       "name": "Authorization",
-       "value": "={{ $json.authHeader }}"
-      },
-      {
-       "name": "Content-Type",
-       "value": "application/json"
-      }
-     ]
-    },
-    "sendBody": true,
-    "specifyBody": "json",
-    "jsonBody": "={{ JSON.stringify($json.payload) }}",
-    "options": {}
-   },
-   "id": "http-mayar-checkout",
-   "name": "HTTP: Mayar Checkout",
-   "type": "n8n-nodes-base.httpRequest",
-   "typeVersion": 4.2,
-   "position": [
-    60,
-    0
-   ]
-  },
-  {
-   "parameters": {
-    "jsCode": "// Response dari Mayar \u2014 struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response \u2014 field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\n// Response Mayar /payment/create: data.link = invoice URL\nconst paymentUrl = data.link || data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\n// voucherValid + reason di-pass dari node Build Mayar Payload\nconst built = $('Code: Build Mayar Payload').first().json;\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000,\n    voucherValid: built.voucherValid === true,\n    voucherReason: built.voucherReason || ''\n  }\n};"
-   },
-   "id": "code-extract-url",
-   "name": "Code: Extract payment_url",
-   "type": "n8n-nodes-base.code",
-   "typeVersion": 2,
-   "position": [
-    300,
-    0
-   ]
-  },
-  {
-   "parameters": {
-    "respondWith": "json",
-    "responseBody": "={{ JSON.stringify({ payment_url: $json.payment_url, reference: $json.reference, voucher_valid: $json.voucherValid, voucher_reason: $json.voucherReason }) }}",
-    "options": {
-     "responseHeaders": {
-      "entries": [
-       {
-        "name": "Content-Type",
-        "value": "application/json"
-       }
-      ]
-     }
-    }
-   },
-   "id": "respond-to-webhook",
-   "name": "Respond to Webhook",
-   "type": "n8n-nodes-base.respondToWebhook",
-   "typeVersion": 1.4,
-   "position": [
-    540,
-    0
-   ]
-  },
-  {
-   "parameters": {},
-   "id": "manual-trigger",
-   "name": "Manual Trigger",
-   "type": "n8n-nodes-base.manualTrigger",
-   "typeVersion": 1,
-   "position": [
-    -700,
-    0
-   ]
-  },
-  {
-   "parameters": {
-    "jsCode": "// \ud83d\uddc4\ufe0f Siapkan data leads (disimpan SEBELUM user bayar \u2014 untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    apps_script_endpoint: 'https://script.google.com/macros/s/AKfycbwMmCBIuMsi42s26xEhZr6_57nDLjlxFxym08v3301fnIM3cktrJXADA8WSuzu_wrsT/exec',\n    apps_script_payload: {\n      action: 'lead',\n      nama: customer.nama || payment.nama || '',\n      email: customer.email || payment.email || '',\n      wa: customer.wa || payment.wa || '',\n      discord: customer.discord || payment.discord || '',\n      harga: payment.amount || 0\n    },\n    notes: 'tier:' + (payment.tier || 'yearly') + ' harga:' + (payment.amount || 0) + (payment.voucher ? ' voucher:' + payment.voucher : ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: $env.SUPABASE_SERVICE_ROLE_KEY\n  }\n};"
-   },
-   "id": "code-prep-lead",
-   "name": "Code: Siapkan Data Leads",
-   "type": "n8n-nodes-base.code",
-   "typeVersion": 2,
-   "position": [
-    540,
-    180
-   ]
-  },
-  {
-   "parameters": {
-    "method": "POST",
-    "url": "https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads",
-    "sendHeaders": true,
-    "headerParameters": {
-     "parameters": [
-      {
-       "name": "apikey",
-       "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-      },
-      {
-       "name": "Authorization",
-       "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-      },
-      {
-       "name": "Content-Type",
-       "value": "application/json"
-      },
-      {
-       "name": "Prefer",
-       "value": "return=minimal, resolution=ignore-duplicates"
-      }
-     ]
-    },
-    "sendBody": true,
-    "specifyBody": "json",
-    "jsonBody": "={{ JSON.stringify({ name: $json.name, email: $json.email, whatsapp: $json.whatsapp, discord_id: $json.discord_id, status: $json.status, source: $json.source, notes: $json.notes }) }}",
-    "options": {
-     "timeout": 15000,
-     "allowUnauthorizedCerts": false
-    }
-   },
-   "id": "http-insert-lead",
-   "name": "HTTP: Simpan Leads (Supabase)",
-   "type": "n8n-nodes-base.httpRequest",
-   "typeVersion": 4.2,
-   "position": [
-    780,
-    180
-   ],
-   "onError": "continueRegularOutput"
-  },
-  {
-   "parameters": {
-    "method": "POST",
-    "url": "={{ $json.apps_script_endpoint }}",
-    "sendHeaders": true,
-    "headerParameters": {
-     "parameters": [
-      {
-       "name": "Content-Type",
-       "value": "application/json"
-      }
-     ]
-    },
-    "sendBody": true,
-    "specifyBody": "json",
-    "jsonBody": "={{ JSON.stringify($json.apps_script_payload) }}",
-    "options": {
-     "timeout": 20000,
-     "allowUnauthorizedCerts": false
-    }
-   },
-   "id": "http-apps-script-lead",
-   "name": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
-   "type": "n8n-nodes-base.httpRequest",
-   "typeVersion": 4.2,
-   "position": [
-    1020,
-    180
-   ],
-   "onError": "continueRegularOutput"
-  },
-  {
-   "parameters": {
-    "respondWith": "json",
-    "responseBody": "={{ JSON.stringify({ error: 'voucher_ditolak', message: String($json.error || 'Voucher tidak valid untuk paket ini').replace(/ \\[line \\d+\\]$/, '') }) }}",
-    "options": {
-     "responseCode": 400,
-     "responseHeaders": {
-      "entries": [
-       {
-        "name": "Content-Type",
-        "value": "application/json"
-       }
-      ]
-     }
-    }
-   },
-   "id": "6405c801-2c3c-4153-adb0-ef758c0e2f4d",
-   "name": "Respond Voucher Ditolak",
-   "type": "n8n-nodes-base.respondToWebhook",
-   "typeVersion": 1.4,
-   "position": [
-    60,
-    -200
-   ]
-  }
- ],
- "connections": {
-  "Webhook: Checkout Page": {
-   "main": [
-    [
-     {
-      "node": "Code: Build Mayar Payload",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Code: Build Mayar Payload": {
-   "main": [
-    [
-     {
-      "node": "HTTP: Mayar Checkout",
-      "type": "main",
-      "index": 0
-     }
-    ],
-    [
-     {
-      "node": "Respond Voucher Ditolak",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "HTTP: Mayar Checkout": {
-   "main": [
-    [
-     {
-      "node": "Code: Extract payment_url",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Code: Extract payment_url": {
-   "main": [
-    [
-     {
-      "node": "Respond to Webhook",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Manual Trigger": {
-   "main": [
-    [
-     {
-      "node": "Webhook: Checkout Page",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  },
-  "Code: Siapkan Data Leads": {
-   "main": [
-    [
-     {
-      "node": "HTTP: Simpan Leads (Supabase)",
-      "type": "main",
-      "index": 0
-     },
-     {
-      "node": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
-      "type": "main",
-      "index": 0
-     }
-    ]
-   ]
-  }
- },
- "settings": {
-  "executionOrder": "v1"
- },
- "meta": {
-  "instanceId": "xindelabs"
- },
- "nodeGroups": [],
- "pinData": {},
- "activeVersionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
- "sourceWorkflowId": null,
- "tags": [],
- "activeVersion": {
-  "updatedAt": "2026-10-13T17:51:08.529Z",
-  "createdAt": "2026-10-13T17:51:08.529Z",
-  "versionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
-  "workflowId": "1",
+  "name": "BYOPA - Create Payment (Mayar, 2 Tier + Voucher)",
+  "description": null,
+  "isArchived": false,
   "nodes": [
-   {
-    "parameters": {
-     "httpMethod": "POST",
-     "path": "create-payment",
-     "responseMode": "responseNode",
-     "options": {}
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-payment",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-create-payment",
+      "name": "Webhook: Checkout Page",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -420,
+        0
+      ],
+      "webhookId": "create-payment-workshop-mayar"
     },
-    "id": "webhook-create-payment",
-    "name": "Webhook: Checkout Page",
-    "type": "n8n-nodes-base.webhook",
-    "typeVersion": 2,
-    "position": [
-     -420,
-     0
-    ],
-    "webhookId": "create-payment-workshop-mayar"
-   },
-   {
-    "parameters": {
-     "jsCode": "// \ud83d\udd11 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = $env.MAYAR_API_KEY;\n\n// \ud83c\udff7\ufe0f PRODUCT ID per TIER (produk membership Mayar)\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  }\n};\n\n// \ud83d\uddc4\ufe0f SUPABASE (service_role \u2014 cuma di server)\nconst SUPABASE_URL = 'https://qxzvmnbhplgmspdxdbmg.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// ============================================================\n// HELPER: fetch ke Supabase\n// ============================================================\nasync function supabaseFetch(path, options) {\n  const resp = await this.helpers.httpRequest({\n    method: options.method || 'GET',\n    url: SUPABASE_URL + path,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': 'Bearer ' + SUPABASE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: options.body ? JSON.stringify(options.body) : undefined,\n    json: true,\n    timeout: 10000\n  });\n  return resp;\n}\n\n// ============================================================\n// VALIDASI VOUCHER di server (anti-hack \u2014 jangan percaya harga dari browser)\n// ============================================================\nasync function validateVoucher(code, tier, baseAmount) {\n  if (!code) return { valid: false, diskon: 0, voucher_code: '' };\n\n  // 1. Cari voucher di Supabase\n  const rows = await supabaseFetch(\n    '/rest/v1/vouchers?select=*&code=eq.' + encodeURIComponent(code) + '&active=eq.true',\n    { method: 'GET' }\n  );\n  const v = (Array.isArray(rows) && rows.length > 0) ? rows[0] : null;\n  if (!v) return { valid: false, reason: 'Kode voucher tidak ditemukan atau tidak aktif', diskon: 0, voucher_code: code };\n\n  // 3. Cek tier paket (voucher yearly jangan dipakai untuk lifetime, atau sebaliknya)\n  const vTier = (v.tier || 'all').toString().trim().toLowerCase();\n  if (vTier !== 'all' && vTier !== tier) {\n    return {\n      valid: false,\n      reason: 'Kode voucher tidak berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime'),\n      diskon: 0,\n      voucher_code: code\n    };\n  }\n\n  // 4. Cek expired\n  if (v.expires_at) {\n    const exp = new Date(v.expires_at);\n    if (exp < new Date()) {\n      return { valid: false, reason: 'Kode voucher sudah kedaluwarsa', diskon: 0, voucher_code: code };\n    }\n  }\n\n  // 5. Cek kuota\n  const maxUses = v.max_uses;\n  if (maxUses !== null && maxUses !== undefined && Number(v.used_count || 0) >= Number(maxUses)) {\n    return { valid: false, reason: 'Kode voucher sudah habis dipakai', diskon: 0, voucher_code: code };\n  }\n\n  // 6. Hitung diskon\n  let diskon = 0;\n  if (v.type === 'percent') {\n    diskon = Math.round(baseAmount * Number(v.value) / 100);\n  } else {\n    diskon = Math.min(Number(v.value) || 0, baseAmount);\n  }\n\n  return { valid: true, diskon: diskon, voucher_code: code, voucher_id: v.id };\n}\n\n// ============================================================\n// CATAT PEMAKAIAN VOUCHER (used_count + 1)\n// ============================================================\nasync function recordVoucherUse(voucherId) {\n  if (!voucherId) return;\n  try {\n    // Read current used_count\n    const rows = await supabaseFetch(\n      '/rest/v1/vouchers?select=used_count&id=eq.' + voucherId,\n      { method: 'GET' }\n    );\n    const current = (Array.isArray(rows) && rows.length > 0) ? Number(rows[0].used_count || 0) : 0;\n    // Increment\n    await supabaseFetch(\n      '/rest/v1/vouchers?id=eq.' + voucherId,\n      { method: 'PATCH', body: { used_count: current + 1 } }\n    );\n  } catch (err) {\n    console.log('voucher use record warn: ' + err.message);\n  }\n}\n\n// ============================================================\n// MAIN\n// ============================================================\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// Nomor HP Mayar (08... min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// ============ VALIDASI VOUCHER (server-side) ============\nconst voucherCode = (body.voucher_code || '').toString().trim().toUpperCase();\nconst voucherCheck = await validateVoucher(voucherCode, tier, t.amount);\n\n// Voucher DIKIRIM tapi TIDAK VALID -> tolak di sini (jangan bikin invoice nyasar).\n// Browser sudah cek duluan; ini pagar anti-tamper.\nif (voucherCode && !voucherCheck.valid) {\n  throw new Error(voucherCheck.reason || 'Kode voucher tidak valid untuk paket ini');\n}\n\n\n// Harga final: HARGA SELALU DARI SERVER (TIERS[tier].amount) \u2014\n// harga/diskon dari browser diabaikan sepenuhnya supaya tidak bisa dimanipulasi.\nconst baseAmount = t.amount;\nlet finalAmount = baseAmount - voucherCheck.diskon;\n// Guard: Mayar min amount \u2014 kalau diskon bikin <= 0, set ke 1000\nif (finalAmount < 1000) finalAmount = 1000;\n// Sanity: harga final tidak boleh melebihi harga paket\nif (finalAmount > baseAmount) finalAmount = baseAmount;\n\n// URL return \u2014 bawa tier, harga final, & voucher (buat Pixel + tracking)\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html?tier=' + tier + '&harga=' + finalAmount +\n  (voucherCheck.valid ? '&voucher=' + voucherCode : '');\n\n// Payload ke Mayar (amount = harga SETELAH diskon)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: finalAmount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: (t.label + ' ' + (discord || '-')).slice(0, 24)\n};\n\n// Catat pemakaian voucher (used_count + 1) \u2014 fire and forget\nif (voucherCheck.valid && voucherCheck.voucher_id) {\n  await recordVoucherUse(voucherCheck.voucher_id);\n}\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: finalAmount,\n    amountBase: t.amount,\n    diskon: voucherCheck.diskon,\n    voucher: voucherCheck.valid ? voucherCode : '',\n    voucherValid: voucherCheck.valid,\n    voucherReason: voucherCheck.reason || '',\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
+    {
+      "parameters": {
+        "jsCode": "// 🔑 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = $env.MAYAR_API_KEY;\n\n// 🏷️ PRODUCT ID per TIER (produk membership Mayar)\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  },\n  'early-bird': {\n    productId: 'cd838d9a-d47b-412a-93bd-b794f671c7e0',\n    amount: 389000,\n    label: 'XindeLabs Early Bird'\n  },\n  regular: {\n    productId: '6aa86b90-ced1-4607-91b4-c773f19154c1',\n    amount: 489000,\n    label: 'XindeLabs Reguler'\n  }\n};\n\n// 🗄️ SUPABASE (service_role — cuma di server)\nconst SUPABASE_URL = 'https://qxzvmnbhplgmspdxdbmg.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// ============================================================\n// HELPER: fetch ke Supabase\n// ============================================================\nasync function supabaseFetch(path, options) {\n  const resp = await this.helpers.httpRequest({\n    method: options.method || 'GET',\n    url: SUPABASE_URL + path,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': 'Bearer ' + SUPABASE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: options.body ? JSON.stringify(options.body) : undefined,\n    json: true,\n    timeout: 10000\n  });\n  return resp;\n}\n\n// ============================================================\n// VALIDASI VOUCHER di server (anti-hack — jangan percaya harga dari browser)\n// ============================================================\nasync function validateVoucher(code, tier, baseAmount) {\n  if (!code) return { valid: false, diskon: 0, voucher_code: '' };\n\n  // 1. Cari voucher di Supabase\n  const rows = await supabaseFetch(\n    '/rest/v1/vouchers?select=*&code=eq.' + encodeURIComponent(code) + '&active=eq.true',\n    { method: 'GET' }\n  );\n  const v = (Array.isArray(rows) && rows.length > 0) ? rows[0] : null;\n  if (!v) return { valid: false, reason: 'Kode voucher tidak ditemukan atau tidak aktif', diskon: 0, voucher_code: code };\n\n  // 3. Cek tier paket (voucher yearly jangan dipakai untuk lifetime, atau sebaliknya)\n  const vTier = (v.tier || 'all').toString().trim().toLowerCase();\n  if (vTier !== 'all' && vTier !== tier) {\n    return {\n      valid: false,\n      reason: 'Kode voucher tidak berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime'),\n      diskon: 0,\n      voucher_code: code\n    };\n  }\n\n  // 4. Cek expired\n  if (v.expires_at) {\n    const exp = new Date(v.expires_at);\n    if (exp < new Date()) {\n      return { valid: false, reason: 'Kode voucher sudah kedaluwarsa', diskon: 0, voucher_code: code };\n    }\n  }\n\n  // 5. Cek kuota\n  const maxUses = v.max_uses;\n  if (maxUses !== null && maxUses !== undefined && Number(v.used_count || 0) >= Number(maxUses)) {\n    return { valid: false, reason: 'Kode voucher sudah habis dipakai', diskon: 0, voucher_code: code };\n  }\n\n  // 6. Hitung diskon\n  let diskon = 0;\n  if (v.type === 'percent') {\n    diskon = Math.round(baseAmount * Number(v.value) / 100);\n  } else {\n    diskon = Math.min(Number(v.value) || 0, baseAmount);\n  }\n\n  return { valid: true, diskon: diskon, voucher_code: code, voucher_id: v.id };\n}\n\n// ============================================================\n// CATAT PEMAKAIAN VOUCHER (used_count + 1)\n// ============================================================\nasync function recordVoucherUse(voucherId) {\n  if (!voucherId) return;\n  try {\n    // Read current used_count\n    const rows = await supabaseFetch(\n      '/rest/v1/vouchers?select=used_count&id=eq.' + voucherId,\n      { method: 'GET' }\n    );\n    const current = (Array.isArray(rows) && rows.length > 0) ? Number(rows[0].used_count || 0) : 0;\n    // Increment\n    await supabaseFetch(\n      '/rest/v1/vouchers?id=eq.' + voucherId,\n      { method: 'PATCH', body: { used_count: current + 1 } }\n    );\n  } catch (err) {\n    console.log('voucher use record warn: ' + err.message);\n  }\n}\n\n// ============================================================\n// MAIN\n// ============================================================\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// Nomor HP Mayar (08... min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// ============ VALIDASI VOUCHER (server-side) ============\nconst voucherCode = (body.voucher_code || '').toString().trim().toUpperCase();\nconst voucherCheck = await validateVoucher(voucherCode, tier, t.amount);\n\n// Voucher DIKIRIM tapi TIDAK VALID -> tolak di sini (jangan bikin invoice nyasar).\n// Browser sudah cek duluan; ini pagar anti-tamper.\nif (voucherCode && !voucherCheck.valid) {\n  throw new Error(voucherCheck.reason || 'Kode voucher tidak valid untuk paket ini');\n}\n\n\n// Harga final: HARGA SELALU DARI SERVER (TIERS[tier].amount) —\n// harga/diskon dari browser diabaikan sepenuhnya supaya tidak bisa dimanipulasi.\nconst baseAmount = t.amount;\nlet finalAmount = baseAmount - voucherCheck.diskon;\n// Guard: Mayar min amount — kalau diskon bikin <= 0, set ke 1000\nif (finalAmount < 1000) finalAmount = 1000;\n// Sanity: harga final tidak boleh melebihi harga paket\nif (finalAmount > baseAmount) finalAmount = baseAmount;\n\n// URL return — bawa tier, harga final, & voucher (buat Pixel + tracking)\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html?tier=' + tier + '&harga=' + finalAmount +\n  (voucherCheck.valid ? '&voucher=' + voucherCode : '');\n\n// Payload ke Mayar (amount = harga SETELAH diskon)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: finalAmount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: t.label.slice(0, 24)\n};\n\n// Catat pemakaian voucher (used_count + 1) — fire and forget\nif (voucherCheck.valid && voucherCheck.voucher_id) {\n  await recordVoucherUse(voucherCheck.voucher_id);\n}\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: finalAmount,\n    amountBase: t.amount,\n    diskon: voucherCheck.diskon,\n    voucher: voucherCheck.valid ? voucherCode : '',\n    voucherValid: voucherCheck.valid,\n    voucherReason: voucherCheck.reason || '',\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
+      },
+      "id": "code-build-payload",
+      "name": "Code: Build Mayar Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -180,
+        0
+      ],
+      "onError": "continueErrorOutput"
     },
-    "id": "code-build-payload",
-    "name": "Code: Build Mayar Payload",
-    "type": "n8n-nodes-base.code",
-    "typeVersion": 2,
-    "position": [
-     -180,
-     0
-    ],
-    "onError": "continueErrorOutput"
-   },
-   {
-    "parameters": {
-     "method": "POST",
-     "url": "={{ $json.endpoint }}",
-     "sendHeaders": true,
-     "headerParameters": {
-      "parameters": [
-       {
-        "name": "Authorization",
-        "value": "={{ $json.authHeader }}"
-       },
-       {
-        "name": "Content-Type",
-        "value": "application/json"
-       }
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "={{ $json.authHeader }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {}
+      },
+      "id": "http-mayar-checkout",
+      "name": "HTTP: Mayar Checkout",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        0
       ]
-     },
-     "sendBody": true,
-     "specifyBody": "json",
-     "jsonBody": "={{ JSON.stringify($json.payload) }}",
-     "options": {}
     },
-    "id": "http-mayar-checkout",
-    "name": "HTTP: Mayar Checkout",
-    "type": "n8n-nodes-base.httpRequest",
-    "typeVersion": 4.2,
-    "position": [
-     60,
-     0
-    ]
-   },
-   {
-    "parameters": {
-     "jsCode": "// Response dari Mayar \u2014 struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response \u2014 field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\n// Response Mayar /payment/create: data.link = invoice URL\nconst paymentUrl = data.link || data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\n// voucherValid + reason di-pass dari node Build Mayar Payload\nconst built = $('Code: Build Mayar Payload').first().json;\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000,\n    voucherValid: built.voucherValid === true,\n    voucherReason: built.voucherReason || ''\n  }\n};"
+    {
+      "parameters": {
+        "jsCode": "// Response dari Mayar — struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response — field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\n// Response Mayar /payment/create: data.link = invoice URL\nconst paymentUrl = data.link || data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\n// voucherValid + reason di-pass dari node Build Mayar Payload\nconst built = $('Code: Build Mayar Payload').first().json;\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000,\n    voucherValid: built.voucherValid === true,\n    voucherReason: built.voucherReason || ''\n  }\n};"
+      },
+      "id": "code-extract-url",
+      "name": "Code: Extract payment_url",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        0
+      ]
     },
-    "id": "code-extract-url",
-    "name": "Code: Extract payment_url",
-    "type": "n8n-nodes-base.code",
-    "typeVersion": 2,
-    "position": [
-     300,
-     0
-    ]
-   },
-   {
-    "parameters": {
-     "respondWith": "json",
-     "responseBody": "={{ JSON.stringify({ payment_url: $json.payment_url, reference: $json.reference, voucher_valid: $json.voucherValid, voucher_reason: $json.voucherReason }) }}",
-     "options": {
-      "responseHeaders": {
-       "entries": [
-        {
-         "name": "Content-Type",
-         "value": "application/json"
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ payment_url: $json.payment_url, reference: $json.reference, voucher_valid: $json.voucherValid, voucher_reason: $json.voucherReason }) }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
         }
-       ]
-      }
-     }
-    },
-    "id": "respond-to-webhook",
-    "name": "Respond to Webhook",
-    "type": "n8n-nodes-base.respondToWebhook",
-    "typeVersion": 1.4,
-    "position": [
-     540,
-     0
-    ]
-   },
-   {
-    "parameters": {},
-    "id": "manual-trigger",
-    "name": "Manual Trigger",
-    "type": "n8n-nodes-base.manualTrigger",
-    "typeVersion": 1,
-    "position": [
-     -700,
-     0
-    ]
-   },
-   {
-    "parameters": {
-     "jsCode": "// \ud83d\uddc4\ufe0f Siapkan data leads (disimpan SEBELUM user bayar \u2014 untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    apps_script_endpoint: 'https://script.google.com/macros/s/AKfycbwMmCBIuMsi42s26xEhZr6_57nDLjlxFxym08v3301fnIM3cktrJXADA8WSuzu_wrsT/exec',\n    apps_script_payload: {\n      action: 'lead',\n      nama: customer.nama || payment.nama || '',\n      email: customer.email || payment.email || '',\n      wa: customer.wa || payment.wa || '',\n      discord: customer.discord || payment.discord || '',\n      harga: payment.amount || 0\n    },\n    notes: 'tier:' + (payment.tier || 'yearly') + ' harga:' + (payment.amount || 0) + (payment.voucher ? ' voucher:' + payment.voucher : ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: $env.SUPABASE_SERVICE_ROLE_KEY\n  }\n};"
-    },
-    "id": "code-prep-lead",
-    "name": "Code: Siapkan Data Leads",
-    "type": "n8n-nodes-base.code",
-    "typeVersion": 2,
-    "position": [
-     540,
-     180
-    ]
-   },
-   {
-    "parameters": {
-     "method": "POST",
-     "url": "https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads",
-     "sendHeaders": true,
-     "headerParameters": {
-      "parameters": [
-       {
-        "name": "apikey",
-        "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-       },
-       {
-        "name": "Authorization",
-        "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
-       },
-       {
-        "name": "Content-Type",
-        "value": "application/json"
-       },
-       {
-        "name": "Prefer",
-        "value": "return=minimal, resolution=ignore-duplicates"
-       }
+      },
+      "id": "respond-to-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        540,
+        0
       ]
-     },
-     "sendBody": true,
-     "specifyBody": "json",
-     "jsonBody": "={{ JSON.stringify({ name: $json.name, email: $json.email, whatsapp: $json.whatsapp, discord_id: $json.discord_id, status: $json.status, source: $json.source, notes: $json.notes }) }}",
-     "options": {
-      "timeout": 15000,
-      "allowUnauthorizedCerts": false
-     }
     },
-    "id": "http-insert-lead",
-    "name": "HTTP: Simpan Leads (Supabase)",
-    "type": "n8n-nodes-base.httpRequest",
-    "typeVersion": 4.2,
-    "position": [
-     780,
-     180
-    ],
-    "onError": "continueRegularOutput"
-   },
-   {
-    "parameters": {
-     "method": "POST",
-     "url": "={{ $json.apps_script_endpoint }}",
-     "sendHeaders": true,
-     "headerParameters": {
-      "parameters": [
-       {
-        "name": "Content-Type",
-        "value": "application/json"
-       }
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        0
       ]
-     },
-     "sendBody": true,
-     "specifyBody": "json",
-     "jsonBody": "={{ JSON.stringify($json.apps_script_payload) }}",
-     "options": {
-      "timeout": 20000,
-      "allowUnauthorizedCerts": false
-     }
     },
-    "id": "http-apps-script-lead",
-    "name": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
-    "type": "n8n-nodes-base.httpRequest",
-    "typeVersion": 4.2,
-    "position": [
-     1020,
-     180
-    ],
-    "onError": "continueRegularOutput"
-   },
-   {
-    "parameters": {
-     "respondWith": "json",
-     "responseBody": "={{ JSON.stringify({ error: 'voucher_ditolak', message: String($json.error || 'Voucher tidak valid untuk paket ini').replace(/ \\[line \\d+\\]$/, '') }) }}",
-     "options": {
-      "responseCode": 400,
-      "responseHeaders": {
-       "entries": [
-        {
-         "name": "Content-Type",
-         "value": "application/json"
+    {
+      "parameters": {
+        "jsCode": "// 🗄️ Siapkan data leads (disimpan SEBELUM user bayar — untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    apps_script_endpoint: 'https://script.google.com/macros/s/AKfycbwMmCBIuMsi42s26xEhZr6_57nDLjlxFxym08v3301fnIM3cktrJXADA8WSuzu_wrsT/exec',\n    apps_script_payload: {\n      action: 'lead',\n      nama: customer.nama || payment.nama || '',\n      email: customer.email || payment.email || '',\n      wa: customer.wa || payment.wa || '',\n      discord: customer.discord || payment.discord || '',\n      harga: payment.amount || 0\n    },\n    notes: 'tier:' + (payment.tier || 'yearly') + ' harga:' + (payment.amount || 0) + (payment.voucher ? ' voucher:' + payment.voucher : ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: $env.SUPABASE_SERVICE_ROLE_KEY\n  }\n};"
+      },
+      "id": "code-prep-lead",
+      "name": "Code: Siapkan Data Leads",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal, resolution=ignore-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, email: $json.email, whatsapp: $json.whatsapp, discord_id: $json.discord_id, status: $json.status, source: $json.source, notes: $json.notes }) }}",
+        "options": {
+          "timeout": 15000,
+          "allowUnauthorizedCerts": false
         }
-       ]
-      }
-     }
+      },
+      "id": "http-insert-lead",
+      "name": "HTTP: Simpan Leads (Supabase)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        180
+      ],
+      "onError": "continueRegularOutput"
     },
-    "id": "6405c801-2c3c-4153-adb0-ef758c0e2f4d",
-    "name": "Respond Voucher Ditolak",
-    "type": "n8n-nodes-base.respondToWebhook",
-    "typeVersion": 1.4,
-    "position": [
-     60,
-     -200
-    ]
-   }
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.apps_script_endpoint }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.apps_script_payload) }}",
+        "options": {
+          "timeout": 20000,
+          "allowUnauthorizedCerts": false
+        }
+      },
+      "id": "http-apps-script-lead",
+      "name": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1020,
+        180
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: 'voucher_ditolak', message: String($json.error || 'Voucher tidak valid untuk paket ini').replace(/ \\[line \\d+\\]$/, '') }) }}",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6405c801-2c3c-4153-adb0-ef758c0e2f4d",
+      "name": "Respond Voucher Ditolak",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        60,
+        -200
+      ]
+    }
   ],
   "connections": {
-   "Webhook: Checkout Page": {
-    "main": [
-     [
-      {
-       "node": "Code: Build Mayar Payload",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   },
-   "Code: Build Mayar Payload": {
-    "main": [
-     [
-      {
-       "node": "HTTP: Mayar Checkout",
-       "type": "main",
-       "index": 0
-      }
-     ],
-     [
-      {
-       "node": "Respond Voucher Ditolak",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   },
-   "HTTP: Mayar Checkout": {
-    "main": [
-     [
-      {
-       "node": "Code: Extract payment_url",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   },
-   "Code: Extract payment_url": {
-    "main": [
-     [
-      {
-       "node": "Respond to Webhook",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   },
-   "Manual Trigger": {
-    "main": [
-     [
-      {
-       "node": "Webhook: Checkout Page",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   },
-   "Code: Siapkan Data Leads": {
-    "main": [
-     [
-      {
-       "node": "HTTP: Simpan Leads (Supabase)",
-       "type": "main",
-       "index": 0
-      },
-      {
-       "node": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
-       "type": "main",
-       "index": 0
-      }
-     ]
-    ]
-   }
+    "Webhook: Checkout Page": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Mayar Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Mayar Payload": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Mayar Checkout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Voucher Ditolak",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: Mayar Checkout": {
+      "main": [
+        [
+          {
+            "node": "Code: Extract payment_url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Extract payment_url": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Webhook: Checkout Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Siapkan Data Leads": {
+      "main": [
+        [
+          {
+            "node": "HTTP: Simpan Leads (Supabase)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "instanceId": "xindelabs"
   },
   "nodeGroups": [],
-  "authors": "Evant vant",
-  "name": null,
-  "description": null,
-  "autosaved": false,
-  "workflowPublishHistory": [
-   {
-    "createdAt": "2026-10-13T17:51:08.646Z",
-    "id": 51,
-    "workflowId": "1",
+  "pinData": {},
+  "activeVersionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
+  "sourceWorkflowId": null,
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-10-13T17:51:08.529Z",
+    "createdAt": "2026-10-13T17:51:08.529Z",
     "versionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
-    "event": "activated",
-    "userId": "2bdb5001-3f13-4291-b130-02d2018ac5c3"
-   },
-   {
-    "createdAt": "2026-10-13T17:51:08.627Z",
-    "id": 50,
     "workflowId": "1",
-    "versionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
-    "event": "deactivated",
-    "userId": "2bdb5001-3f13-4291-b130-02d2018ac5c3"
-   }
-  ]
- },
- "active": false
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "create-payment",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-create-payment",
+        "name": "Webhook: Checkout Page",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -420,
+          0
+        ],
+        "webhookId": "create-payment-workshop-mayar"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 🔑 KONFIGURASI MAYAR\nconst MAYAR_API_TOKEN = $env.MAYAR_API_KEY;\n\n// 🏷️ PRODUCT ID per TIER (produk membership Mayar)\nconst TIERS = {\n  yearly: {\n    productId: 'd8927ccd-4323-4500-b4f3-2f0e4f82acd1',\n    amount: 599000,\n    label: 'Langganan 1 Tahun'\n  },\n  lifetime: {\n    productId: '56284414-f48b-47b9-af79-74d2b0f4b2dd',\n    amount: 999000,\n    label: 'Langganan Life-Time'\n  }\n};\n\n// 🗄️ SUPABASE (service_role — cuma di server)\nconst SUPABASE_URL = 'https://qxzvmnbhplgmspdxdbmg.supabase.co';\nconst SUPABASE_KEY = $env.SUPABASE_SERVICE_ROLE_KEY;\n\n// URL callback & return\nconst CALLBACK_URL = 'https://n8n.43-133-131-126.sslip.io/webhook/mayar-callback';\n\n// Endpoint Mayar (terverifikasi)\nconst MAYAR_ENDPOINT = 'https://api.mayar.id/hl/v1/payment/create';\n\n// ============================================================\n// HELPER: fetch ke Supabase\n// ============================================================\nasync function supabaseFetch(path, options) {\n  const resp = await this.helpers.httpRequest({\n    method: options.method || 'GET',\n    url: SUPABASE_URL + path,\n    headers: {\n      'apikey': SUPABASE_KEY,\n      'Authorization': 'Bearer ' + SUPABASE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: options.body ? JSON.stringify(options.body) : undefined,\n    json: true,\n    timeout: 10000\n  });\n  return resp;\n}\n\n// ============================================================\n// VALIDASI VOUCHER di server (anti-hack — jangan percaya harga dari browser)\n// ============================================================\nasync function validateVoucher(code, tier, baseAmount) {\n  if (!code) return { valid: false, diskon: 0, voucher_code: '' };\n\n  // 1. Cari voucher di Supabase\n  const rows = await supabaseFetch(\n    '/rest/v1/vouchers?select=*&code=eq.' + encodeURIComponent(code) + '&active=eq.true',\n    { method: 'GET' }\n  );\n  const v = (Array.isArray(rows) && rows.length > 0) ? rows[0] : null;\n  if (!v) return { valid: false, reason: 'Kode voucher tidak ditemukan atau tidak aktif', diskon: 0, voucher_code: code };\n\n  // 3. Cek tier paket (voucher yearly jangan dipakai untuk lifetime, atau sebaliknya)\n  const vTier = (v.tier || 'all').toString().trim().toLowerCase();\n  if (vTier !== 'all' && vTier !== tier) {\n    return {\n      valid: false,\n      reason: 'Kode voucher tidak berlaku untuk paket ' + (vTier === 'yearly' ? 'Tahunan' : 'Lifetime'),\n      diskon: 0,\n      voucher_code: code\n    };\n  }\n\n  // 4. Cek expired\n  if (v.expires_at) {\n    const exp = new Date(v.expires_at);\n    if (exp < new Date()) {\n      return { valid: false, reason: 'Kode voucher sudah kedaluwarsa', diskon: 0, voucher_code: code };\n    }\n  }\n\n  // 5. Cek kuota\n  const maxUses = v.max_uses;\n  if (maxUses !== null && maxUses !== undefined && Number(v.used_count || 0) >= Number(maxUses)) {\n    return { valid: false, reason: 'Kode voucher sudah habis dipakai', diskon: 0, voucher_code: code };\n  }\n\n  // 6. Hitung diskon\n  let diskon = 0;\n  if (v.type === 'percent') {\n    diskon = Math.round(baseAmount * Number(v.value) / 100);\n  } else {\n    diskon = Math.min(Number(v.value) || 0, baseAmount);\n  }\n\n  return { valid: true, diskon: diskon, voucher_code: code, voucher_id: v.id };\n}\n\n// ============================================================\n// CATAT PEMAKAIAN VOUCHER (used_count + 1)\n// ============================================================\nasync function recordVoucherUse(voucherId) {\n  if (!voucherId) return;\n  try {\n    // Read current used_count\n    const rows = await supabaseFetch(\n      '/rest/v1/vouchers?select=used_count&id=eq.' + voucherId,\n      { method: 'GET' }\n    );\n    const current = (Array.isArray(rows) && rows.length > 0) ? Number(rows[0].used_count || 0) : 0;\n    // Increment\n    await supabaseFetch(\n      '/rest/v1/vouchers?id=eq.' + voucherId,\n      { method: 'PATCH', body: { used_count: current + 1 } }\n    );\n  } catch (err) {\n    console.log('voucher use record warn: ' + err.message);\n  }\n}\n\n// ============================================================\n// MAIN\n// ============================================================\nconst raw = $input.first().json || {};\nconst body = raw.body && typeof raw.body === 'object' ? raw.body : raw;\n\nconst nama = (body.nama || '').toString().trim();\nconst email = (body.email || '').toString().trim().toLowerCase();\nconst wa = (body.wa || '').toString().trim();\nconst discord = (body.discord || '').toString().trim();\nconst tierInput = (body.tier || 'yearly').toString().trim().toLowerCase();\n\n// Validasi minimal\nif (!nama || !email || !wa) {\n  throw new Error('Data tidak lengkap: nama, email, dan WA wajib diisi');\n}\n\n// Pilih tier\nconst tier = TIERS[tierInput] ? tierInput : 'yearly';\nconst t = TIERS[tier];\n\n// Nomor HP Mayar (08... min 10 digit)\nconst mobile = wa.replace(/[^0-9]/g, '');\nif (mobile.length < 10) {\n  throw new Error('Nomor WA tidak valid (minimal 10 digit)');\n}\n\n// ============ VALIDASI VOUCHER (server-side) ============\nconst voucherCode = (body.voucher_code || '').toString().trim().toUpperCase();\nconst voucherCheck = await validateVoucher(voucherCode, tier, t.amount);\n\n// Voucher DIKIRIM tapi TIDAK VALID -> tolak di sini (jangan bikin invoice nyasar).\n// Browser sudah cek duluan; ini pagar anti-tamper.\nif (voucherCode && !voucherCheck.valid) {\n  throw new Error(voucherCheck.reason || 'Kode voucher tidak valid untuk paket ini');\n}\n\n\n// Harga final: HARGA SELALU DARI SERVER (TIERS[tier].amount) —\n// harga/diskon dari browser diabaikan sepenuhnya supaya tidak bisa dimanipulasi.\nconst baseAmount = t.amount;\nlet finalAmount = baseAmount - voucherCheck.diskon;\n// Guard: Mayar min amount — kalau diskon bikin <= 0, set ke 1000\nif (finalAmount < 1000) finalAmount = 1000;\n// Sanity: harga final tidak boleh melebihi harga paket\nif (finalAmount > baseAmount) finalAmount = baseAmount;\n\n// URL return — bawa tier, harga final, & voucher (buat Pixel + tracking)\nconst RETURN_URL = 'https://xindelabs-workshop.vercel.app/success.html?tier=' + tier + '&harga=' + finalAmount +\n  (voucherCheck.valid ? '&voucher=' + voucherCode : '');\n\n// Payload ke Mayar (amount = harga SETELAH diskon)\nconst payload = {\n  name: nama,\n  email: email,\n  mobile: mobile,\n  productId: t.productId,\n  amount: finalAmount,\n  callbackUrl: CALLBACK_URL,\n  returnUrl: RETURN_URL,\n  notes: (t.label + ' ' + (discord || '-')).slice(0, 24)\n};\n\n// Catat pemakaian voucher (used_count + 1) — fire and forget\nif (voucherCheck.valid && voucherCheck.voucher_id) {\n  await recordVoucherUse(voucherCheck.voucher_id);\n}\n\nreturn {\n  json: {\n    endpoint: MAYAR_ENDPOINT,\n    authHeader: 'Bearer ' + MAYAR_API_TOKEN,\n    payload: payload,\n    tier: tier,\n    tierLabel: t.label,\n    amount: finalAmount,\n    amountBase: t.amount,\n    diskon: voucherCheck.diskon,\n    voucher: voucherCheck.valid ? voucherCode : '',\n    voucherValid: voucherCheck.valid,\n    voucherReason: voucherCheck.reason || '',\n    customer: { nama: nama, email: email, wa: wa, discord: discord }\n  }\n};"
+        },
+        "id": "code-build-payload",
+        "name": "Code: Build Mayar Payload",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -180,
+          0
+        ],
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.endpoint }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "={{ $json.authHeader }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.payload) }}",
+          "options": {}
+        },
+        "id": "http-mayar-checkout",
+        "name": "HTTP: Mayar Checkout",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          60,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// Response dari Mayar — struktur: { statusCode, messages, data }\nconst mayarResp = $input.first().json;\n\n// Cek error\nif (mayarResp.statusCode && mayarResp.statusCode >= 400) {\n  throw new Error('Mayar error: ' + JSON.stringify(mayarResp));\n}\n\nconst data = mayarResp.data || {};\n\n// Mayar checkout response — field payment URL bisa bervariasi.\n// Cek di response asli lo, lalu samakan field-nya di bawah.\n// Response Mayar /payment/create: data.link = invoice URL\nconst paymentUrl = data.link || data.payment_url || data.url || data.checkout_url || data.redirect_url || '';\n\nif (!paymentUrl) {\n  // Kalau response belum punya URL (misal butuh step tambahan),\n  // log semua data biar kelihatan strukturnya:\n  throw new Error('payment_url tidak ditemukan. Response Mayar: ' + JSON.stringify(mayarResp));\n}\n\n// voucherValid + reason di-pass dari node Build Mayar Payload\nconst built = $('Code: Build Mayar Payload').first().json;\nreturn {\n  json: {\n    payment_url: paymentUrl,\n    reference: data.reference || data.id || data.payment_ref || '',\n    amount: data.amount || 299000,\n    voucherValid: built.voucherValid === true,\n    voucherReason: built.voucherReason || ''\n  }\n};"
+        },
+        "id": "code-extract-url",
+        "name": "Code: Extract payment_url",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          300,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ payment_url: $json.payment_url, reference: $json.reference, voucher_valid: $json.voucherValid, voucher_reason: $json.voucherReason }) }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "id": "respond-to-webhook",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          540,
+          0
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "manual-trigger",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -700,
+          0
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 🗄️ Siapkan data leads (disimpan SEBELUM user bayar — untuk follow-up)\nconst payment = $input.first().json;\nconst customer = payment.customer || {};\n\n// cek duplikat sederhana: kalau leads udah ada, jangan dobel\nreturn {\n  json: {\n    name: customer.nama || payment.nama || '',\n    email: customer.email || payment.email || '',\n    whatsapp: customer.wa || payment.wa || '',\n    discord_id: customer.discord || payment.discord || '',\n    status: 'belum',\n    source: 'checkout',\n    apps_script_endpoint: 'https://script.google.com/macros/s/AKfycbwMmCBIuMsi42s26xEhZr6_57nDLjlxFxym08v3301fnIM3cktrJXADA8WSuzu_wrsT/exec',\n    apps_script_payload: {\n      action: 'lead',\n      nama: customer.nama || payment.nama || '',\n      email: customer.email || payment.email || '',\n      wa: customer.wa || payment.wa || '',\n      discord: customer.discord || payment.discord || '',\n      harga: payment.amount || 0\n    },\n    notes: 'tier:' + (payment.tier || 'yearly') + ' harga:' + (payment.amount || 0) + (payment.voucher ? ' voucher:' + payment.voucher : ''),\n    supabase_url: 'https://qxzvmnbhplgmspdxdbmg.supabase.co',\n    supabase_key: $env.SUPABASE_SERVICE_ROLE_KEY\n  }\n};"
+        },
+        "id": "code-prep-lead",
+        "name": "Code: Siapkan Data Leads",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          540,
+          180
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://qxzvmnbhplgmspdxdbmg.supabase.co/rest/v1/leads",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Prefer",
+                "value": "return=minimal, resolution=ignore-duplicates"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify({ name: $json.name, email: $json.email, whatsapp: $json.whatsapp, discord_id: $json.discord_id, status: $json.status, source: $json.source, notes: $json.notes }) }}",
+          "options": {
+            "timeout": 15000,
+            "allowUnauthorizedCerts": false
+          }
+        },
+        "id": "http-insert-lead",
+        "name": "HTTP: Simpan Leads (Supabase)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          780,
+          180
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $json.apps_script_endpoint }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.apps_script_payload) }}",
+          "options": {
+            "timeout": 20000,
+            "allowUnauthorizedCerts": false
+          }
+        },
+        "id": "http-apps-script-lead",
+        "name": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1020,
+          180
+        ],
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ error: 'voucher_ditolak', message: String($json.error || 'Voucher tidak valid untuk paket ini').replace(/ \\[line \\d+\\]$/, '') }) }}",
+          "options": {
+            "responseCode": 400,
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        },
+        "id": "6405c801-2c3c-4153-adb0-ef758c0e2f4d",
+        "name": "Respond Voucher Ditolak",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.4,
+        "position": [
+          60,
+          -200
+        ]
+      }
+    ],
+    "connections": {
+      "Webhook: Checkout Page": {
+        "main": [
+          [
+            {
+              "node": "Code: Build Mayar Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Build Mayar Payload": {
+        "main": [
+          [
+            {
+              "node": "HTTP: Mayar Checkout",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond Voucher Ditolak",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP: Mayar Checkout": {
+        "main": [
+          [
+            {
+              "node": "Code: Extract payment_url",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Extract payment_url": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "Webhook: Checkout Page",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code: Siapkan Data Leads": {
+        "main": [
+          [
+            {
+              "node": "HTTP: Simpan Leads (Supabase)",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP: Panggil Apps Script (Lead ke Sheets + Email)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Evant vant",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-10-13T17:51:08.646Z",
+        "id": 51,
+        "workflowId": "1",
+        "versionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
+        "event": "activated",
+        "userId": "2bdb5001-3f13-4291-b130-02d2018ac5c3"
+      },
+      {
+        "createdAt": "2026-10-13T17:51:08.627Z",
+        "id": 50,
+        "workflowId": "1",
+        "versionId": "4063bc97-2b03-4b2e-be18-9cbd71676d44",
+        "event": "deactivated",
+        "userId": "2bdb5001-3f13-4291-b130-02d2018ac5c3"
+      }
+    ]
+  },
+  "active": false
 }
