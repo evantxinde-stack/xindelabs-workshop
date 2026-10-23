@@ -239,7 +239,11 @@ async function renderStep(host, step, funnel) {
   for (const block of blocks) {
     const renderer = BLOCK_RENDERERS[block.type] || renderCustomHTML;
     const el = await renderer(block, step, funnel);
-    if (el) host.appendChild(el);
+    if (el) {
+      const anchor = blockData(block).anchor;
+      if (anchor) el.id = String(anchor);
+      host.appendChild(el);
+    }
   }
 
   renderStepNav(host, ctx.currentStep);

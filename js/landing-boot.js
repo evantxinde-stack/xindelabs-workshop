@@ -257,6 +257,7 @@ window.LandingBoot = (function () {
 
     // Subdomain funnel → biarkan funnel-engine yang Handles render.
     if (!IS_PREVIEW && isFunnelHost()) {
+      document.title = 'Xinde Labs — Kelas & Workshop';
       document.body.classList.add('funnel-mode');
       return;
     }
