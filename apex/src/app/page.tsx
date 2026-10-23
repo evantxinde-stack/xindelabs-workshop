@@ -1,320 +1,432 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { admin } from "@/lib/supabase/server";
-import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
-import { PartnershipForm } from "@/components/PartnershipForm";
-import { formatDate, formatIDR, parseJsonValue, stripTags } from "@/lib/content";
+import { formatIDR, stripTags } from "@/lib/content";
 
 export const dynamic = "force-dynamic";
 
-type Program = {
-  slug: string;
-  title: string;
-  description: string | null;
-  cover_image: string | null;
-  price: number | null;
-  type: string | null;
-  features: unknown;
+export const metadata = {
+  title: "Xinde Labs — AI Automation & Digital Selling",
+  description:
+    "Xinde Labs membangun sistem AI yang menjalankan operasional bisnis: agent otonom, funnel yang menutup penjualan sendiri, dan konten yang terbit tanpa kamu pegang satu-satu.",
 };
+
+// ponytail: sementara arahkan ke kelas. (subdomain live) — balik ke learn. setelah DNS terbit
+const LEARN_URL = "https://kelas.xindelabs.web.id";
 
 type ClassRow = {
   slug: string;
   title: string;
   description: string | null;
-  cover_image: string | null;
   price: number | null;
+  type: string | null;
 };
 
-type Post = {
-  slug: string;
+type WorkRow = {
+  id: string;
   title: string;
-  excerpt: string | null;
-  cover_image: string | null;
-  published_at: string | null;
+  slug: string;
+  description: string | null;
   category: string | null;
+  link_url: string | null;
 };
 
-const ECOSYSTEM = [
-  {
-    href: "https://kelas.xindelabs.web.id",
-    label: "Kelas",
-    desc: "Kelas online & live untuk bangun skill AI agent dari nol.",
-    cta: "Buka Kelas",
-  },
-  {
-    href: "https://workshop.xindelabs.web.id",
-    label: "Workshop",
-    desc: "Workshop Intensity: sekali jalan, sistem sales & konten lo jadi jalan sendiri.",
-    cta: "Lihat Workshop",
-  },
-  {
-    href: "https://member.xindelabs.web.id",
-    label: "Member",
-    desc: "Area member: modul, rekaman, sesi live, dan komunitas alumni.",
-    cta: "Masuk Area Member",
-  },
-  {
-    href: "/blog",
-    label: "Blog",
-    desc: "Artikel soal AI agent, personal branding, dan sistem penjualan.",
-    cta: "Baca Blog",
-  },
-  {
-    href: "/portofolio",
-    label: "Portofolio",
-    desc: "Karya nyata: website, brand, dan sistem yang pernah kita bangun.",
-    cta: "Lihat Portofolio",
-  },
+const SKILLS = [
+  { n: "01", t: "Tim Bot Otonom", d: "Agent yang jalan di VPS, kerja 24/7 tanpa kamu suruh." },
+  { n: "02", t: "Funnel & Checkout", d: "Landing ke payment ke akses produk, semuanya otomatis." },
+  { n: "03", t: "Instagram Engine", d: "Konten, posting, dan engagement jalan sendiri per brand." },
+  { n: "04", t: "Ads & Copy", d: "Meta Ads yang dites cepat, copy yang menutup penjualan." },
+  { n: "05", t: "Membership & LMS", d: "Area member, kelas online, akses terbuka setelah bayar." },
+  { n: "06", t: "Content Ecosystem", d: "Riset, hook, publikasi: satu sistem untuk banyak brand." },
 ];
 
+const TRACK_RECORD = [
+  "Tim bot hermes yang jalan harian di VPS",
+  "Engine Instagram: 3 brand, konten terbit otomatis",
+  "Funnel Mayar: bayar → akses LMS dalam hitungan detik",
+  "Sistem Meta Ads multi-niche dengan evaluasi berkala",
+  "Membership klinik: poin, tier, dan kartu digital",
+];
+
+const STATS = [
+  { v: "24/7", k: "agent aktif di VPS, tanpa disuruh" },
+  { v: "< 1 menit", k: "dari payment masuk ke akses LMS terbuka" },
+  { v: "3 brand", k: "konten Instagram terbit otomatis tiap hari" },
+  { v: "5 niche", k: "campaign Meta Ads dengan evaluasi berkala" },
+];
+
+const display = "font-[family-name:var(--font-display)]";
+const hand = "font-[family-name:var(--font-hand)]";
+
 export default async function Home() {
-  const [contentRes, programsRes, classesRes, postsRes, waRes] = await Promise.all([
-    admin.from("site_content").select("value").eq("key", "homepage").maybeSingle(),
+  const [workRes, classesRes, waRes] = await Promise.all([
     admin
-      .from("programs")
-      .select("slug,title,description,cover_image,price,type,features")
-      .eq("status", "published")
+      .from("portfolio")
+      .select("id,title,slug,description,category,link_url")
       .order("sort_order", { ascending: true })
-      .limit(4),
+      .limit(6),
     admin
       .from("classes")
-      .select("slug,title,description,cover_image,price")
+      .select("slug,title,description,price,type")
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
-      .limit(4),
-    admin
-      .from("blog_posts")
-      .select("slug,title,excerpt,cover_image,published_at,category")
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
       .limit(3),
     admin.from("settings").select("value").eq("key", "wa_admin_number").maybeSingle(),
   ]);
 
-  const content = parseJsonValue(contentRes.data?.value);
-  const programs: Program[] = programsRes.data || [];
+  const works: WorkRow[] = workRes.data || [];
   const classes: ClassRow[] = classesRes.data || [];
-  const posts: Post[] = postsRes.data || [];
   const waNumber = String(waRes.data?.value || "").replace(/\D/g, "");
   const waHref = waNumber
     ? `https://wa.me/${waNumber.startsWith("0") ? "62" + waNumber.slice(1) : waNumber}`
     : null;
 
-  const heroTitle = stripTags(content.hero_title) || "Bangun Karyawan Super Pintar";
-  const heroSubtitle =
-    stripTags(content.hero_subtitle) ||
-    "Bikin agent AI yang follow-up calon client, riset prospek, bikin konten, dan jawab objeji — 24/7, tanpa lo perlu lembur.";
-
   return (
-    <div className="min-h-screen bg-[var(--background)] font-sans text-white">
-      <SiteHeader />
+    <div className="min-h-screen bg-[#09090b] font-sans text-[#f4f2ee] antialiased">
+      {/* ============ NAV — wordmark lowercase + dot ============ */}
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#09090b]/85 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
+          <Link href="/" className={`${display} text-xl font-bold tracking-tight`}>
+            xindelabs<span className="text-[#00ff88]">.</span>
+          </Link>
+          <nav className="hidden items-center gap-7 font-mono text-[11px] lowercase tracking-[0.16em] text-white/55 sm:flex">
+            <a href="#tentang" className="hover:text-[#00ff88]">tentang</a>
+            <a href="#karya" className="hover:text-[#00ff88]">karya</a>
+            <a href="#belajar" className="hover:text-[#00ff88]">belajar</a>
+            <a href="#kontak" className="hover:text-[#00ff88]">kontak</a>
+          </nav>
+          <a
+            href="#kontak"
+            className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
+          >
+            Kerja bareng
+          </a>
+        </div>
+      </header>
 
-      {/* ================= HERO / PERSONAL BRANDING ================= */}
-      <main className="grid-bg relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full opacity-30 blur-[140px]"
-          style={{ background: "radial-gradient(circle, var(--accent) 0%, transparent 70%)" }}
-        />
-        <section className="relative mx-auto max-w-6xl px-4 pb-16 pt-16 md:pb-24 md:pt-24">
-          <span className="badge anim-fade-up inline-block">personal branding · ai agent · digital business</span>
-          <h1 className="anim-fade-up anim-delay-100 mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight md:text-6xl">
-            <span className="text-gradient">{heroTitle}</span>
-          </h1>
-          <p className="anim-fade-up anim-delay-200 mt-6 max-w-2xl text-base leading-relaxed text-white/65 md:text-lg">
-            {heroSubtitle}
-          </p>
-
-          <div className="anim-fade-up anim-delay-300 mt-8 flex flex-wrap gap-3">
-            <Link href="https://kelas.xindelabs.web.id" className="btn-glow rounded-xl px-5 py-3 font-bold">
-              Lihat Kelas
-            </Link>
-            <Link
-              href="https://workshop.xindelabs.web.id"
-              className="btn-glow-outline rounded-xl px-5 py-3 font-semibold"
+      <main className="relative">
+        {/* ============ HERO ============ */}
+        <section className="relative mx-auto grid max-w-6xl items-center gap-10 px-5 pb-24 pt-16 md:grid-cols-[1.15fr_.85fr] md:gap-14 md:pb-32 md:pt-24">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[640px] -translate-x-1/2 rounded-full opacity-[0.13] blur-[150px]"
+            style={{ background: "radial-gradient(circle, #00ff88 0%, transparent 70%)" }}
+          />
+          <div className="relative">
+            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">
+              // ai automation · digital selling
+            </p>
+            <h1
+              className={`${display} mt-6 text-[clamp(2.5rem,6.5vw,4.3rem)] font-bold leading-[1.03] tracking-tight`}
             >
-              Lihat Workshop
-            </Link>
-            <Link href="/tutorial" className="btn-glow-outline rounded-xl px-5 py-3 font-semibold">
-              Tutorial Gratis
-            </Link>
-            {waHref ? (
+              Yang bikin capek bukan jualannya — tapi{" "}
+              <span className="text-[#00ff88]">semua yang lo kerjain ulang tiap hari.</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-white/60 md:text-lg">
+              Xinde Labs bikin agent AI yang ambil alih kerjaan berulang: follow-up leads, funnel
+              yang nutup penjualan, konten yang terbit tiap hari.{" "}
+              <span className={`${hand} text-[1.35rem] leading-[1.15] text-[#00ff88]`}>Biar lo balik ngurus growth.</span>
+            </p>
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-glow-outline rounded-xl px-5 py-3 font-semibold"
+                href="#kontak"
+                className="rounded-full bg-[#00ff88] px-7 py-3 text-[15px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
               >
-                Chat Admin
+                Kerja bareng →
               </a>
-            ) : null}
+              <a
+                href={LEARN_URL}
+                className="rounded-full border border-white/25 px-7 py-3 text-[15px] font-semibold transition hover:border-[#00ff88] hover:text-[#00ff88]"
+              >
+                Liat kelasnya
+              </a>
+            </div>
+            <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.3em] text-white/30">
+              scroll ↓
+            </p>
           </div>
 
-          <dl className="anim-fade-up anim-delay-400 mt-14 grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[
-              { k: "Kelas live", v: `${classes.length || "—"}` },
-              { k: "Program", v: `${programs.length || "—"}` },
-              { k: "Artikel", v: `${posts.length || "—"}` },
-              { k: "Siap 24/7", v: "Yes" },
-            ].map((s) => (
-              <div key={s.k} className="glass rounded-2xl px-4 py-4">
-                <dt className="font-mono text-xs uppercase tracking-wider text-white/40">{s.k}</dt>
-                <dd className="mt-1 text-2xl font-bold text-[var(--accent)]">{s.v}</dd>
+          <div className="relative">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
+              <img
+                src="/founder.jpg"
+                alt="Evant Danamaya — founder Xinde Labs"
+                className="aspect-[4/5] w-full object-cover"
+                width={1080}
+                height={1350}
+              />
+            </div>
+            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
+              evant danamaya · founder
+            </p>
+          </div>
+        </section>
+
+        {/* ============ STATS — angka live ============ */}
+        <section className="border-y border-white/10 bg-[#0c0c0f]">
+          <div className="mx-auto grid max-w-6xl gap-px px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
+            {STATS.map((s) => (
+              <div key={s.k} className="px-4 py-3">
+                <p className={`${display} text-3xl font-bold text-[#00ff88] md:text-4xl`}>{s.v}</p>
+                <p className="mt-2 font-mono text-[11.5px] leading-relaxed text-white/65">{s.k}</p>
               </div>
             ))}
-          </dl>
+          </div>
+        </section>
+
+        {/* ============ 01 — TENTANG ============ */}
+        <section id="tentang" className="mx-auto max-w-6xl px-5 py-24">
+          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">tentang</p>
+          <h2
+            className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
+          >
+            Dari kerja manual, jadi{" "}
+            <span className={`${hand} font-bold text-[#00ff88]`}>sistem yang jalan sendiri.</span>
+          </h2>
+
+          <div className="mt-10 grid gap-10 md:grid-cols-[1.2fr_.8fr]">
+            <div className="space-y-4 text-[15px] leading-relaxed text-white/65">
+              <p>
+                Latar belakang saya penjualan, bukan kampus IT. Semua yang saya bangun di sini
+                berawal dari satu masalah yang sama: kerjaan repetitif — follow-up, rekap, posting,
+                hitung — menghabiskan waktu yang seharusnya dipakai untuk tumbuh.
+              </p>
+              <p>
+                Sekarang Xinde Labs membangun lapisan itu dengan AI: agent otonom yang mengambil
+                pekerjaan operasional, funnel yang mengurus pembayaran sampai akses produk, dan
+                sistem konten yang menjaga brand tetap hidup.
+              </p>
+              <p className={`${hand} text-2xl leading-snug text-[#00ff88]`}>
+                Semua angka di atas jalan di bisnis saya sendiri, tiap hari.
+              </p>
+            </div>
+            <div className="self-start rounded-xl border border-white/10 bg-[#0c0c0f] p-6">
+              <p className="font-mono text-[11px] text-white/45">$ whoami</p>
+              <ul className="mt-4 space-y-3 text-[13.5px] leading-snug text-white/70">
+                {TRACK_RECORD.map((r) => (
+                  <li key={r} className="flex gap-2.5">
+                    <span className="font-mono text-[#00ff88]">›</span>
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+            {SKILLS.map((s) => (
+              <div key={s.n} className="bg-[#0c0c0f] p-6">
+                <span className="font-mono text-[11px] text-[#00ff88]">{s.n}</span>
+                <h3 className={`${display} mt-3 text-[16px] font-bold`}>{s.t}</h3>
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/50">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ============ 02 — KARYA (WHITE) ============ */}
+        <section id="karya" className="border-y border-white/10 bg-white text-[#0a0a0c]">
+          <div className="mx-auto max-w-6xl px-5 py-24">
+            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#0a8a55]">karya</p>
+            <h2
+              className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
+            >
+              Yang lo liat di sini <span className={`${hand} font-bold text-[#0a8a55]`}>sistem yang kepake, bukan mockup.</span>
+            </h2>
+
+            {works.length ? (
+              <>
+                <p className="mt-10 font-mono text-[12px] text-[#0a8a55]">$ ls karya/ --published</p>
+                <div className="mt-3 divide-y divide-[#e4e4e4] border-y border-[#e4e4e4]">
+                  {works.map((w, i) => (
+                    <details
+                      key={w.id}
+                      className="group py-5 [&_summary::-webkit-details-marker]:hidden"
+                    >
+                      <summary className="flex cursor-pointer items-baseline gap-4">
+                        <span className="font-mono text-[11px] text-[#0a8a55]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="flex-1">
+                          <span className={`${display} block text-[17px] font-bold`}>{w.title}</span>
+                          {w.category ? (
+                            <span className="mt-1 block font-mono text-[10.5px] uppercase tracking-[0.14em] text-[#6b7a70]">
+                              {w.category}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="font-mono text-lg text-[#0a8a55] group-open:hidden">→</span>
+                        <span className="hidden font-mono text-lg text-[#0a8a55] group-open:inline">↑</span>
+                      </summary>
+                      <div className="mt-4 pl-8">
+                        <p className="max-w-2xl whitespace-pre-line text-[14px] leading-relaxed text-[#3a3a3a]">
+                          {stripTags(w.description) || "Detail menyusul."}
+                        </p>
+                        {w.link_url ? (
+                          <a
+                            href={w.link_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-block font-mono text-[12px] text-[#0a8a55] underline decoration-[#0a8a55]/40 underline-offset-4"
+                          >
+                            lihat hasilnya ↗
+                          </a>
+                        ) : null}
+                      </div>
+                    </details>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="mt-8 text-[15px] text-[#3a3a3a]">
+                Studi kasus sedang dirapikan.{" "}
+                <Link href="/portofolio" className="text-[#0a8a55] underline underline-offset-4">
+                  Lihat portofolio
+                </Link>
+                .
+              </p>
+            )}
+
+            <Link
+              href="/portofolio"
+              className="mt-8 inline-block font-mono text-[12px] lowercase tracking-[0.14em] text-[#0a8a55]"
+            >
+              semua karya →
+            </Link>
+          </div>
+        </section>
+
+        {/* ============ 03 — BELAJAR ============ */}
+        <section id="belajar" className="mx-auto max-w-6xl px-5 py-24">
+          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">belajar</p>
+          <h2
+            className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
+          >
+            Cara bangunnya, <span className="text-[#00ff88]">diajarkan kebuka.</span>
+          </h2>
+          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
+            Semua yang dipakai di project nyata ditulis dan diajarkan di classroom Xinde Labs: kelas
+            online, tantangan praktik, dan mentoring.
+          </p>
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {classes.length ? (
+              classes.map((c) => (
+                <a
+                  key={c.slug}
+                  href={LEARN_URL}
+                  className="rounded-xl border border-white/10 bg-[#0c0c0f] p-5 transition hover:border-[#00ff88]/50"
+                >
+                  <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-white/45">
+                    {c.type || "kelas"}
+                  </span>
+                  <h3 className={`${display} mt-3 text-[15.5px] font-bold leading-snug`}>{c.title}</h3>
+                  <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-white/50">
+                    {stripTags(c.description)}
+                  </p>
+                  <p className="mt-4 font-mono text-[12px] text-[#00ff88]">{formatIDR(c.price)}</p>
+                </a>
+              ))
+            ) : (
+              <div className="sm:col-span-3 rounded-xl border border-dashed border-[#00ff88]/30 p-6 text-[14px] text-white/60">
+                Kelas pertama sedang disiapkan.{" "}
+                <a href={LEARN_URL} className="text-[#00ff88] underline underline-offset-4">
+                  Lihat classroom
+                </a>
+                .
+              </div>
+            )}
+          </div>
+
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <a
+              href={LEARN_URL}
+              className="rounded-full bg-[#00ff88] px-7 py-3 text-[15px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
+            >
+              Masuk classroom →
+            </a>
+            <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/45">
+              {classes.length > 0
+                ? `${classes.length} kelas aktif · akses langsung setelah bayar`
+                : "akses langsung setelah bayar"}
+            </span>
+          </div>
+        </section>
+
+        {/* ============ 04 — KONTAK ============ */}
+        <section
+          id="kontak"
+          className="relative border-t border-white/10"
+          style={{
+            background:
+              "radial-gradient(circle at 80% 20%, rgba(0,255,136,0.14), transparent 45%), linear-gradient(160deg, #07130d 0%, #09090b 60%)",
+          }}
+        >
+          <div className="mx-auto max-w-6xl px-5 py-24">
+            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">kontak</p>
+            <h2
+              className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
+            >
+              Berhenti jadi bottleneck operasional.{" "}
+              <span className={`${hand} font-bold text-[#00ff88]`}>Bikin sistemnya yang jaga.</span>
+            </h2>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
+              Terbuka untuk project automation, infrastruktur agent, sampai build end-to-end — dari
+              satu workflow sampai sistem operasional penuh.
+            </p>
+
+            <div className="mt-10 grid gap-6 sm:grid-cols-2">
+              {waHref ? (
+                <a href={waHref} target="_blank" rel="noopener noreferrer" className="group">
+                  <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/45">
+                    whatsapp
+                  </span>
+                  <span
+                    className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
+                  >
+                    Chat langsung ↗
+                  </span>
+                </a>
+              ) : null}
+              <a
+                href="https://instagram.com/xindelabs.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group"
+              >
+                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/45">
+                  instagram
+                </span>
+                <span
+                  className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
+                >
+                  @xindelabs.id ↗
+                </span>
+              </a>
+            </div>
+          </div>
         </section>
       </main>
 
-      {/* ================= EKOSISTEM ================= */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="text-center">
-          <span className="badge">ekosistem xinde labs</span>
-          <h2 className="mt-4 text-3xl font-bold md:text-4xl">Satu tempat, semua yang lo butuhin</h2>
-          <p className="mx-auto mt-3 max-w-2xl text-white/60">
-            Belajar, bantuin, dan grow — semuanya nyambung lewat satu sistem.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {ECOSYSTEM.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="glass glow-border group rounded-2xl p-6 transition"
-            >
-              <h3 className="text-lg font-bold text-white">{item.label}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/60">{item.desc}</p>
-              <span className="mt-4 inline-block font-mono text-[13px] text-[var(--accent)]">
-                {item.cta} →
-              </span>
-            </Link>
-          ))}
-
-          <div className="glass glow-border rounded-2xl p-6">
-            <h3 className="text-lg font-bold text-white">Butuh CUSTOM?</h3>
-            <p className="mt-2 text-sm leading-relaxed text-white/60">
-              Kelas private, workshop kantor, atau setup agent khusus brand lo.
+      {/* ============ FOOTER ============ */}
+      <footer className="border-t border-white/10 bg-[#09090b] pb-12">
+        <div className="mx-auto max-w-6xl px-5">
+          <div className="pt-8">
+            <p className={`${display} text-lg font-bold tracking-tight`}>
+              <span className={`${hand} font-bold text-[#00ff88]`}>Dibangun,</span> bukan dipresentasikan.
             </p>
-            <a href="#kerjasama" className="mt-4 inline-block font-mono text-[13px] text-[var(--accent)]">
-              Ajukan Kerjasama →
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= PROGRAM UNGGULAN ================= */}
-      {programs.length ? (
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <span className="badge">program</span>
-              <h2 className="mt-4 text-3xl font-bold md:text-4xl">Program Unggulan</h2>
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.14em] text-white/60">
+              <span>© {new Date().getFullYear()} xinde labs</span>
+              <nav className="flex gap-5">
+                <Link href="/blog" className="lowercase hover:text-[#00ff88]">blog</Link>
+                <Link href="/portofolio" className="lowercase hover:text-[#00ff88]">portofolio</Link>
+                <Link href="/tutorial" className="lowercase hover:text-[#00ff88]">tutorial</Link>
+                <Link href="/admin" className="lowercase hover:text-[#00ff88]">admin</Link>
+              </nav>
             </div>
-            <Link href="https://kelas.xindelabs.web.id" className="font-mono text-sm text-[var(--accent)]">
-              Lihat semua →
-            </Link>
-          </div>
-
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {programs.map((p) => (
-              <article key={p.slug} className="glass glow-border overflow-hidden rounded-2xl">
-                {p.cover_image ? (
-                  <img src={p.cover_image} alt={p.title} className="h-36 w-full object-cover" />
-                ) : null}
-                <div className="p-5">
-                  {p.type ? <span className="chip">{p.type}</span> : null}
-                  <h3 className="mt-3 text-base font-bold">{p.title}</h3>
-                  <p className="mt-2 line-clamp-3 text-sm text-white/60">{stripTags(p.description)}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="price-tag text-sm">{formatIDR(p.price)}</span>
-                    <Link
-                      href="https://kelas.xindelabs.web.id"
-                      className="font-mono text-[13px] text-[var(--accent)]"
-                    >
-                      Detail →
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* ================= KELAS TERBARU ================= */}
-      {classes.length ? (
-        <section className="mx-auto max-w-6xl px-4 py-16">
-          <span className="badge">kelas</span>
-          <h2 className="mt-4 text-3xl font-bold md:text-4xl">Kelas yang lagi aktif</h2>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {classes.map((c) => (
-              <article key={c.slug} className="glass glow-border rounded-2xl p-5">
-                <h3 className="text-base font-bold">{c.title}</h3>
-                <p className="mt-2 line-clamp-3 text-sm text-white/60">{stripTags(c.description)}</p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="font-mono text-sm text-[var(--accent)]">{formatIDR(c.price)}</span>
-                  <Link
-                    href="https://kelas.xindelabs.web.id"
-                    className="font-mono text-[13px] text-white/70 hover:text-[var(--accent)]"
-                  >
-                    Daftar →
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* ================= ARTIKEL TERBARU ================= */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <span className="badge">blog</span>
-            <h2 className="mt-4 text-3xl font-bold md:text-4xl">Catatan terbaru</h2>
-          </div>
-          <Link href="/blog" className="font-mono text-sm text-[var(--accent)]">
-            Semua artikel →
-          </Link>
-        </div>
-
-        {posts.length ? (
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
-            {posts.map((p) => (
-              <Link key={p.slug} href={`/blog/${p.slug}`} className="glass glow-border rounded-2xl p-5 transition">
-                {p.cover_image ? (
-                  <img src={p.cover_image} alt={p.title} className="mb-4 h-40 w-full rounded-xl object-cover" />
-                ) : null}
-                {p.category ? <span className="chip">{p.category}</span> : null}
-                <h3 className="mt-3 text-base font-bold leading-snug">{p.title}</h3>
-                <p className="mt-2 line-clamp-3 text-sm text-white/60">{stripTags(p.excerpt)}</p>
-                <span className="mt-4 block font-mono text-xs text-white/40">
-                  {formatDate(p.published_at)}
-                </span>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-6 text-white/50">Belum ada artikel. Segera hadir.</p>
-        )}
-      </section>
-
-      {/* ================= KERJASAMA ================= */}
-      <section id="kerjasama" className="mx-auto max-w-4xl px-4 py-16">
-        <div className="glass glow-border rounded-3xl p-6 md:p-10">
-          <span className="badge">kerjasama</span>
-          <h2 className="mt-4 text-3xl font-bold md:text-4xl">Punya tim yang butuh upgrade?</h2>
-          <p className="mt-3 max-w-2xl text-white/60">
-            Ceritakan kebutuhan lo — kelas private, workshop kantor, sampai setup agent AI buat tim marketing.
-          </p>
-          <div className="mt-8">
-            <PartnershipForm />
           </div>
         </div>
-      </section>
-
-      <SiteFooter />
+      </footer>
     </div>
   );
 }
