@@ -1,0 +1,7 @@
+import { redirect } from "next/navigation";
+import { admin } from "@/lib/supabase/server";
+import { LearnShell } from "../../catalog";
+import { isAdminMember, learnMember, ownsClass } from "../../access";
+import WorkshopRoom from "./room";
+export const dynamic="force-dynamic";
+export default async function WorkshopPage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const {user,member}=await learnMember();if(!user)redirect("/learn/login");const {data:cls}=await admin.from("classes").select("*").eq("slug",slug).maybeSingle();if(!cls)return <LearnShell><h1>Workshop tidak ditemukan</h1></LearnShell>;const [{data:orders},{data:pre},{data:decks}]=await Promise.all([admin.from("orders").select("*").eq("lead_id",member?.lead_id||"00000000-0000-0000-0000-000000000000"),admin.from("workshop_pre_sessions").select("*").eq("class_id",cls.id).order("sort_order"),admin.from("workshop_decks").select("*").eq("class_id",cls.id).order("sort_order")]);if(!(ownsClass(member,cls,orders??[])||await isAdminMember()))return <LearnShell><h1 className="text-3xl font-bold">Workshop terkunci</h1><a href={`/checkout/${cls.slug}`} className="mt-5 inline-block rounded-lg bg-[#10B981] px-4 py-3 font-bold text-[#050A07]">Beli akses workshop</a></LearnShell>;return <LearnShell><p className="font-mono text-xs uppercase tracking-[.25em] text-[#10B981]">Interactive Workshop Room</p><h1 className="mt-3 text-4xl font-bold">{cls.title}</h1><WorkshopRoom cls={cls} preSessions={pre??[]} decks={decks??[]} memberId={member?.id}/></LearnShell>}
