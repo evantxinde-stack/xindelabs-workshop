@@ -57,6 +57,41 @@ const STATS = [
 const display = "font-[family-name:var(--font-display)]";
 const hand = "font-[family-name:var(--font-hand)]";
 
+// Satu sumber nav buat desktop + burger mobile
+const NAV = [
+  { href: "#tentang", label: "tentang" },
+  { href: "#karya", label: "karya" },
+  { href: "#belajar", label: "belajar" },
+  { href: "#kontak", label: "kontak" },
+  { href: LEARN_URL, label: "learn" },
+  { href: "/blog", label: "blog" },
+  { href: "https://workshop.xindelabs.web.id", label: "workshop" },
+  { href: "https://member.xindelabs.web.id", label: "login member" },
+];
+
+function NavBurger() {
+  return (
+    <details className="relative sm:hidden">
+      <summary
+        aria-label="Menu"
+        className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-white/15 text-white/70 [&::-webkit-details-marker]:hidden"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <path d="M2 4h12M2 8h12M2 12h12" strokeLinecap="round" />
+        </svg>
+      </summary>
+      <nav className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-white/10 bg-[#0c0c0f] p-2 font-mono text-[12px] lowercase tracking-[0.12em] text-white/70 shadow-2xl">
+        {NAV.map((l) => (
+          <a key={l.href} href={l.href} className="block rounded-lg px-3 py-2.5 hover:bg-white/5 hover:text-[#00ff88]">
+            {l.label}
+          </a>
+        ))}
+      </nav>
+    </details>
+  );
+}
+
+
 export default async function Home() {
   const [workRes, classesRes, waRes] = await Promise.all([
     admin
@@ -94,12 +129,15 @@ export default async function Home() {
             <a href="#belajar" className="hover:text-[#00ff88]">belajar</a>
             <a href="#kontak" className="hover:text-[#00ff88]">kontak</a>
           </nav>
-          <a
-            href="#kontak"
-            className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
-          >
-            Kerja bareng
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="#kontak"
+              className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
+            >
+              Kerja bareng
+            </a>
+            <NavBurger />
+          </div>
         </div>
       </header>
 
@@ -417,10 +455,11 @@ export default async function Home() {
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.14em] text-white/60">
               <span>© {new Date().getFullYear()} xindelabs</span>
               <nav className="flex gap-5">
+                <a href={LEARN_URL} className="lowercase hover:text-[#00ff88]">learn</a>
                 <Link href="/blog" className="lowercase hover:text-[#00ff88]">blog</Link>
+                <a href="https://workshop.xindelabs.web.id" className="lowercase hover:text-[#00ff88]">workshop</a>
                 <Link href="/portofolio" className="lowercase hover:text-[#00ff88]">portofolio</Link>
-                <Link href="/tutorial" className="lowercase hover:text-[#00ff88]">tutorial</Link>
-                <Link href="/admin" className="lowercase hover:text-[#00ff88]">admin</Link>
+                <a href="https://member.xindelabs.web.id" className="lowercase hover:text-[#00ff88]">member</a>
               </nav>
             </div>
           </div>
