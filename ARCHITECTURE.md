@@ -1,23 +1,33 @@
 # XINDELABS UNIFIED ECOSYSTEM - MASTER ARCHITECTURE
 
-## 0. Peta Routing Domain (per 22 Oktober 2026)
+## 0. Peta Routing Domain (per 24 Oktober 2026)
 
 | Host | Project Vercel | Isi | Deploy |
 |---|---|---|---|
-| `xindelabs.web.id` | `tutorial` (Next.js, `/Users/evantvant/Documents/tutorial`) | Home unified `/` (**redesign main hub 2026-10-23**), blog `/blog`, portofolio `/portofolio`, tutorial `/tutorial`, **admin `/admin` (Basic auth, ADMIN_PASSWORD)**, SEMUA API produksi (Mayar checkout, provision-LMS, lead, webhook, cron) | `git push` main → auto-deploy |
-| `learn.xindelabs.web.id` | `xindelabs-workshop` (static, repo ini) | **Classroom hub — semua kelas & workshop ada di sini** (funnel `subdomain=learn`) | `git push` |
-| `workshop.xindelabs.web.id` | `xindelabs-workshop` | Funnel `workshop` | `git push` |
-| `kelas.xindelabs.web.id` | `xindelabs-workshop` | Funnel `kelas` (legacy — diarahkan ke `learn.`) | `git push` |
+| `xindelabs.web.id` | `tutorial` (Next.js, `apex/` di repo ini) | Main hub `/` (nav: tentang, karya, belajar, kontak + burger mobile: learn, blog, service, login member), tombol **"Work with me" → `/service`**, blog `/blog`, portofolio `/portofolio`, **service `/service` (halaman layanan + harga, baru 2026-10-24)**, **admin satu pintu `/admin` → redirect ke CMS `admin.xindelabs.web.id/admin`**, SEMUA API produksi (Mayar checkout, provision-LMS, lead, webhook, cron) | `git push` main → auto-deploy |
+| `learn.xindelabs.web.id` | `xindelabs-workshop` (static, repo ini) | **Portal belajar — 3 pintu (baru 2026-10-24):**<br>• `/member` → Login/Member area (LMS: katalog kelas, modul, sertifikat, VIP 1-on-1, upsell cross-sell)<br>• `/kelas` → Landing katalog kelas publik (kembali ke `/index.html?view=kelas`, render `js/modules/kelas-page.js`)<br>• `/workshop` → Landing workshop live | `git push` |
+| `xindelabs.web.id/blog` | `tutorial` | Blog (dari Main Hub nav) | `git push` |
+| `xindelabs.web.id/service` | `tutorial` | Halaman Service — daftar layanan + harga + CTA WA/IG (tujuan tombol "Work with me") | `git push` |
+| `admin.xindelabs.web.id` | `xindelabs-workshop` | CMS penuh (`admin.html` + `js/admin/*`) — diakses via satu pintu `xindelabs.web.id/admin` | `git push` |
+| `workshop.xindelabs.web.id` | `xindelabs-workshop` | Funnel `workshop` (alias lama, tetap hidup) | `git push` |
+| `kelas.xindelabs.web.id` | `xindelabs-workshop` | Funnel `kelas` (legacy — diarahkan ke `learn./kelas`) | `git push` |
 | `hermes.xindelabs.web.id` | `xindelabs-workshop` | Funnel `hermes` | `git push` |
 | `promo.xindelabs.web.id` | `xindelabs-workshop` | Funnel `promo` | `git push` |
-| `member.xindelabs.web.id` | `xindelabs-workshop` | Member LMS | `git push` |
+| `member.xindelabs.web.id` | `xindelabs-workshop` | Member LMS (alias lama → `/member-app.html`; gunakan `learn./member`) | `git push` |
 
 Catatan:
-- **Admin satu pintu di `xindelabs.web.id/admin`** (keputusan 2026-10-23). `admin.xindelabs.web.id` + `admin.html` static bukan jalur utama lagi.
+- **Struktur learn (keputusan 2026-10-24, yang diminta user):**
+  - Main Hub nav → `learn.xindelabs.web.id` (portal belajar)
+  - `learn.xindelabs.web.id/member` → login member area (LMS baru, bukan `member.html` legacy)
+  - `learn.xindelabs.web.id/kelas` → landing page kelas
+  - `learn.xindelabs.web.id/workshop` → landing page workshop
+- **`member.html` sekarang = LMS baru** (sinkron `member-app.html`, nav: Dashboard + Katalog Kelas). File fisik menang atas rewrite di Vercel cleanUrls — jangan ganti lagi jadi LMS legacy.
+- **Admin satu pintu di `xindelabs.web.id/admin`** (keputusan 2026-10-23). `admin.xindelabs.web.id` + `admin.html` static diakses via redirect dari sana.
 - Domain apex **tidak** dipindah ke project static. Semua API yang dipakai n8n/Mayar tetap hidup di `xindelabs.web.id`.
 - `js/landing-boot.js` punya route guard: landing CMS "utama" hanya dirender di root, subdomain funnel pakai `funnel-engine`.
 - Wildcard `*.xindelabs.web.id` sudah di-assign, tapi subdomain baru tetap didaftarkan eksplisit agar sertifikat TLS terbit (wildcard butuh DNS-01). DNS baru: CNAME ke `cname.vercel-dns.com`, proxy Cloudflare **off**.
 - Konten funnel per subdomain tersimpan di tabel `funnels` + `funnel_steps` (bukan file). Subdomain baru = row `funnels` baru (`subdomain`, `slug`, `is_active`) + clone `funnel_steps`.
+- Routing learn via `vercel.json` `rewrites` (bukan middleware): `/kelas → /index.html?view=kelas`, `/workshop → /workshop.html`, `/member → /member-app`. **Middleware TIDAK boleh import `next/server`** — project ini statik, tanpa dependency `next` (sudah 2× deploy gagal karena ini).
 
 ## 1. Fondasi Teknologi (Zero-Build Static & Modular ES6)
 Project ini menggunakan arsitektur **Static HTML5 + Tailwind CSS + Vanilla JavaScript (ES6 Modules `type="module"`) + Supabase JS v2 (ESM CDN)** tanpa bundler (tanpa Vite/React/Webpack dan tanpa `package.json`).
