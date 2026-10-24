@@ -3,7 +3,9 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/auth", "destination": "/auth.html" },
-    { "source": "/kelas", "destination": "/index.html?view=kelas" },
+    { "source": "/kelas", "destination": "/index.html?subdomain=kelas&view=kelas" },
+    { "source": "/workshop", "destination": "/workshop.html" },
+    { "source": "/member", "destination": "/member-app.html" },
     { "source": "/blog/:slug", "destination": "/blog.html?slug=:slug" },
     { "source": "/checkout", "destination": "/checkout.html" },
     { "source": "/upsell", "destination": "/upsell.html" },

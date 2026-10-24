@@ -66,14 +66,14 @@
     const route = initRouter();
     window.__XINDE_ROUTE__ = route;
 
-    if (route.type === 'root') {
-      // Root domain (xindelabs.web.id) → render Main Hub
-      const { render } = await import('./js/modules/main-hub.js');
-      await render('hubRoot');
-    } else if (route.subdomain === 'kelas' && new URLSearchParams(location.search).get('view') === 'kelas') {
+    if (new URLSearchParams(location.search).get('view') === 'kelas') {
       // learn.xindelabs.web.id/kelas → halaman katalog kelas
       document.title = 'Kelas — XindeLabs';
       const { render } = await import('./js/modules/kelas-page.js');
+      await render('hubRoot');
+    } else if (route.type === 'root') {
+      // Root domain (xindelabs.web.id) → render Main Hub
+      const { render } = await import('./js/modules/main-hub.js');
       await render('hubRoot');
     } else if (route.type === 'member') {
       // Member subdomain → halaman member app
