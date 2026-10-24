@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-session";
+import { authCookieOptions } from "@/lib/auth-cookie";
 
 export async function POST(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { password?: string };
@@ -12,11 +13,8 @@ export async function POST(req: Request) {
   const token = await sessionToken(adminPassword);
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7, // 7 hari
+    ...authCookieOptions(req.headers.get("host")?.split(":")[0]),
+    maxAge: 60 * 60 * 24 * 7,
   });
 
   return Response.json({ ok: true });
