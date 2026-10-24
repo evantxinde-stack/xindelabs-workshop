@@ -168,11 +168,14 @@ function renderKatalog() {
         <div style="padding:22px; display:grid; gap:12px;">
           <h3 style="font-family:var(--font-display); font-weight:700; font-size:19px;">${esc(cls.title)}</h3>
           <p style="color:var(--muted); font-size:14.5px;">${esc(cls.description||'')}</p>
-          ${owned ? `<div style="font-family:var(--font-mono); font-size:13px; color:var(--green);">Progress: ${pct}%</div>` : `<div style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">🔒 Belum dimiliki</div>`}
+          ${owned ? `<div style="font-family:var(--font-mono); font-size:13px; color:var(--green);">Progress: ${pct}%</div>` : `<div style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">🔒 Belum dimiliki — upgrade kapan aja</div>`}
           ${owned ? `<button class="btn btn--primary btn--sm" onclick="window.__openClass__('${esc(cls.id)}')">Buka Kelas</button>` :
             `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <span style="font-family:var(--font-mono); color:var(--cyan);">${formatIDR(price||0)}</span>
-              <a href="/checkout.html?class=${esc(cls.slug)}" class="btn btn--ghost btn--sm">Harga Khusus Member</a>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <a href="https://wa.me/62895335137700?text=${encodeURIComponent('Halo XindeLabs, mau beli ' + (cls.title||'kelas'))}" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" title="Tanya dulu via WhatsApp">💬</a>
+                <a href="/checkout.html?class=${esc(cls.slug)}" class="btn btn--primary btn--sm">Beli Kelas Ini</a>
+              </div>
             </div>`}
         </div>
       </article>
@@ -276,7 +279,11 @@ function renderVIP() {
       <ul style="display:grid; gap:10px; list-style:none; color:var(--muted);">
         ${(settings.benefits||[]).map(b=>`<li>✓ ${esc(b)}</li>`).join('')}
       </ul>
-      ${penuh ? `<button class="btn btn--ghost" disabled style="justify-self:start;">Slot Penuh — Tunggu Periode Berikutnya</button>` : `<a href="/checkout.html?product=vip-1on1" class="btn btn--primary" style="justify-self:start;">Daftar &amp; Bayar VIP 1-on-1</a>`}
+      ${penuh ? `<button class="btn btn--ghost" disabled style="justify-self:start;">Slot Penuh — Tunggu Periode Berikutnya</button>`
+              : `<div style="display:flex; gap:12px; flex-wrap:wrap; justify-self:start;">
+                  <a href="https://wa.me/62895335137700?text=${encodeURIComponent('Halo XindeLabs, mau tanya soal Bimbingan VIP 1-on-1')}" target="_blank" rel="noopener" class="btn btn--ghost">💬 Tanya Dulu via WhatsApp</a>
+                  <a href="/checkout.html?product=vip-1on1" class="btn btn--primary">Daftar &amp; Bayar VIP 1-on-1</a>
+                </div>`}
     </div>
   `;
 }
