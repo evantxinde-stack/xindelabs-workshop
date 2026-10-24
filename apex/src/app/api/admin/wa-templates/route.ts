@@ -1,11 +1,7 @@
 import type { NextRequest } from "next/server";
 import { admin } from "@/lib/supabase/server";
+import { isAdminRequest } from "@/lib/admin-session";
 
-function isAdmin(req: NextRequest) {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) return false;
-  return req.headers.get("authorization") === `Basic ${btoa("admin:" + password)}`;
-}
 
 function bad(message: string) {
   return Response.json({ error: message }, { status: 400 });
@@ -17,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return new Response("Unauthorized", { status: 401 });
   }
   const body = await req.json().catch(() => null);
@@ -37,7 +33,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return new Response("Unauthorized", { status: 401 });
   }
   const id = new URL(req.url).searchParams.get("id");

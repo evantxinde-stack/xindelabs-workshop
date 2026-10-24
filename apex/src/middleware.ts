@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ADMIN_COOKIE, sessionToken } from "@/lib/admin-session";
 
 export const config = { matcher: ["/admin/:path*"] };
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const password = process.env.ADMIN_PASSWORD || "";
-  const auth = req.headers.get("authorization") ?? "";
-  const expected = `Basic ${Buffer.from("admin:" + password).toString("base64")}`;
-  if (password && auth === expected) {
-    return NextResponse.next();
+  const token = await sessionToken(password);
+  const authorized = Boolean(password) && req.cookies.get(ADMIN_COOKIE)?.value === token;
+
+  // Form login sendiri selalu boleh dibuka; kalau sudah login, lempar ke dashboard
+  if (req.nextUrl.pathname === "/admin/login") {
+    return authorized ? NextResponse.redirect(new URL("/admin", req.url)) : NextResponse.next();
   }
-  // ponytail: Basic auth cukup untuk 1 admin; naik ke session auth saat ada tim
-  return new NextResponse("Login required", {
-    status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Admin"' },
-  });
+
+  if (authorized) return NextResponse.next();
+
+  // Belum login → form login (bukan popup Basic Auth)
+  const loginUrl = new URL("/admin/login", req.url);
+  loginUrl.searchParams.set("next", req.nextUrl.pathname);
+  return NextResponse.redirect(loginUrl);
 }

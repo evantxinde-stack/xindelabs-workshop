@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
@@ -21,7 +21,15 @@ const NAV = [
 
 export default function AdminSidebar() {
   const path = usePathname();
+  const router = useRouter();
   const isActive = (href: string) => (href === "/admin" ? path === "/admin" : path.startsWith(href));
+
+  async function handleLogout(e: React.FormEvent) {
+    e.preventDefault();
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.replace("/admin/login");
+    router.refresh();
+  }
   return (
     <aside className="sidebar lg:sticky lg:top-0 lg:h-screen lg:flex-col">
       <div className="flex items-center gap-2.5 px-5 py-5">
@@ -41,6 +49,9 @@ export default function AdminSidebar() {
         <a href="/" target="_blank" rel="noopener noreferrer" className="nav-btn">
           Lihat Situs ↗
         </a>
+        <form action="/api/admin/logout" method="post" onSubmit={handleLogout}>
+          <button type="submit" className="nav-btn w-full text-left">Logout</button>
+        </form>
       </nav>
       <div className="lg:hidden overflow-x-auto px-3 py-2">
         <div className="flex gap-1">

@@ -1,11 +1,7 @@
 import type { NextRequest } from "next/server";
 import { admin } from "@/lib/supabase/server";
+import { isAdminRequest } from "@/lib/admin-session";
 
-function isAdmin(req: NextRequest) {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) return false;
-  return req.headers.get("authorization") === `Basic ${btoa("admin:" + password)}`;
-}
 
 export async function GET() {
   const [seqs, steps] = await Promise.all([
@@ -35,7 +31,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!isAdmin(req)) return new Response("Unauthorized", { status: 401 });
+  if (!(await isAdminRequest(req))) return new Response("Unauthorized", { status: 401 });
   const body = (await req.json().catch(() => null)) as
     | { id?: string; subject?: unknown; html_body?: unknown; body_text?: unknown }
     | null;

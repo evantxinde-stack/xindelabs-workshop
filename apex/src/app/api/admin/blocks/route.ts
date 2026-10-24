@@ -1,12 +1,8 @@
 import type { NextRequest } from "next/server";
 import { admin } from "@/lib/supabase/server";
+import { isAdminRequest } from "@/lib/admin-session";
 import { BLOCK_TYPES, PAGES, type Block, type BlockType, type PageKey } from "@/lib/content-data";
 
-function isAdmin(req: NextRequest) {
-  const password = process.env.ADMIN_PASSWORD;
-  if (!password) return false;
-  return req.headers.get("authorization") === `Basic ${btoa("admin:" + password)}`;
-}
 
 function bad(message: string) {
   return Response.json({ error: message }, { status: 400 });
@@ -36,7 +32,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  if (!isAdmin(req)) {
+  if (!(await isAdminRequest(req))) {
     return new Response("Unauthorized", { status: 401 });
   }
   const body = await req.json().catch(() => null);

@@ -1,12 +1,11 @@
-export const dynamic = 'force-dynamic';
+import LoginForm from "./LoginForm";
+
+export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
   return (
-    <div className="grid-bg min-h-screen flex items-center justify-center">
-      <div className="panel p-6">
-        <h1 className="text-xl font-bold">Admin Login</h1>
-        <p className="text-sm text-white/50 mt-2">Basic Auth diperlukan. Gunakan kredensial admin.</p>
-      </div>
+    <div className="grid-bg flex min-h-screen items-center justify-center px-4">
+      <LoginForm />
     </div>
   );
 }
