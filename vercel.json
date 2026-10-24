@@ -3,6 +3,11 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/auth", "destination": "/auth.html" },
+    { "source": "/kelas", "destination": "/index.html?view=kelas" },
+    { "source": "/blog/:slug", "destination": "/blog.html?slug=:slug" },
+    { "source": "/checkout", "destination": "/checkout.html" },
+    { "source": "/upsell", "destination": "/upsell.html" },
+    { "source": "/thankyou", "destination": "/thankyou.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
@@ -58,11 +63,5 @@
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/blog/:slug", "destination": "/blog.html?slug=:slug" },
-    { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/upsell", "destination": "/upsell.html" },
-    { "source": "/thankyou", "destination": "/thankyou.html" }
   ]
 }
