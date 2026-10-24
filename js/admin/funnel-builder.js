@@ -302,11 +302,19 @@ function renderEditor() {
   renderSteps();
 
   $('fbSave').addEventListener('click', saveFunnel);
+  // Perbaikan preview: buka di subdomain-nya langsung (bukan /?subdomain=),
+  // karena halaman admin ini berjalan di host admin. (localhost/preview Vercel
+  // tetap boleh pakai param ?subdomain= untuk uji lokal.)
   $('fbPreview').addEventListener('click', () => {
     collectDraftFromDom();
     const sub = state.draft.subdomain || state.draft.slug;
     if (!sub) return toast('Isi subdomain dulu.', 'warn');
-    window.open('/?subdomain=' + encodeURIComponent(sub), '_blank');
+    const h = String(window.location.hostname || '');
+    const isLocal = h === 'localhost' || h === '127.0.0.1' || h.startsWith('192.168.') || h.startsWith('10.') || h.endsWith('.vercel.app');
+    const url = isLocal
+      ? window.location.origin + '/?subdomain=' + encodeURIComponent(sub)
+      : 'https://' + encodeURIComponent(sub) + '.xindelabs.web.id/';
+    window.open(url, '_blank');
   });
   $('fbDelete').addEventListener('click', deleteFunnel);
   $('fbAddStep').addEventListener('click', addStep);

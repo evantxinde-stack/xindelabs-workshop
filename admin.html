@@ -75,7 +75,6 @@
       <div class="a-shell">
         <aside class="a-sidebar">
           <button type="button" class="a-menu is-active" data-panel="dashboard">Dashboard</button>
-          <button type="button" class="a-menu" data-panel="content">Konten Landing</button>
           <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
           <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
           <button type="button" class="a-menu" data-panel="pipeline">Pipeline &amp; Drop-off</button>
@@ -85,7 +84,6 @@
           <button type="button" class="a-menu" data-panel="members">Members <span class="a-badge" id="countMenuMembers"></span></button>
           <button type="button" class="a-menu" data-panel="vouchers">Vouchers</button>
           <button type="button" class="a-menu" data-panel="affiliates">Affiliate <span class="a-badge" id="countMenuAffiliates"></span></button>
-          <button type="button" class="a-menu" data-panel="landingpages">Landing Pages</button>
           <button type="button" class="a-menu a-menu--accent" data-panel="hermes">✦ Hermes AI Command Center</button>
         </aside>
 
@@ -104,7 +102,7 @@
           <div id="panelBlog" style="display:none"></div>
 
           <!-- ============ PANEL: KONTEN ============ -->
-          <div id="panelContent" style="display:none">
+          <div id="panelContent" style="display:none" data-retired="1">
             <div class="section-head" style="text-align:left">
               <p class="eyebrow"><span class="dot"></span>admin</p>
               <h2 class="h2">Edit Konten Landing</h2>
@@ -646,7 +644,7 @@
           </div>
 
           <!-- ============ PANEL: LANDING PAGES ============ -->
-          <div id="panelLandingPages" style="display:none">
+          <div id="panelLandingPages" style="display:none" data-retired="1">
             <div class="section-head" style="text-align:left">
               <p class="eyebrow"><span class="dot"></span>admin</p>
               <h2 class="h2">Landing Page Management</h2>
@@ -951,7 +949,6 @@
         document.getElementById('logoutBtn').style.display = 'inline-flex';
         ensureAdminModules();
         loadDashboard();
-        loadContent();
         loadLms();
         loadMembers();
         loadLeads('course');
@@ -1298,7 +1295,7 @@
     var currentPanel = 'dashboard';
 
     function panelEl(panel) {
-      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', pipeline: 'panelPipeline', funnels: 'panelFunnels', blog: 'panelBlog', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers', affiliates: 'panelAffiliates', landingpages: 'panelLandingPages' };
+      var map = { dashboard: 'panelDashboard', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', pipeline: 'panelPipeline', funnels: 'panelFunnels', blog: 'panelBlog', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers', affiliates: 'panelAffiliates', };
       return document.getElementById(map[panel]);
     }
 
@@ -1379,7 +1376,7 @@
         modCall('hermes', 'closeHermes');
         // Bersihkan banner error panel sebelumnya.
         document.querySelectorAll('[data-module-error]').forEach(function (n) { n.remove(); });
-        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'pipeline', 'funnels', 'blog', 'members', 'vouchers', 'affiliates', 'landingpages'].forEach(function (p) {
+        ['dashboard', 'lms', 'leadsCourse', 'leadsKomunitas', 'pipeline', 'funnels', 'blog', 'members', 'vouchers', 'affiliates'].forEach(function (p) {
           var el = panelEl(p);
           if (el) el.style.display = (p === currentPanel) ? 'block' : 'none';
         });
@@ -1396,7 +1393,6 @@
         if (currentPanel === 'members') loadMembers();
         if (currentPanel === 'vouchers') loadVouchers();
         if (currentPanel === 'affiliates') loadAffiliates();
-        if (currentPanel === 'landingpages') loadLandingPages();
       });
     });
 
@@ -2945,10 +2941,7 @@
         if (lpEditingKey && lpEditingKey !== key) {
           client.from('site_content').delete().eq('key', lpEditingKey).then(function (dr) {
             if (dr.error) console.error('[lp] hapus key legacy', dr.error);
-            loadLandingPages();
           });
-        } else {
-          loadLandingPages();
         }
       }).catch(function (e2) {
         btn.disabled = false;
@@ -2979,9 +2972,9 @@
       if (del) deleteLanding(del.dataset.del);
     });
 
-    document.getElementById('lpEditorBack').addEventListener('click', function () {
+    var lpBackBtn = document.getElementById('lpEditorBack');
+    if (lpBackBtn) lpBackBtn.addEventListener('click', function () {
       document.getElementById('lpEditorWrap').style.display = 'none';
-      loadLandingPages();
     });
 
     function duplicateLanding(key) {
