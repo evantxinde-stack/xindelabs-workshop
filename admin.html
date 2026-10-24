@@ -1,0 +1,3038 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin CMS — Xinde Labs</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+  <script src="js/config.js"></script>
+  <script src="js/pixel.js"></script>
+</head>
+<body class="admin">
+
+  <header class="a-topbar">
+    <a href="index.html" class="a-brand">xindelabs<span>.</span> <em>Admin</em></a>
+    <div class="a-topbar__right">
+      <a href="index.html" class="btn btn--ghost btn--sm">Lihat Site</a>
+      <button class="btn btn--ghost btn--sm" id="logoutBtn" style="display:none">Logout</button>
+    </div>
+  </header>
+
+  <div class="a-center">
+
+    <div class="notice notice--warn" id="configNotice" style="display:none;max-width:760px">
+        ⚠️ Supabase belum dikonfigurasi. Isi <b style="color:inherit">SUPABASE_URL</b> &amp; <b style="color:inherit">SUPABASE_ANON_KEY</b> di <span style="font-family:var(--font-mono)">js/config.js</span> dulu — CMS butuh tabel <span style="font-family:var(--font-mono)">admins</span> &amp; <span style="font-family:var(--font-mono)">site_content</span>.
+      </div>
+
+      <!-- ============ LOGIN ============ -->
+      <div id="loginState" style="display:none">
+        <div class="form-card" style="margin:0 auto">
+          <p class="eyebrow"><span class="dot"></span>admin cms</p>
+          <h1 class="form-title">Login Admin</h1>
+          <p class="form-sub">Pakai email yang terdaftar sebagai admin (tabel <span style="font-family:var(--font-mono);font-size:12px">admins</span>).</p>
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="email lo" autocomplete="email" required />
+              <div class="err-msg">Email wajib diisi.</div>
+            </div>
+            <div class="field">
+              <label for="password">Password</label>
+              <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required />
+              <div class="err-msg">Password wajib diisi.</div>
+            </div>
+            <div class="notice notice--warn form-error" id="loginError"></div>
+            <button type="submit" class="btn btn--primary btn--block" id="loginBtn">Masuk</button>
+            <div id="signupHint" style="display:none">
+              <p class="form-sub" style="margin-top:18px;font-size:12px">Email ini sudah terdaftar di tabel <span style="font-family:var(--font-mono)">admins</span>, tapi belum punya akun Supabase Auth.</p>
+              <button type="button" class="btn btn--ghost btn--block" id="signupBtn">Buat akun admin ini →</button>
+              <p class="form-sub" id="signupHintSub" style="margin-top:10px;font-size:12px"></p>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============ DENIED ============ -->
+      <div id="deniedState" style="display:none">
+        <div class="form-card" style="margin:0 auto">
+          <p class="eyebrow"><span class="dot"></span>admin cms</p>
+          <h1 class="form-title">🔒 Akses Ditolak</h1>
+          <p class="form-sub">Email <b id="deniedEmail" style="font-family:var(--font-mono);font-weight:600">ini</b> tidak terdaftar sebagai admin. Kontak pemilik buat didaftarkan di tabel <span style="font-family:var(--font-mono);font-size:12px">admins</span>.</p>
+          <a href="index.html" class="btn btn--ghost btn--block">← Kembali ke Landing</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ============ EDITOR ============ -->
+    <div id="editorState" style="display:none">
+      <div class="a-shell">
+        <aside class="a-sidebar">
+          <button type="button" class="a-menu is-active" data-panel="dashboard">Dashboard</button>
+          <button type="button" class="a-menu" data-panel="content">Konten Landing</button>
+          <button type="button" class="a-menu" data-panel="leadsCourse">Leads Course <span class="a-badge" id="countMenuCourse"></span></button>
+          <button type="button" class="a-menu" data-panel="leadsKomunitas">Leads Komunitas <span class="a-badge" id="countMenuKomunitas"></span></button>
+          <button type="button" class="a-menu" data-panel="pipeline">Pipeline &amp; Drop-off</button>
+          <button type="button" class="a-menu" data-panel="funnels">Funnel Builder</button>
+          <button type="button" class="a-menu" data-panel="blog">Blog Editor</button>
+          <button type="button" class="a-menu" data-panel="lms">LMS &amp; VIP</button>
+          <button type="button" class="a-menu" data-panel="members">Members <span class="a-badge" id="countMenuMembers"></span></button>
+          <button type="button" class="a-menu" data-panel="vouchers">Vouchers</button>
+          <button type="button" class="a-menu" data-panel="affiliates">Affiliate <span class="a-badge" id="countMenuAffiliates"></span></button>
+          <button type="button" class="a-menu" data-panel="landingpages">Landing Pages</button>
+          <button type="button" class="a-menu a-menu--accent" data-panel="hermes">✦ Hermes AI Command Center</button>
+        </aside>
+
+        <main class="a-main">
+
+          <!-- ============ PANEL: DASHBOARD ============ -->
+          <div id="panelDashboard"></div>
+
+          <!-- ============ PANEL: PIPELINE ============ -->
+          <div id="panelPipeline" style="display:none"></div>
+
+          <!-- ============ PANEL: FUNNEL BUILDER ============ -->
+          <div id="panelFunnels" style="display:none"></div>
+
+          <!-- ============ PANEL: BLOG EDITOR ============ -->
+          <div id="panelBlog" style="display:none"></div>
+
+          <!-- ============ PANEL: KONTEN ============ -->
+          <div id="panelContent" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Edit Konten Landing</h2>
+            </div>
+
+            <form id="cmsForm">
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Hero</label></div>
+                <div class="field">
+                  <label for="f_hero_title">Hero Title</label>
+                  <textarea id="f_hero_title" rows="2"></textarea>
+                  <div class="hint">Boleh HTML — pakai &lt;span class='hl'&gt;…&lt;/span&gt; buat frasa hijau.</div>
+                </div>
+                <div class="field">
+                  <label for="f_hero_subtitle">Hero Subtitle</label>
+                  <textarea id="f_hero_subtitle" rows="3"></textarea>
+                </div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Video Intro</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_video_id">YouTube Video ID / Link</label>
+                    <input type="text" id="f_video_id" placeholder="cth: M7lc1UVf-VE atau https://youtu.be/M7lc1UVf-VE" />
+                    <div class="hint">Boleh isi link penuh YouTube atau cukup ID-nya saja.</div>
+                  </div>
+                  <div class="field">
+                    <label for="f_video_caption">Caption Video</label>
+                    <input type="text" id="f_video_caption" placeholder="intro.mp4 — …" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Pricing</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_price_yearly">Harga Tahunan (Rp)</label>
+                    <input type="number" id="f_price_yearly" step="1000" min="0" />
+                  </div>
+                  <div class="field">
+                    <label for="f_price_lifetime">Harga Lifetime (Rp)</label>
+                    <input type="number" id="f_price_lifetime" step="1000" min="0" />
+                  </div>
+                </div>
+                <div class="admin-grid2" style="margin-top:12px">
+                  <div class="field">
+                    <label>Banner Promo</label>
+                    <div class="banner-upload" id="bannerUploadWrap">
+                      <div class="banner-preview" id="bannerPreview" style="display:none">
+                        <img id="bannerPreviewImg" src="" alt="Preview banner" />
+                        <button type="button" class="btn btn--ghost btn--sm" id="bannerRemove">✕ Hapus</button>
+                      </div>
+                      <div class="banner-pick" id="bannerPick">
+                        <input type="file" id="f_promo_banner_file" accept="image/*" style="display:none" />
+                        <button type="button" class="btn btn--ghost btn--sm" id="bannerPickBtn">📁 Pilih Gambar</button>
+                        <div class="hint">JPG/PNG, max 2MB. Tampil di section pricing &amp; checkout.</div>
+                      </div>
+                    </div>
+                    <input type="hidden" id="f_promo_banner" />
+                  </div>
+                  <div class="field">
+                    <label for="f_promo_banner_alt">Alt Text Banner</label>
+                    <input type="text" id="f_promo_banner_alt" placeholder="Banner promo event" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Promo Countdown</label></div>
+                <div class="admin-grid2">
+                  <div class="field">
+                    <label for="f_countdown_until">Waktu Berakhir Promo</label>
+                    <input type="datetime-local" id="f_countdown_until" />
+                    <div class="hint">Format lokal (WIB). Kosongkan = pakai waktu default yang sudah ditentukan. Setelah lewat, timer otomatis hilang.</div>
+                  </div>
+                  <div class="field">
+                    <label for="f_countdown_on">Tampilkan Countdown</label>
+                    <div style="display:flex;align-items:center;gap:10px">
+                      <label class="switch" title="Tampilkan / sembunyikan countdown">
+                        <input type="checkbox" id="f_countdown_on" value="1" />
+                        <span class="switch__slider"></span>
+                      </label>
+                      <span class="hint" style="margin:0" id="f_countdown_on_hint">Hidup</span>
+                    </div>
+                    <div class="hint">Biarkan hidup (hijau) agar timer promo tampil. Matikan bila tidak mau menampilkan countdown.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head"><label>Link Komunitas</label></div>
+                <div class="admin-grid3">
+                  <div class="field">
+                    <label for="f_discord">Link Discord</label>
+                    <input type="url" id="f_discord" placeholder="https://discord.gg/…" />
+                  </div>
+                  <div class="field">
+                    <label for="f_wa">Link WhatsApp</label>
+                    <input type="url" id="f_wa" placeholder="https://wa.me/62…" />
+                  </div>
+                  <div class="field">
+                    <label for="f_ig">Handle Instagram</label>
+                    <input type="text" id="f_ig" placeholder="@xindelabs.id" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>Testimoni</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addTestimonial">+ Tambah</button>
+                </div>
+                <div id="testimonialRows"></div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>FAQ</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addFaq">+ Tambah</button>
+                </div>
+                <div id="faqRows"></div>
+              </div>
+
+              <div class="admin-block">
+                <div class="admin-block__head">
+                  <label>Use Cases</label>
+                  <button type="button" class="btn btn--ghost btn--sm" id="addUsecase">+ Tambah</button>
+                </div>
+                <div id="usecaseRows"></div>
+                <div class="hint" style="margin-top:8px">Setiap use case punya: Nama (cth: Hermes Finance), Target (untuk siapa), dan Deskripsi singkat. Perubahan langsung tampil di landing page.</div>
+              </div>
+
+              <div class="notice notice--ok" id="saveMsg" style="display:none"></div>
+              <div class="notice notice--warn" id="saveErr" style="display:none"></div>
+
+              <div class="admin-tools">
+                <button type="submit" class="btn btn--primary" id="saveBtn">Simpan Konten</button>
+                <span class="hint" id="saveState">Belum ada perubahan.</span>
+              </div>
+            </form>
+          </div>
+
+          <!-- ============ PANEL: LEADS COURSE ============ -->
+          <div id="panelLeadsCourse" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Leads — Course</h2>
+              <p class="lead">Pendaftar course dari halaman checkout.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Pipeline leads course</h3>
+                <div class="a-topbar__right" style="gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshCourse">↻ Refresh</button>
+                  <button type="button" class="btn btn--ghost btn--sm" id="exportCsvCourse">Export CSV</button>
+                </div>
+              </div>
+
+              <div class="a-filters" id="filtersCourse">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntCourseAll">0</span></button>
+                <button type="button" class="a-filter" data-status="belum">Belum <span class="cnt" id="cntCourseBelum">0</span></button>
+                <button type="button" class="a-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntCourseFollowUp">0</span></button>
+                <button type="button" class="a-filter" data-status="bayar">Bayar <span class="cnt" id="cntCourseBayar">0</span></button>
+              </div>
+
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Kontak</th>
+                      <th>Discord ID</th>
+                      <th>Status</th>
+                      <th>Catatan</th>
+                      <th>Follow-up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="courseLeadsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="courseEmpty" style="display:none">Belum ada lead di filter ini.</p>
+              <p class="a-empty">Klik WA → buka chat follow-up ke lead dengan template yang dipilih (template di <span style="font-family:var(--font-mono)">js/config.js</span>).</p>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: LEADS KOMUNITAS ============ -->
+          <div id="panelLeadsKomunitas" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Leads — Komunitas</h2>
+              <p class="lead">Pendaftar komunitas gratis dari landing page.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Pipeline leads komunitas</h3>
+                <div class="a-topbar__right" style="gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshKomunitas">↻ Refresh</button>
+                  <button type="button" class="btn btn--ghost btn--sm" id="exportCsvKomunitas">Export CSV</button>
+                </div>
+              </div>
+
+              <div class="a-filters" id="filtersKomunitas">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntKomAll">0</span></button>
+                <button type="button" class="a-filter" data-status="belum">Belum <span class="cnt" id="cntKomBelum">0</span></button>
+                <button type="button" class="a-filter" data-status="follow_up">Follow-up <span class="cnt" id="cntKomFollowUp">0</span></button>
+                <button type="button" class="a-filter" data-status="bayar">Bayar <span class="cnt" id="cntKomBayar">0</span></button>
+              </div>
+
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Nama</th>
+                      <th>Kontak</th>
+                      <th>Discord ID</th>
+                      <th>Status</th>
+                      <th>Catatan</th>
+                      <th>Follow-up</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="komunitasLeadsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="komunitasEmpty" style="display:none">Belum ada lead di filter ini.</p>
+              <p class="a-empty">Klik WA → buka chat follow-up ke lead dengan template yang dipilih (template di <span style="font-family:var(--font-mono)">js/config.js</span>).</p>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: LMS & VIP ============ -->
+          <div id="panelLMS" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">LMS &amp; VIP</h2>
+              <p class="lead">Kelola modul course, kelas &amp; lesson, slot VIP, serta review project member.</p>
+            </div>
+
+            <div class="a-tabs" id="lmsTabs">
+              <button type="button" class="a-filter is-active" data-lmstab="modul">Modul</button>
+              <button type="button" class="a-filter" data-lmstab="classes">Classes &amp; Lessons</button>
+              <button type="button" class="a-filter" data-lmstab="vip">VIP &amp; Slot</button>
+              <button type="button" class="a-filter" data-lmstab="projects">Project Review</button>
+            </div>
+
+            <div data-lmspane="modul">
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Status Course</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshLms">↻ Refresh</button>
+              </div>
+              <div class="lms-status-row">
+                <div class="field" style="margin:0">
+                  <label for="f_course_open">Course Buka / Tutup</label>
+                  <div class="hint" style="margin:0">Kalau ditutup, member area nampilin banner "course ditutup sementara". Member aktif tetap bisa akses.</div>
+                </div>
+                <label class="switch" title="Buka / tutup course">
+                  <input type="checkbox" id="f_course_open" />
+                  <span class="switch__slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Modul Course</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="addModule">+ Tambah Modul</button>
+              </div>
+              <p class="a-empty" id="modulesHint">Belum ada modul. Klik "+ Tambah Modul" buat mulai.</p>
+              <div id="moduleRows"></div>
+              <div class="admin-tools">
+                <button type="button" class="btn btn--primary" id="saveModulesBtn">Simpan Modul</button>
+                <span class="hint" id="modulesSaveState">Belum ada perubahan.</span>
+              </div>
+            </div>
+            </div>
+
+            <!-- TAB: CLASSES & LESSONS -->
+            <div data-lmspane="classes" style="display:none">
+              <div class="notice notice--warn" id="clsNotice" style="display:none"></div>
+              <div class="a-funnel-layout">
+                <aside class="a-funnel-list">
+                  <div class="a-card__head">
+                    <h3>Kelas</h3>
+                    <button type="button" class="btn btn--primary btn--sm" id="clsAdd">+ Kelas Baru</button>
+                  </div>
+                  <div id="clsList"></div>
+                </aside>
+
+                <section class="a-funnel-editor">
+                  <div class="a-card" id="clsForm" style="display:none">
+                    <div class="a-card__head">
+                      <h3>Detail Kelas</h3>
+                      <div class="a-actions">
+                        <button type="button" class="btn btn--ghost btn--sm" id="clsDelete">Hapus</button>
+                        <button type="button" class="btn btn--primary btn--sm" id="clsSave">Simpan Kelas</button>
+                      </div>
+                    </div>
+                    <div class="admin-grid3">
+                      <div class="field"><label>Judul</label><input class="a-input" id="cls_title"></div>
+                      <div class="field"><label>Slug</label><input class="a-input" id="cls_slug"></div>
+                      <div class="field"><label>Urutan</label><input class="a-input" type="number" id="cls_sort"></div>
+                    </div>
+                    <div class="field"><label>Deskripsi</label><textarea class="a-input" id="cls_desc" rows="3"></textarea></div>
+                    <div class="admin-grid3">
+                      <div class="field"><label>Harga</label><input class="a-input" type="number" id="cls_price"></div>
+                      <div class="field"><label>Harga Member</label><input class="a-input" type="number" id="cls_mprice"></div>
+                      <div class="field"><label>Cover Image URL</label><input class="a-input" id="cls_cover"></div>
+                    </div>
+                    <label class="a-check"><input type="checkbox" id="cls_published"> Published</label>
+                  </div>
+
+                  <div class="a-card">
+                    <div class="a-card__head">
+                      <h3>Lessons</h3>
+                      <div class="a-actions">
+                        <button type="button" class="btn btn--ghost btn--sm" id="lessonAdd">+ Lesson</button>
+                        <button type="button" class="btn btn--primary btn--sm" id="lessonSave">Simpan Lessons</button>
+                      </div>
+                    </div>
+                    <p class="a-empty" id="lessonsEmpty" style="display:none">Belum ada lesson.</p>
+                    <div id="lessonRows"></div>
+                  </div>
+                </section>
+              </div>
+            </div>
+
+            <!-- TAB: VIP -->
+            <div data-lmspane="vip" style="display:none">
+              <div class="notice notice--warn" id="vipNotice" style="display:none"></div>
+
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Slot VIP Bulan Ini</h3>
+                  <button type="button" class="btn btn--ghost btn--sm" id="vipSync">↻ Sync Slot</button>
+                </div>
+                <div class="a-slotbar"><div class="a-slotbar__fill" id="vipMeterBar" style="width:0%"></div></div>
+                <div class="a-slotbar__text"><b id="vipMeterText">0 / 0 slot terisi</b><span id="vipMeterSub"></span></div>
+              </div>
+
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Pengaturan VIP</h3>
+                  <button type="button" class="btn btn--primary btn--sm" id="vipSave">Simpan</button>
+                </div>
+                <div class="admin-grid3">
+                  <div class="field"><label>Max Slot / Bulan</label><input class="a-input" type="number" id="vip_max"></div>
+                  <div class="field"><label>Harga VIP</label><input class="a-input" type="number" id="vip_price"></div>
+                  <div class="field"><label>&nbsp;</label><label class="a-check"><input type="checkbox" id="vip_active"> VIP aktif</label></div>
+                </div>
+                <div class="field"><label>Deskripsi</label><textarea class="a-input" id="vip_desc" rows="2"></textarea></div>
+                <div class="field"><label>Benefit (satu per baris)</label><textarea class="a-input" id="vip_benefits" rows="5"></textarea></div>
+              </div>
+
+              <div class="a-card">
+                <div class="a-card__head"><h3>Booking VIP</h3></div>
+                <div class="a-table-wrap">
+                  <table class="a-table">
+                    <thead><tr><th>Member</th><th>Jadwal</th><th>Topik</th><th>Status</th><th>Dibuat</th><th></th></tr></thead>
+                    <tbody id="vipBookingsBody"></tbody>
+                  </table>
+                </div>
+                <p class="a-empty" id="vipBookingsEmpty" style="display:none">Belum ada booking.</p>
+              </div>
+            </div>
+
+            <!-- TAB: PROJECT REVIEW -->
+            <div data-lmspane="projects" style="display:none">
+              <div class="notice notice--warn" id="prjNotice" style="display:none"></div>
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3>Project Review</h3>
+                  <button type="button" class="btn btn--ghost btn--sm" id="prjRefresh">↻ Refresh</button>
+                </div>
+                <div class="a-table-wrap">
+                  <table class="a-table">
+                    <thead><tr><th>Project</th><th>Deskripsi</th><th>Status</th><th>Feedback</th><th></th></tr></thead>
+                    <tbody id="prjBody"></tbody>
+                  </table>
+                </div>
+                <p class="a-empty" id="prjEmpty" style="display:none">Belum ada project.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: MEMBERS ============ -->
+          <div id="panelMembers" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Member Management</h2>
+              <p class="lead">Daftar member course yang sudah bayar.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Member</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshMembers">↻ Refresh</button>
+              </div>
+              <div class="a-filters" id="filtersMembers">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntMemAll">0</span></button>
+                <button type="button" class="a-filter" data-status="paid">Paid <span class="cnt" id="cntMemPaid">0</span></button>
+                <button type="button" class="a-filter" data-status="pending">Pending <span class="cnt" id="cntMemPending">0</span></button>
+                <button type="button" class="a-filter" data-status="expired">Expired <span class="cnt" id="cntMemExpired">0</span></button>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Tier</th>
+                      <th>Paid Until</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="membersBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="membersEmpty" style="display:none">Belum ada member.</p>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: VOUCHERS ============ -->
+          <div id="panelVouchers" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Voucher Management</h2>
+              <p class="lead">Kelola kode voucher &amp; diskon checkout.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Voucher</h3>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshVouchers">↻ Refresh</button>
+                  <button type="button" class="btn btn--primary btn--sm" id="addVoucher">+ Tambah Voucher</button>
+                </div>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Kode</th>
+                      <th>Tipe</th>
+                      <th>Nilai</th>
+                      <th>Paket</th>
+                      <th>Terpakai</th>
+                      <th>Batas</th>
+                      <th>Aktif</th>
+                      <th>Kadaluarsa</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="vouchersBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="vouchersEmpty" style="display:none">Belum ada voucher. Klik "+ Tambah Voucher" buat mulai.</p>
+              <div class="admin-tools">
+                <button type="button" class="btn btn--primary" id="saveVouchersBtn">Simpan Semua</button>
+                <span class="hint" id="vouchersSaveState">Belum ada perubahan.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: AFFILIATES ============ -->
+          <div id="panelAffiliates" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Affiliate</h2>
+              <p class="lead">Kelola affiliate (member berbayar) &amp; komisi dari penjualan lewat link referral (kode <span style="font-family:var(--font-mono)">?ref=</span>).</p>
+            </div>
+
+            <div class="d-kpis" id="affKpis"></div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Affiliate</h3>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshAffiliates">↻ Refresh</button>
+                  <button type="button" class="btn btn--primary btn--sm" id="addAffiliate">+ Tambah Affiliate</button>
+                </div>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Kode</th>
+                      <th>Status</th>
+                      <th>Komisi</th>
+                      <th>Nilai</th>
+                      <th>Klik</th>
+                      <th>Komisi Masuk</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="affiliatesBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="affiliatesEmpty" style="display:none">Belum ada affiliate. Member berbayar bisa aktifin sendiri dari area member, atau klik "+ Tambah Affiliate".</p>
+            </div>
+
+            <div class="a-card" style="margin-top:22px">
+              <div class="a-card__head">
+                <h3>Komisi</h3>
+                <button type="button" class="btn btn--ghost btn--sm" id="refreshCommissions">↻ Refresh</button>
+              </div>
+              <div class="a-filters" id="filtersCommissions">
+                <button type="button" class="a-filter is-active" data-status="all">Semua <span class="cnt" id="cntCommAll">0</span></button>
+                <button type="button" class="a-filter" data-status="pending">Belum dibayar <span class="cnt" id="cntCommPending">0</span></button>
+                <button type="button" class="a-filter" data-status="paid">Dibayar <span class="cnt" id="cntCommPaid">0</span></button>
+                <button type="button" class="a-filter" data-status="void">Batal <span class="cnt" id="cntCommVoid">0</span></button>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Affiliate</th>
+                      <th>Pembeli</th>
+                      <th>Paket</th>
+                      <th>Nilai</th>
+                      <th>Komisi</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="commissionsBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="commissionsEmpty" style="display:none">Belum ada komisi.</p>
+              <p class="hint" style="margin-top:10px">Komisi dibuat otomatis oleh sistem saat pembayaran berhasil &amp; pembeli datang dari link affiliate. Pencairan dilakukan manual — setelah transfer, klik <b>Tandai dibayar</b>.</p>
+            </div>
+          </div>
+
+          <!-- ============ PANEL: LANDING PAGES ============ -->
+          <div id="panelLandingPages" style="display:none">
+            <div class="section-head" style="text-align:left">
+              <p class="eyebrow"><span class="dot"></span>admin</p>
+              <h2 class="h2">Landing Page Management</h2>
+              <p class="lead">Bikin &amp; kelola banyak landing page — tiap page punya subdomain custom sendiri.</p>
+            </div>
+
+            <div class="a-card">
+              <div class="a-card__head">
+                <h3>Daftar Landing Page</h3>
+                <div style="display:flex;gap:8px">
+                  <button type="button" class="btn btn--ghost btn--sm" id="refreshLandingPages">↻ Refresh</button>
+                  <button type="button" class="btn btn--primary btn--sm" id="createLandingPage">+ Landing Baru</button>
+                </div>
+              </div>
+              <div class="a-table-wrap">
+                <table class="a-table">
+                  <thead>
+                    <tr>
+                      <th>Judul</th>
+                      <th>Slug / Subdomain</th>
+                      <th>Link</th>
+                      <th>Terakhir Update</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="landingPagesBody"></tbody>
+                </table>
+              </div>
+              <p class="a-empty" id="landingPagesEmpty" style="display:none">Belum ada landing page.</p>
+              <p class="hint" style="margin-top:10px">Subdomain: saat publish ke Vercel, map subdomain ke halaman ini (misal <code>promo1.example.com</code> → <code>page.html</code>). Akses juga bisa lewat <code>?slug=…</code>.</p>
+            </div>
+
+            <!-- ============ Editor landing page (section builder) ============ -->
+            <div id="lpEditorWrap" style="display:none; margin-top:28px">
+              <div class="a-card">
+                <div class="a-card__head">
+                  <h3 id="lpEditorTitle">Edit Landing Page</h3>
+                  <button type="button" class="btn btn--ghost btn--sm" id="lpEditorBack">← Kembali</button>
+                </div>
+
+                <div id="lpMetaBlock">
+                  <div class="admin-block">
+                    <div class="admin-block__head"><label>Identitas Landing</label></div>
+                    <div class="admin-grid2">
+                      <div class="field">
+                        <label for="lp_title">Judul (untuk admin)</label>
+                        <input type="text" id="lp_title" placeholder="cth: Promo Property Q3" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_slug">Slug / Subdomain</label>
+                        <input type="text" id="lp_slug" placeholder="cth: property (hrs unik)" />
+                        <div class="hint">Kosongkan &amp; "utama" = landing utama. Dipakai untuk <code>?slug=…</code> &amp; subdomain.</div>
+                      </div>
+                    </div>
+                    <div class="admin-grid2" style="margin-top:0">
+                      <div class="field">
+                        <label for="lp_page_title">Judul Tab Browser (&lt;title&gt;)</label>
+                        <input type="text" id="lp_page_title" placeholder="cth: Bangun Agent Sales Property" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_accent">Warna Aksen (hex)</label>
+                        <input type="color" id="lp_accent" value="#00ff88" style="height:44px;padding:4px" title="Pilih warna aksen" />
+                        <div class="hint">Warna tombol &amp; teks hijau. Default #00ff88.</div>
+                      </div>
+                    </div>
+                    <div class="admin-grid2" style="margin-top:0">
+                      <div class="field">
+                        <label for="lp_page_desc">Meta Description</label>
+                        <textarea id="lp_page_desc" rows="2" placeholder="Deskripsi untuk Google/Sosmed (SEO), opsional"></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="admin-block">
+                    <div class="admin-block__head"><label>Navigasi (Navbar)</label></div>
+                    <div class="admin-grid3">
+                      <div class="field">
+                        <label for="lp_nav_logo">Logo (teks)</label>
+                        <input type="text" id="lp_nav_logo" placeholder="xindelabs" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_nav_logo_dot">Titik Logo</label>
+                        <input type="text" id="lp_nav_logo_dot" placeholder="." style="width:70px" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_home_href">Link Logo</label>
+                        <input type="text" id="lp_home_href" placeholder="index.html" />
+                      </div>
+                    </div>
+                    <div class="admin-grid2" style="margin-top:12px">
+                      <div class="field">
+                        <label for="lp_nav_cta_text">Text Tombol CTA Navbar</label>
+                        <input type="text" id="lp_nav_cta_text" placeholder="Daftar Course" />
+                      </div>
+                      <div class="field">
+                        <label for="lp_nav_cta_href">Link Tombol CTA Navbar</label>
+                        <input type="text" id="lp_nav_cta_href" placeholder="checkout.html" />
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>Link Navbar</label>
+                      <div id="lpNavLinks"></div>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpAddNavLink" style="margin-top:8px">+ Tambah Link</button>
+                    </div>
+                  </div>
+
+                  <div class="admin-block">
+                    <div class="admin-block__head"><label>Footer</label></div>
+                    <div class="field">
+                      <label for="lp_footer_copy">Teks Footer</label>
+                      <input type="text" id="lp_footer_copy" placeholder="© 2026 Xinde Labs · …" />
+                    </div>
+                    <div class="field">
+                      <label>Link Footer</label>
+                      <div id="lpFooterLinks"></div>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpAddFooterLink" style="margin-top:8px">+ Tambah Link</button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- ===== LIVE PREVIEW ===== -->
+                <div class="admin-block lp-preview-block">
+                  <div class="admin-block__head">
+                    <label>👁️ Live Preview</label>
+                    <div class="lp-preview__tools">
+                      <button type="button" class="lp-dev is-active" data-w="390" title="Mobile">📱</button>
+                      <button type="button" class="lp-dev" data-w="768" title="Tablet">💻</button>
+                      <button type="button" class="lp-dev" data-w="1000" title="Desktop">🖥️</button>
+                      <button type="button" class="btn btn--ghost btn--sm" id="lpPreviewReload" title="Muat ulang preview">↻</button>
+                    </div>
+                  </div>
+                  <div class="lp-preview__wrap" id="lpPreviewWrap">
+                    <iframe id="lpPreviewFrame" title="Live preview landing" src="about:blank"></iframe>
+                  </div>
+                </div>
+
+                <!-- ===== Section palette (buat nambah section) ===== -->
+                <div class="admin-block">
+                  <div class="admin-block__head"><label>Tambahkan Bagian (Section)</label></div>
+                  <div class="lp-palette" id="lpPalette"></div>
+                </div>
+
+                <!-- ===== Kumpulan section ===== -->
+                <div class="admin-block">
+                  <div class="admin-block__head">
+                    <label>Susunan Landing (drag untuk urut, klik untuk edit)</label>
+                  </div>
+                  <div id="lpSections" class="lp-sections"></div>
+                  <p class="a-empty" id="lpSectionsEmpty" style="display:none">Belum ada section. Klik tipe di atas buat mulai.</p>
+                </div>
+
+                <div class="notice notice--warn form-error" id="lpFormError" style="display:none"></div>
+                <div class="notice notice--ok" id="lpFormMsg" style="display:none"></div>
+
+                <div class="admin-tools">
+                  <button type="button" class="btn btn--primary" id="lpSaveBtn">Simpan Landing</button>
+                  <button type="button" class="btn btn--ghost" id="lpFormPreview" style="display:none">Buka Preview</button>
+                  <span class="hint" id="lpFormState"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </main>
+      </div>
+    </div>
+
+  <footer class="footer">
+    <div class="wrap footer__in">
+      <span class="footer__copy">© 2026 Xinde Labs · Admin CMS</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/lp-render.js"></script>
+  <script src="js/landing-pages.js"></script>
+  <script>
+    var cfg = window.XINDE;
+    var client = null;
+
+    // ============ State switcher ============
+    function show(state) {
+      ['loginState', 'deniedState', 'editorState'].forEach(function (id) {
+        document.getElementById(id).style.display = (id === state) ? 'block' : 'none';
+      });
+      var center = document.querySelector('.a-center');
+      if (center) center.style.display = (state === 'editorState') ? 'none' : 'block';
+    }
+
+    // ============ Supabase belum dikonfigurasi ============
+    if (!cfg.supabaseConfigured() || !window.supabase) {
+      document.getElementById('configNotice').style.display = 'block';
+      show('loginState');
+      document.getElementById('loginBtn').disabled = true;
+    } else {
+      client = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+      client.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) initAdmin(res.data.session.user);
+        else show('loginState');
+      });
+    }
+
+    // ============ Login ============
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!client) return;
+      var email = document.getElementById('email').value.trim();
+      var password = document.getElementById('password').value;
+      var btn = document.getElementById('loginBtn');
+      var err = document.getElementById('loginError');
+
+      if (!email || !password) {
+        err.textContent = '⚠️ Isi email dan password dulu.';
+        err.classList.add('show');
+        return;
+      }
+      err.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Masuk…';
+
+      client.auth.signInWithPassword({ email: email, password: password }).then(function (res) {
+        if (res.error) {
+          err.textContent = '⚠️ ' + (res.error.message || 'Login gagal.');
+          err.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = 'Masuk';
+          if (/invalid login credentials/i.test(res.error.message || '')) {
+            maybeOfferSignup(email, password);
+          }
+          return;
+        }
+        initAdmin(res.data.user);
+      });
+    });
+
+    // ============ Kalau belum ada user Auth: tawarkan buat akun ============
+    function maybeOfferSignup(email, password) {
+      if (!client) return;
+      var hint = document.getElementById('signupHint');
+      var sub = document.getElementById('signupHintSub');
+      client.from('admins').select('email').eq('email', email).maybeSingle().then(function (r) {
+        if (r.error || !r.data) return;
+        hint.style.display = 'block';
+        sub.textContent = '';
+        var btn = document.getElementById('signupBtn');
+        btn.onclick = function () {
+          btn.disabled = true;
+          btn.textContent = 'Membuat akun…';
+          client.auth.signUp({ email: email, password: password }).then(function (sr) {
+            if (sr.error) {
+              sub.textContent = '⚠️ ' + (sr.error.message || 'Gagal membuat akun.');
+              btn.disabled = false;
+              btn.textContent = 'Buat akun admin ini →';
+              return;
+            }
+            if (sr.data.session) {
+              initAdmin(sr.data.user);
+            } else {
+              sub.textContent = 'Akun dibuat. Cek email (termasuk spam) lalu klik link verifikasi, setelah itu login lagi.';
+              btn.disabled = true;
+              btn.textContent = 'Akun dibuat ✓';
+            }
+          });
+        };
+      });
+    }
+
+    // ============ Cek role admin + buka editor ============
+    function ensureAdminModules(done) {
+      if (window.__initAdminModules) {
+        window.__initAdminModules(client, cfg);
+        if (done) done();
+        return;
+      }
+      // Module script (type=module) belum eksekusi — tunggu sebentar.
+      var tries = 0;
+      var timer = setInterval(function () {
+        if (window.__initAdminModules) {
+          clearInterval(timer);
+          window.__initAdminModules(client, cfg);
+          if (done) done();
+        } else if (++tries > 60) {
+          clearInterval(timer);
+        }
+      }, 100);
+    }
+
+    function initAdmin(user) {
+      if (!client) return;
+      client.from('admins').select('email').eq('email', user.email).maybeSingle().then(function (r) {
+        if (r.error) {
+          show('deniedState');
+          document.getElementById('deniedEmail').textContent = user.email;
+          return;
+        }
+        if (!r.data) {
+          show('deniedState');
+          document.getElementById('deniedEmail').textContent = user.email;
+          return;
+        }
+        show('editorState');
+        document.getElementById('logoutBtn').style.display = 'inline-flex';
+        ensureAdminModules();
+        loadDashboard();
+        loadContent();
+        loadLms();
+        loadMembers();
+        loadLeads('course');
+        loadLeads('komunitas');
+      });
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      if (client) client.auth.signOut().then(function () { location.reload(); });
+    });
+
+    // ============ Render dynamic rows ============
+    function testimonialRow(t) {
+      t = t || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Quote</label><textarea rows="3">' + esc(t.quote || '') + '</textarea></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Nama</label><input type="text" placeholder="cth: Rudi, Agen Properti Surabaya" value="' + esc(t.name || '') + '" /></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
+    function faqRow(f) {
+      f = f || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Pertanyaan</label><input type="text" value="' + esc(f.q || '') + '" /></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Jawaban</label><textarea rows="2">' + esc(f.a || '') + '</textarea></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
+    function usecaseRow(u) {
+      u = u || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row';
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="field"><label>Nama</label><input type="text" placeholder="cth: Hermes Finance" value="' + esc(u.name || '') + '" /></div>' +
+          '<div class="field"><label>Target</label><input type="text" placeholder="untuk siapa — cth: klinik · UMKM · pebisnis" value="' + esc(u.who || '') + '" /></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Deskripsi</label><textarea rows="2" placeholder="Jelaskan masalah yang dipecahkan…">' + esc(u.prob || '') + '</textarea></div>' +
+        '</div>' +
+        '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>';
+      wrap.querySelector('.row-remove').addEventListener('click', function () { wrap.remove(); });
+      return wrap;
+    }
+
+    function esc(s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    document.getElementById('addTestimonial').addEventListener('click', function () {
+      document.getElementById('testimonialRows').appendChild(testimonialRow());
+    });
+    document.getElementById('addFaq').addEventListener('click', function () {
+      document.getElementById('faqRows').appendChild(faqRow());
+    });
+    document.getElementById('addUsecase').addEventListener('click', function () {
+      document.getElementById('usecaseRows').appendChild(usecaseRow());
+    });
+
+    // ============ Load konten ke form ============
+    function loadContent() {
+      client.from('site_content').select('value').eq('key', 'homepage').maybeSingle().then(function (r) {
+        var v = (r.data && r.data.value) ? r.data.value : {};
+        var d = cfg.DEFAULT_CONTENT;
+
+        document.getElementById('f_hero_title').value = v.hero_title || d.hero_title || '';
+        document.getElementById('f_hero_subtitle').value = v.hero_subtitle || d.hero_subtitle || '';
+        var vId = v.video_youtube_id;
+        if (!vId || /^youtube/i.test(vId)) vId = cfg.VIDEO_YOUTUBE_ID || '';
+        document.getElementById('f_video_id').value = vId;
+        document.getElementById('f_video_caption').value = v.video_caption || d.video_caption || '';
+        document.getElementById('f_price_yearly').value = v.price_yearly || cfg.PRICES.yearly.harga || '';
+        document.getElementById('f_price_lifetime').value = v.price_lifetime || cfg.PRICES.lifetime.harga || '';
+        document.getElementById('f_promo_banner').value = v.promo_banner_url || '';
+        document.getElementById('f_promo_banner_alt').value = v.promo_banner_alt || '';
+
+        var cut = v.promo_countdown_until;
+        var isOff = (cut === 'OFF' || cut === 'off');
+        var onEl = document.getElementById('f_countdown_on');
+        onEl.checked = !isOff;
+        var onHint = document.getElementById('f_countdown_on_hint');
+        if (onHint) onHint.textContent = isOff ? 'Mati' : 'Hidup';
+        var co = document.getElementById('f_countdown_until');
+        if (!isOff && cut && !/OFF/i.test(cut)) {
+          var dt = new Date(cut);
+          if (!isNaN(dt.getTime())) {
+            var p2 = function (n) { return (n < 10 ? '0' : '') + n; };
+            co.value = dt.getFullYear() + '-' + p2(dt.getMonth() + 1) + '-' + p2(dt.getDate()) + 'T' + p2(dt.getHours()) + ':' + p2(dt.getMinutes());
+          } else {
+            co.value = '';
+          }
+        } else {
+          co.value = '';
+        }
+
+        if (v.promo_banner_url) {
+          document.getElementById('bannerPreviewImg').src = v.promo_banner_url;
+          document.getElementById('bannerPreview').style.display = 'block';
+          document.getElementById('bannerPick').style.display = 'none';
+        } else {
+          document.getElementById('bannerPreview').style.display = 'none';
+          document.getElementById('bannerPick').style.display = 'block';
+        }
+        document.getElementById('f_discord').value = v.discord_link || '';
+        document.getElementById('f_wa').value = v.whatsapp_link || '';
+        document.getElementById('f_ig').value = v.instagram_handle || '';
+
+        var rows = document.getElementById('testimonialRows');
+        rows.innerHTML = '';
+        (v.testimonials && v.testimonials.length ? v.testimonials : d.testimonials || []).forEach(function (t) {
+          rows.appendChild(testimonialRow(t));
+        });
+
+        var frows = document.getElementById('faqRows');
+        frows.innerHTML = '';
+        (v.faqs && v.faqs.length ? v.faqs : d.faqs || []).forEach(function (f) {
+          frows.appendChild(faqRow(f));
+        });
+
+        var urows = document.getElementById('usecaseRows');
+        urows.innerHTML = '';
+        (v.usecases && v.usecases.length ? v.usecases : []).forEach(function (u) {
+          urows.appendChild(usecaseRow(u));
+        });
+      });
+    }
+
+    // ============ Banner upload ============
+    document.getElementById('bannerPickBtn').addEventListener('click', function () {
+      document.getElementById('f_promo_banner_file').click();
+    });
+    document.getElementById('f_promo_banner_file').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Ukuran gambar max 2MB.');
+        e.target.value = '';
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('File harus gambar (JPG/PNG).');
+        e.target.value = '';
+        return;
+      }
+      if (!client) {
+        alert('Session expired. Silakan login ulang.');
+        return;
+      }
+      var btn = document.getElementById('bannerPickBtn');
+      btn.disabled = true;
+      btn.textContent = 'Uploading…';
+
+      client.auth.getSession().then(function (sess) {
+        if (!sess.data || !sess.data.session) {
+          btn.disabled = false;
+          btn.textContent = '📁 Pilih Gambar';
+          alert('Session expired. Login ulang.');
+          return;
+        }
+        var ext = file.name.split('.').pop() || 'png';
+        var path = 'promo-banner-' + Date.now() + '.' + ext;
+        return client.storage.from('banners').upload(path, file, { contentType: file.type });
+      }).then(function (r) {
+        if (!r) return;
+        btn.disabled = false;
+        btn.textContent = '📁 Pilih Gambar';
+        if (r.error) {
+          var msg = r.error.message || r.error.error || JSON.stringify(r.error);
+          console.error('[banner upload] error:', r.error);
+          if (/bucket|not found|404/i.test(msg)) {
+            msg = 'Bucket "banners" belum dibuat.\n\nSupabase Dashboard → Storage → New Bucket → nama: banners → Public: ON → Create.';
+          } else if (/row level|RLS|permission|403/i.test(msg)) {
+            msg = 'RLS block. Jalankan SQL setup storage di supabase-setup.sql.';
+          }
+          alert('Gagal upload:\n' + msg);
+          return;
+        }
+        var url = client.storage.from('banners').getPublicUrl(r.data.path).data.publicUrl;
+        document.getElementById('f_promo_banner').value = url;
+        document.getElementById('bannerPreviewImg').src = url;
+        document.getElementById('bannerPreview').style.display = 'block';
+        document.getElementById('bannerPick').style.display = 'none';
+        document.getElementById('f_promo_banner_file').value = '';
+        console.log('[banner upload] success:', url);
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = '📁 Pilih Gambar';
+        console.error('[banner upload] catch:', err);
+        alert('Upload error: ' + (err.message || err || 'unknown') + '\n\nCek F12 → Console.');
+      });
+    });
+    document.getElementById('bannerRemove').addEventListener('click', function () {
+      document.getElementById('f_promo_banner').value = '';
+      document.getElementById('bannerPreview').style.display = 'none';
+      document.getElementById('bannerPick').style.display = 'block';
+      document.getElementById('bannerPreviewImg').src = '';
+      document.getElementById('f_promo_banner_file').value = '';
+    });
+
+    // ============ Kumpulkan + simpan ============
+    function collectRows(containerId) {
+      var out = [];
+      document.querySelectorAll('#' + containerId + ' .admin-row').forEach(function (row) {
+        var main = row.querySelector('.admin-row__main');
+        var fields = main.querySelectorAll('input, textarea');
+        out.push(Array.prototype.map.call(fields, function (f) { return f.value.trim(); }));
+      });
+      return out;
+    }
+
+    document.getElementById('cmsForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = document.getElementById('saveMsg');
+      var err = document.getElementById('saveErr');
+      msg.style.display = 'none';
+      err.style.display = 'none';
+
+      if (!document.getElementById('f_hero_title').value.trim()) {
+        err.textContent = '⚠️ Hero title wajib diisi.';
+        err.style.display = 'flex';
+        return;
+      }
+
+      var tRows = collectRows('testimonialRows');
+      var fRows = collectRows('faqRows');
+      var uRows = collectRows('usecaseRows');
+
+      var content = {
+        hero_title: document.getElementById('f_hero_title').value.trim(),
+        hero_subtitle: document.getElementById('f_hero_subtitle').value.trim(),
+        video_youtube_id: document.getElementById('f_video_id').value.trim(),
+        video_caption: document.getElementById('f_video_caption').value.trim(),
+        price_yearly: Number(document.getElementById('f_price_yearly').value) || 0,
+        price_lifetime: Number(document.getElementById('f_price_lifetime').value) || 0,
+        promo_banner_url: document.getElementById('f_promo_banner').value.trim(),
+        promo_banner_alt: document.getElementById('f_promo_banner_alt').value.trim(),
+        promo_countdown_until: (function () {
+          if (!document.getElementById('f_countdown_on').checked) return 'OFF';
+          var raw = document.getElementById('f_countdown_until').value.trim();
+          // datetime-local → "YYYY-MM-DDTHH:mm"; tambahkan detik + offset WIB
+          if (raw) {
+            var m = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})$/.exec(raw);
+            return m ? m[1] + ':00+07:00' : raw;
+          }
+          // Tidak ada tanggal dipilih → default +30 hari (WIB) supaya timer tetap tampil
+          var d = new Date(Date.now() + 30 * 86400000);
+          var p2n = function (n) { return (n < 10 ? '0' : '') + n; };
+          return d.getFullYear() + '-' + p2n(d.getMonth() + 1) + '-' + p2n(d.getDate()) +
+                 'T' + p2n(d.getHours()) + ':' + p2n(d.getMinutes()) + ':00+07:00';
+        })(),
+        discord_link: document.getElementById('f_discord').value.trim(),
+        whatsapp_link: document.getElementById('f_wa').value.trim(),
+        instagram_handle: document.getElementById('f_ig').value.trim(),
+        testimonials: tRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) {
+          return { quote: r[0], name: r[1] };
+        }),
+        faqs: fRows.filter(function (r) { return r[0] || r[1]; }).map(function (r) {
+          return { q: r[0], a: r[1] };
+        }),
+        usecases: uRows.filter(function (r) { return r[0] || r[1] || r[2]; }).map(function (r) {
+          return { name: r[0], who: r[1], prob: r[2] };
+        })
+      };
+
+      var btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      document.getElementById('saveState').textContent = 'Mengirim ke Supabase…';
+
+      client.auth.getSession().then(function (sess) {
+        if (!sess.data || !sess.data.session) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Konten';
+          err.textContent = '⚠️ Session expired. Login ulang.';
+          err.style.display = 'flex';
+          document.getElementById('saveState').textContent = '';
+          return null;
+        }
+        var token = sess.data.session.access_token;
+        window.__adminToken = token;
+        return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.homepage', {
+          method: 'PATCH',
+          headers: {
+            'apikey': cfg.SUPABASE_ANON_KEY,
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ value: content, updated_by: 'admin' })
+        });
+      }).then(function (r) {
+        if (!r) return null;
+        if (!r.ok) {
+          console.error('[save cms] PATCH failed:', r.status);
+          return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
+            method: 'POST',
+            headers: {
+              'apikey': cfg.SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + window.__adminToken,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ key: 'homepage', value: content, updated_by: 'admin' })
+          });
+        }
+        return r;
+      }).then(function (r) {
+        if (!r) return;
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten';
+        if (!r.ok) {
+          console.error('[save cms] final error:', r.status);
+          err.textContent = '⚠️ Gagal simpan: HTTP ' + r.status + '. Cek F12 → Console.';
+          err.style.display = 'flex';
+          document.getElementById('saveState').textContent = '';
+          return;
+        }
+        document.getElementById('saveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        msg.textContent = '✅ Konten tersimpan — landing page sudah update.';
+        msg.style.display = 'flex';
+      }).catch(function (e) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Konten';
+        console.error('[save cms] catch:', e);
+        err.textContent = '⚠️ Error: ' + (e.message || 'unknown');
+        err.style.display = 'flex';
+        document.getElementById('saveState').textContent = '';
+      });
+    });
+
+    // ============ Sidebar: ganti panel ============
+    var currentPanel = 'dashboard';
+
+    function panelEl(panel) {
+      var map = { dashboard: 'panelDashboard', content: 'panelContent', leadsCourse: 'panelLeadsCourse', leadsKomunitas: 'panelLeadsKomunitas', pipeline: 'panelPipeline', funnels: 'panelFunnels', blog: 'panelBlog', lms: 'panelLMS', members: 'panelMembers', vouchers: 'panelVouchers', affiliates: 'panelAffiliates', landingpages: 'panelLandingPages' };
+      return document.getElementById(map[panel]);
+    }
+
+    // Error Supabase yang berarti skema DB belum lengkap.
+    function isSchemaError(err) {
+      var code = String((err && err.code) || '');
+      var msg = String((err && (err.message || err.details || err.hint)) || err || '');
+      var all = code + ' ' + msg;
+      return /does not exist|schema cache|PGRST20[45]|42P01|42703|42883|column .* not found|not found in schema/i.test(all);
+    }
+
+    // Tampilkan error panel yang jelas (bukan panel kosong).
+    function showModuleError(modName, err) {
+      var msg = (err && err.message) ? err.message : String(err || 'error tidak diketahui');
+      console.error('[admin] modul "' + modName + '" gagal:', err);
+      var el = panelEl(currentPanel);
+      if (el) {
+        var banner = el.querySelector('[data-module-error]');
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.className = 'notice notice--warn';
+          banner.setAttribute('data-module-error', '1');
+          banner.style.margin = '0 0 16px';
+          el.insertBefore(banner, el.firstChild);
+        }
+        var hint = isSchemaError(err)
+          ? '<br><b>Skema database belum lengkap.</b> Jalankan <code>sql/migrate_2026_admin.sql</code> di Supabase SQL Editor, lalu muat ulang halaman ini.'
+          : '';
+        var extra = (err && (err.code || err.hint)) ? '<br><small>' + esc(String(err.code || err.hint)) + '</small>' : '';
+        banner.innerHTML = '<b>Panel ' + esc(modName) + ' gagal dimuat.</b> ' + esc(msg) + extra + hint;
+      }
+      if (window.toast) window.toast('Panel ' + modName + ' gagal dimuat: ' + msg, 'warn');
+    }
+
+    // Panggil modul admin dengan penjaga error: 1 modul rusak tidak boleh
+    // membuat seluruh dashboard mati.
+    function modCall(modName, method) {
+      var mods = window.__ADMIN_MODULES__;
+      if (!mods || !mods[modName]) return null;
+      var m = mods[modName];
+      var fn = m[method];
+      if (typeof fn !== 'function' && typeof m[method + 'Hermes'] === 'function') fn = m[method + 'Hermes'];
+      if (typeof fn !== 'function') {
+        console.warn('[admin] modul "' + modName + '" tidak punya fungsi "' + method + '"');
+        return null;
+      }
+      try {
+        var out = fn.call(m);
+        // Modul async: error-nya berupa promise rejection, harus ditangkap.
+        if (out && typeof out.then === 'function') {
+          out.catch(function (e) { showModuleError(modName, e); });
+        }
+        return out;
+      } catch (e) {
+        showModuleError(modName, e);
+        return null;
+      }
+    }
+
+    document.querySelectorAll('.a-menu').forEach(function (b) {
+      b.addEventListener('click', function () {
+        // Hermes AI Command Center = slide-over (drawer), bukan ganti panel.
+        if (b.dataset.panel === 'hermes') {
+          document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
+          b.classList.add('is-active');
+          if (window.__ADMIN_MODULES__) {
+            modCall('hermes', 'toggleHermes');
+          } else {
+            ensureAdminModules(function () {
+              modCall('hermes', 'openHermes');
+            });
+          }
+          return;
+        }
+        document.querySelectorAll('.a-menu').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        currentPanel = b.dataset.panel;
+        modCall('hermes', 'closeHermes');
+        // Bersihkan banner error panel sebelumnya.
+        document.querySelectorAll('[data-module-error]').forEach(function (n) { n.remove(); });
+        ['dashboard', 'content', 'lms', 'leadsCourse', 'leadsKomunitas', 'pipeline', 'funnels', 'blog', 'members', 'vouchers', 'affiliates', 'landingpages'].forEach(function (p) {
+          var el = panelEl(p);
+          if (el) el.style.display = (p === currentPanel) ? 'block' : 'none';
+        });
+        if (currentPanel === 'dashboard') loadDashboard();
+        if (currentPanel === 'pipeline') modCall('pipeline', 'load');
+        if (currentPanel === 'funnels') modCall('funnels', 'load');
+        if (currentPanel === 'blog') modCall('blog', 'load');
+        if (currentPanel === 'lms') {
+          loadLms();
+          modCall('lms', 'load');
+        }
+        if (currentPanel === 'leadsCourse') loadLeads('course');
+        if (currentPanel === 'leadsKomunitas') loadLeads('komunitas');
+        if (currentPanel === 'members') loadMembers();
+        if (currentPanel === 'vouchers') loadVouchers();
+        if (currentPanel === 'affiliates') loadAffiliates();
+        if (currentPanel === 'landingpages') loadLandingPages();
+      });
+    });
+
+    // ============ Leads ============
+    var DB_SOURCE = { course: 'landing-daftar', komunitas: 'komunitas' };
+    var leadsCache = { course: null, komunitas: null };
+    var statusFilters = { course: 'all', komunitas: 'all' };
+
+    var PANEL_OF = { course: 'leadsCourse', komunitas: 'leadsKomunitas' };
+    function srcOf(l) { return l.source === 'komunitas' ? 'komunitas' : 'course'; }
+    function srcOfPanel(panel) { return panel === 'leadsKomunitas' ? 'komunitas' : 'course'; }
+    function bodyIdOf(panel) { return panel === 'leadsKomunitas' ? 'komunitasLeadsBody' : 'courseLeadsBody'; }
+    function emptyIdOf(panel) { return panel === 'leadsKomunitas' ? 'komunitasEmpty' : 'courseEmpty'; }
+    function filtersIdOf(panel) { return panel === 'leadsKomunitas' ? 'filtersKomunitas' : 'filtersCourse'; }
+
+    function loadLeads(src) {
+      if (!client) return;
+      var panel = PANEL_OF[src];
+      var query = client.from('leads').select('*').order('created_at', { ascending: false });
+      if (src === 'komunitas') {
+        query = query.eq('source', 'komunitas');
+      } else {
+        query = query.neq('source', 'komunitas');
+      }
+      query.then(function (r) {
+        if (r.error) {
+          document.getElementById(bodyIdOf(panel)).innerHTML =
+            '<tr><td colspan="7" class="l-meta">Gagal load leads: ' + esc(r.error.message || '') + '</td></tr>';
+          return;
+        }
+        leadsCache[src] = r.data || [];
+        refreshCounts();
+        renderLeads(panel);
+      });
+    }
+
+    function filteredFor(panel) {
+      var src = srcOfPanel(panel);
+      var st = statusFilters[src];
+      return (leadsCache[src] || []).filter(function (l) {
+        if (st !== 'all' && l.status !== st) return false;
+        return true;
+      });
+    }
+
+    function renderLeads(panel) {
+      var body = document.getElementById(bodyIdOf(panel));
+      var list = filteredFor(panel);
+      body.innerHTML = '';
+      list.forEach(function (l) { body.appendChild(leadRow(l, panel)); });
+      document.getElementById(emptyIdOf(panel)).style.display = list.length ? 'none' : 'block';
+    }
+
+    function refreshCounts() {
+      ['course', 'komunitas'].forEach(function (src) {
+        var list = leadsCache[src] || [];
+        var counts = { all: list.length, belum: 0, follow_up: 0, bayar: 0 };
+        list.forEach(function (l) { if (counts[l.status] !== undefined) counts[l.status]++; });
+        var s = src === 'course' ? 'Course' : 'Kom';
+        document.getElementById('cnt' + s + 'All').textContent = counts.all;
+        document.getElementById('cnt' + s + 'Belum').textContent = counts.belum;
+        document.getElementById('cnt' + s + 'FollowUp').textContent = counts.follow_up;
+        document.getElementById('cnt' + s + 'Bayar').textContent = counts.bayar;
+        var badge = document.getElementById('countMenu' + (src === 'course' ? 'Course' : 'Komunitas'));
+        if (badge) badge.textContent = counts.all;
+      });
+    }
+
+    function updateLead(id, patch) {
+      return client.from('leads').update(patch).eq('id', id).then(function (r) {
+        if (r.error) alert('Gagal update lead: ' + (r.error.message || 'terjadi kesalahan'));
+      });
+    }
+
+    function leadRow(l, panel) {
+      var tr = document.createElement('tr');
+      tr.dataset.id = l.id;
+
+      var statusOpts = [
+        ['belum', 'Belum'],
+        ['follow_up', 'Follow-up'],
+        ['bayar', 'Bayar']
+      ].map(function (s) {
+        return '<option value="' + s[0] + '"' + (l.status === s[0] ? ' selected' : '') + '>' + s[1] + '</option>';
+      }).join('');
+
+      var tplOpts = (cfg.FOLLOWUP_TEMPLATES || []).map(function (t, i) {
+        return '<option value="' + i + '">Template ' + (i + 1) + '</option>';
+      }).join('');
+
+      var wa = l.whatsapp ? 'https://wa.me/' + String(l.whatsapp).replace(/[^\d]/g, '') : '';
+      var created = l.created_at
+        ? new Date(l.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+        : '';
+
+      tr.innerHTML =
+        '<td data-label="Nama">' +
+          '<div class="l-name">' + esc(l.name) + '</div>' +
+          '<div class="l-meta">' + esc(created) + '</div>' +
+        '</td>' +
+        '<td data-label="Kontak">' +
+          '<div class="l-meta">' + esc(l.email || '—') + '</div>' +
+          (wa ? '<a class="l-meta l-wa" target="_blank" rel="noopener" href="' + wa + '">' + esc(l.whatsapp) + '</a>'
+               : '<div class="l-meta">—</div>') +
+        '</td>' +
+        '<td data-label="Discord ID" class="l-meta">' + esc(l.discord_id || '—') + '</td>' +
+        '<td data-label="Status"><select class="a-select st-' + esc(l.status) + '">' + statusOpts + '</select></td>' +
+        '<td data-label="Catatan"><input class="a-note" type="text" value="' + esc(l.notes || '') + '" placeholder="catatan…" /></td>' +
+        '<td data-label="Follow-up">' +
+          '<div class="l-fu">' +
+            '<select class="a-select">' + tplOpts + '</select>' +
+            '<button type="button" class="btn btn--ghost btn--sm lead-wa">WA →</button>' +
+          '</div>' +
+        '</td>' +
+        '<td data-label=""><button type="button" class="btn btn--ghost btn--sm lead-del">Hapus</button></td>';
+
+      var statusSel = tr.querySelector('.a-select.st-' + esc(l.status || 'belum'));
+      if (statusSel) statusSel.addEventListener('change', function (e) {
+        updateLead(l.id, { status: e.target.value }).then(function () {
+          e.target.className = 'a-select st-' + e.target.value;
+          refreshCounts();
+          renderLeads(panel);
+        });
+      });
+
+      var note = tr.querySelector('.a-note');
+      if (note) note.addEventListener('change', function () { updateLead(l.id, { notes: note.value.trim() }); });
+
+      var waBtn = tr.querySelector('.lead-wa');
+      if (waBtn) waBtn.addEventListener('click', function () {
+        var tpl = (cfg.FOLLOWUP_TEMPLATES || [])[Number(tr.querySelector('.l-fu .a-select').value)];
+        if (!tpl || !wa) return;
+        var text = tpl.text.replace(/\{nama\}/g, l.name).replace(/\{nama_lo\}/g, 'Xinde Labs');
+        window.open(wa + '?text=' + encodeURIComponent(text), '_blank');
+        if (l.status !== 'bayar') {
+          l.status = 'follow_up';
+          updateLead(l.id, { status: 'follow_up' }).then(function () {
+            refreshCounts();
+            renderLeads(panel);
+          });
+        }
+      });
+
+      var delBtn = tr.querySelector('.lead-del');
+      if (delBtn) delBtn.addEventListener('click', function () {
+        if (!confirm('Hapus lead "' + l.name + '"? Tindakan ini tidak bisa dibatalkan.')) return;
+        client.from('leads').delete().eq('id', l.id).then(function (r) {
+          if (r.error) { alert('Gagal hapus: ' + (r.error.message || '')); return; }
+          loadLeads(srcOfPanel(panel));
+        });
+      });
+
+      return tr;
+    }
+
+    ['course', 'komunitas'].forEach(function (src) {
+      var panel = PANEL_OF[src];
+      document.querySelectorAll('#' + filtersIdOf(panel) + ' .a-filter').forEach(function (b) {
+        b.addEventListener('click', function () {
+          document.querySelectorAll('#' + filtersIdOf(panel) + ' .a-filter').forEach(function (x) { x.classList.remove('is-active'); });
+          b.classList.add('is-active');
+          statusFilters[src] = b.dataset.status;
+          renderLeads(panel);
+        });
+      });
+    });
+
+    document.getElementById('refreshCourse').addEventListener('click', function () { loadLeads('course'); });
+    document.getElementById('refreshKomunitas').addEventListener('click', function () { loadLeads('komunitas'); });
+
+    function exportCsvFor(panel) {
+      var rows = filteredFor(panel);
+      if (!rows.length) { alert('Tidak ada lead untuk di-export.'); return; }
+      var csv = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+      var lines = ['Nama,Email,WhatsApp,Discord ID,Sumber,Status,Catatan,Dibuat'];
+      rows.forEach(function (l) {
+        lines.push([csv(l.name), csv(l.email), csv(l.whatsapp), csv(l.discord_id),
+                    csv(srcOf(l)), csv(l.status), csv(l.notes), csv(l.created_at)].join(','));
+      });
+      var blob = new Blob([lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'leads-' + srcOfPanel(panel) + '-xindelabs.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    }
+
+    document.getElementById('exportCsvCourse').addEventListener('click', function () { exportCsvFor('leadsCourse'); });
+    document.getElementById('exportCsvKomunitas').addEventListener('click', function () { exportCsvFor('leadsKomunitas'); });
+
+    // ============ Dashboard ============
+    function loadDashboard() {
+      if (window.__ADMIN_MODULES__) window.__ADMIN_MODULES__.dashboard.load();
+    }
+
+    // ============ LMS Management ============
+    document.getElementById('refreshLms').addEventListener('click', loadLms);
+    document.getElementById('addModule').addEventListener('click', function () {
+      var w = moduleRow(null);
+      bindModuleRow(w);
+      document.getElementById('moduleRows').appendChild(w);
+      updateModulesHint();
+    });
+
+    function loadLms() {
+      if (!client) return;
+      Promise.all([
+        client.from('modules').select('*').order('sort', { ascending: true }),
+        client.from('site_content').select('value').eq('key', 'course_status').maybeSingle()
+      ]).then(function (res) {
+        if (res[0].error) {
+          document.getElementById('modulesHint').style.display = 'block';
+          document.getElementById('modulesHint').textContent = '⚠️ Gagal load modul: ' + esc(res[0].error.message || '') +
+            '. Pastikan tabel <span style="font-family:var(--font-mono)">modules</span> sudah dibuat — jalankan <span style="font-family:var(--font-mono)">supabase-setup.sql</span> di SQL Editor.';
+          return;
+        }
+        renderModuleRows(res[0].data || []);
+        var cs = res[1].data && res[1].data.value;
+        document.getElementById('f_course_open').checked = !cs || cs.open !== false;
+      });
+    }
+
+    function moduleRow(m) {
+      m = m || {};
+      var wrap = document.createElement('div');
+      wrap.className = 'admin-row lms-row';
+      if (m.id) wrap.dataset.id = m.id;
+      var lv = function (v, label) {
+        return '<option value="' + v + '"' + (m.level === v ? ' selected' : '') + '>' + label + '</option>';
+      };
+      wrap.innerHTML =
+        '<div class="admin-row__main">' +
+          '<div class="admin-grid3">' +
+            '<div class="field"><label>Level</label><select class="m-level">' +
+              lv('beginner', 'Beginner') + lv('level-up', 'Level Up') + lv('pro', 'Pro') +
+            '</select></div>' +
+            '<div class="field"><label>Durasi (menit)</label><input class="m-duration" type="number" min="1" placeholder="12" value="' + esc(m.duration || '') + '" /></div>' +
+            '<div class="field"><label>Jenis Konten</label><select class="m-type">' +
+              '<option value="video"' + (m.type !== 'text' ? ' selected' : '') + '>Video (YouTube)</option>' +
+              '<option value="text"' + (m.type === 'text' ? ' selected' : '') + '>Teks</option>' +
+            '</select></div>' +
+          '</div>' +
+          '<div class="field m-video-field"><label>Link / ID Video YouTube</label><input class="m-video" type="text" placeholder="M7lc1UVf-VE atau https://youtu.be/…" value="' + esc(m.video_id || '') + '" /></div>' +
+          '<div class="field m-text-field" style="display:none"><label>Isi Teks Modul</label><textarea class="m-text" rows="7" placeholder="Tulis konten modul di sini (bisa multi-paragraf)…">' + esc(m.content || '') + '</textarea></div>' +
+          '<div class="field" style="margin-bottom:0"><label>Judul Modul</label><input class="m-title" type="text" placeholder="Judul modul…" value="' + esc(m.title || '') + '" /></div>' +
+        '</div>' +
+        '<div class="lms-actions">' +
+          '<button type="button" class="btn btn--ghost btn--sm row-up" title="Naik urutan">↑</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm row-down" title="Turun urutan">↓</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm row-remove">Hapus</button>' +
+        '</div>';
+      return wrap;
+    }
+
+    function bindModuleRow(wrap) {
+      wrap.querySelector('.row-up').addEventListener('click', function () {
+        if (wrap.previousElementSibling) wrap.parentNode.insertBefore(wrap, wrap.previousElementSibling);
+      });
+      wrap.querySelector('.row-down').addEventListener('click', function () {
+        if (wrap.nextElementSibling) wrap.parentNode.insertBefore(wrap.nextElementSibling, wrap);
+      });
+      wrap.querySelector('.row-remove').addEventListener('click', function () {
+        if (!confirm('Hapus modul ini?')) return;
+        wrap.remove();
+        updateModulesHint();
+      });
+      var typeSel = wrap.querySelector('.m-type');
+      function syncType() {
+        var isText = typeSel.value === 'text';
+        wrap.querySelector('.m-video-field').style.display = isText ? 'none' : 'block';
+        wrap.querySelector('.m-text-field').style.display = isText ? 'block' : 'none';
+      }
+      typeSel.addEventListener('change', syncType);
+      syncType();
+    }
+
+    function renderModuleRows(list) {
+      var el = document.getElementById('moduleRows');
+      el.innerHTML = '';
+      list.forEach(function (m) {
+        var w = moduleRow(m);
+        bindModuleRow(w);
+        el.appendChild(w);
+      });
+      updateModulesHint();
+    }
+
+    function updateModulesHint() {
+      var hint = document.getElementById('modulesHint');
+      var rows = document.querySelectorAll('#moduleRows .lms-row').length;
+      hint.style.display = rows ? 'none' : 'block';
+      if (rows) hint.textContent = 'Pakai ↑ / ↓ buat ngatur urutan, lalu klik "Simpan Modul".';
+    }
+
+    document.getElementById('f_course_open').addEventListener('change', function () {
+      var open = this.checked;
+      client.from('site_content').upsert({ key: 'course_status', value: { open: open } }).then(function (r) {
+        if (r.error) alert('Gagal simpan status course: ' + (r.error.message || 'terjadi kesalahan'));
+      });
+    });
+
+    document.getElementById('saveModulesBtn').addEventListener('click', function () {
+      var rows = Array.prototype.slice.call(document.querySelectorAll('#moduleRows .lms-row'));
+      var btn = document.getElementById('saveModulesBtn');
+
+      for (var i = 0; i < rows.length; i++) {
+        var title = rows[i].querySelector('.m-title').value.trim();
+        if (!title) {
+          alert('Judul modul wajib diisi (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-title').focus();
+          return;
+        }
+        var mtype = rows[i].querySelector('.m-type').value;
+        if (mtype === 'video' && !rows[i].querySelector('.m-video').value.trim()) {
+          alert('Video ID wajib diisi untuk modul video (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-video').focus();
+          return;
+        }
+        if (mtype === 'text' && !rows[i].querySelector('.m-text').value.trim()) {
+          alert('Isi teks wajib diisi untuk modul teks (baris ke-' + (i + 1) + ').');
+          rows[i].querySelector('.m-text').focus();
+          return;
+        }
+      }
+
+      var upserts = rows.map(function (w, i) {
+        var mtype = w.querySelector('.m-type').value;
+        var payload = {
+          sort: i + 1,
+          level: w.querySelector('.m-level').value,
+          title: w.querySelector('.m-title').value.trim(),
+          duration: String(w.querySelector('.m-duration').value || '').trim(),
+          type: mtype,
+          video_id: mtype === 'video' ? w.querySelector('.m-video').value.trim() : '',
+          content: mtype === 'text' ? w.querySelector('.m-text').value : ''
+        };
+        if (w.dataset.id) payload.id = w.dataset.id;
+        return payload;
+      });
+
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      document.getElementById('modulesSaveState').textContent = 'Mengirim ke Supabase…';
+
+      function done() {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Modul';
+        document.getElementById('modulesSaveState').textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        loadLms();
+      }
+
+      if (!upserts.length) {
+        client.from('modules').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(function (r) {
+          if (r.error) return saveFail(btn, r.error);
+          done();
+        });
+        return;
+      }
+
+      client.from('modules').upsert(upserts).then(function (r) {
+        if (r.error) return saveFail(btn, r.error);
+        var keepIds = upserts.map(function (u) { return u.id; }).filter(Boolean);
+        var del = keepIds.length
+          ? client.from('modules').delete().not('id', 'in', '(' + keepIds.join(',') + ')')
+          : Promise.resolve({ error: null });
+        del.then(function (dr) {
+          if (dr.error) return saveFail(btn, dr.error);
+          done();
+        });
+      });
+    });
+
+    function saveFail(btn, err) {
+      btn.disabled = false;
+      btn.textContent = 'Simpan Modul';
+      document.getElementById('modulesSaveState').textContent = '';
+      alert('Gagal simpan modul: ' + (err.message || 'terjadi kesalahan'));
+    }
+
+    // ============ Member Management ============
+    var membersCache = null;
+    var memberFilter = 'all';
+
+    function loadMembers() {
+      if (!client) return;
+      client.from('members').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) {
+          document.getElementById('membersBody').innerHTML =
+            '<tr><td colspan="5" class="l-meta">Gagal load members: ' + esc(r.error.message || '') + '</td></tr>';
+          document.getElementById('membersEmpty').style.display = 'none';
+          return;
+        }
+        membersCache = r.data || [];
+        refreshMemberCounts();
+        renderMembers();
+      });
+    }
+
+    function refreshMemberCounts() {
+      var list = membersCache || [];
+      var counts = { all: list.length, paid: 0, pending: 0, expired: 0 };
+      list.forEach(function (m) { if (counts[m.status] !== undefined) counts[m.status]++; });
+      document.getElementById('cntMemAll').textContent = counts.all;
+      document.getElementById('cntMemPaid').textContent = counts.paid;
+      document.getElementById('cntMemPending').textContent = counts.pending;
+      document.getElementById('cntMemExpired').textContent = counts.expired;
+      var badge = document.getElementById('countMenuMembers');
+      if (badge) badge.textContent = counts.all;
+    }
+
+    function renderMembers() {
+      var body = document.getElementById('membersBody');
+      var empty = document.getElementById('membersEmpty');
+      var list = (membersCache || []).filter(function (m) {
+        return memberFilter === 'all' || m.status === memberFilter;
+      });
+      body.innerHTML = '';
+      list.forEach(function (m) {
+        var tr = document.createElement('tr');
+        var paidUntil = m.paid_until ? new Date(m.paid_until).toLocaleDateString('id-ID') : '—';
+        var created = m.created_at ? new Date(m.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+        var tierLabel = m.tier === 'lifetime' ? 'Lifetime' : 'Tahunan';
+        var statusClass = 'st-' + (m.status || 'pending');
+        tr.innerHTML =
+          '<td data-label="Email"><div class="l-name">' + esc(m.email) + '</div><div class="l-meta">' + created + '</div></td>' +
+          '<td data-label="Status"><span class="a-select ' + statusClass + '" style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px">' + esc(m.status || 'pending') + '</span></td>' +
+          '<td data-label="Tier">' + esc(tierLabel) + '</td>' +
+          '<td data-label="Paid Until">' + paidUntil + '</td>' +
+          '<td data-label="Created">' + created + '</td>';
+        body.appendChild(tr);
+      });
+      empty.style.display = list.length ? 'none' : 'block';
+    }
+
+    document.getElementById('refreshMembers').addEventListener('click', loadMembers);
+    document.querySelectorAll('#filtersMembers .a-filter').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#filtersMembers .a-filter').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        memberFilter = btn.dataset.status;
+        renderMembers();
+      });
+    });
+
+    // ============ Voucher Management ============
+    var vouchersCache = null;
+
+    function loadVouchers() {
+      client.from('vouchers').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) return;
+        vouchersCache = r.data || [];
+        renderVouchers();
+      });
+    }
+
+    function renderVouchers() {
+      var body = document.getElementById('vouchersBody');
+      var empty = document.getElementById('vouchersEmpty');
+      if (!vouchersCache || !vouchersCache.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = vouchersCache.map(function (v) {
+        var typeLabel = v.type === 'percent' ? '%' : 'Rp';
+        var valLabel = v.type === 'percent' ? v.value + '%' : 'Rp ' + Number(v.value).toLocaleString('id-ID');
+        var tierLabel = !v.tier || v.tier === 'all' ? 'Semua' : v.tier === 'yearly' ? 'Tahunan' : 'Lifetime';
+        var expiry = v.expires_at ? new Date(v.expires_at).toLocaleDateString('id-ID') : '—';
+        var maxLabel = v.max_uses !== null ? v.max_uses : '∞';
+        return '<tr>' +
+          '<td><b style="font-family:var(--font-mono)">' + esc(v.code) + '</b></td>' +
+          '<td>' + esc(typeLabel) + '</td>' +
+          '<td>' + esc(valLabel) + '</td>' +
+          '<td>' + esc(tierLabel) + '</td>' +
+          '<td>' + v.used_count + '</td>' +
+          '<td>' + maxLabel + '</td>' +
+          '<td>' + (v.active ? '✓' : '—') + '</td>' +
+          '<td>' + expiry + '</td>' +
+          '<td><button type="button" class="btn btn--ghost btn--sm voucher-del" data-id="' + v.id + '">Hapus</button></td>' +
+        '</tr>';
+      }).join('');
+
+      body.querySelectorAll('.voucher-del').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = btn.dataset.id;
+          vouchersCache = vouchersCache.filter(function (v) { return v.id !== id; });
+          renderVouchers();
+        });
+      });
+    }
+
+    document.getElementById('addVoucher').addEventListener('click', function () {
+      var code = prompt('Masukkan kode voucher (huruf besar, tanpa spasi):');
+      if (!code) return;
+      code = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (!code) return;
+
+      var type = prompt('Tipe diskon?\n1 = Persentase (%)\n2 = Nominal (Rp)\n\nKetik 1 atau 2:');
+      if (type !== '1' && type !== '2') return;
+
+      var val = prompt(type === '1' ? 'Berapa persen diskonnya? (cth: 10)' : 'Berapa nominal diskonnya? (cth: 50000)');
+      if (!val || isNaN(val)) return;
+
+      var tier = prompt('Berlaku untuk paket apa?\nall = Semua paket\nyearly = Tahunan saja\nlifetime = Lifetime saja\n\nKetik all, yearly, atau lifetime:', 'all');
+      if (!tier || !['all', 'yearly', 'lifetime'].includes(tier)) return;
+
+      var maxUses = prompt('Batas penggunaan (kosongkan untuk unlimited):');
+      maxUses = maxUses ? parseInt(maxUses) : null;
+
+      var exp = prompt('Kadaluarsa kapan? (YYYY-MM-DD, kosongkan jika tidak ada):');
+      var expiresAt = exp ? exp + 'T23:59:59Z' : null;
+
+      if (!vouchersCache) vouchersCache = [];
+      vouchersCache.unshift({
+        id: 'new-' + Date.now(),
+        code: code,
+        type: type === '1' ? 'percent' : 'amount',
+        value: Number(val),
+        tier: tier,
+        max_uses: maxUses,
+        used_count: 0,
+        active: true,
+        expires_at: expiresAt
+      });
+      renderVouchers();
+    });
+
+    document.getElementById('refreshVouchers').addEventListener('click', loadVouchers);
+
+    document.getElementById('saveVouchersBtn').addEventListener('click', function () {
+      var btn = document.getElementById('saveVouchersBtn');
+      var stateEl = document.getElementById('vouchersSaveState');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      stateEl.textContent = 'Mengirim ke Supabase…';
+
+      // Delete all, then insert fresh
+      client.from('vouchers').delete().neq('id', '00000000-0000-0000-0000-000000000000').then(function (delRes) {
+        if (delRes.error) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          stateEl.textContent = '';
+          alert('Gagal hapus voucher lama: ' + delRes.error.message);
+          return;
+        }
+
+        var buildVoucherRows = function (withTier) {
+          return (vouchersCache || []).map(function (v) {
+            var row = {
+              code: v.code,
+              type: v.type,
+              value: v.value,
+              max_uses: v.max_uses,
+              used_count: v.used_count || 0,
+              active: v.active !== false,
+              expires_at: v.expires_at
+            };
+            // kolom 'tier' opsional — hanya dikirim kalau tabel punya kolom tsb
+            if (withTier && v.tier) row.tier = v.tier;
+            return row;
+          });
+        };
+
+        if (!buildVoucherRows(true).length) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+          loadVouchers();
+          return;
+        }
+
+        client.from('vouchers').insert(buildVoucherRows(true)).then(function (insRes) {
+          // Kolom 'tier' belum ada di tabel → coba lagi tanpa kolom itu
+          // (penting: data sudah dihapus di atas, insert wajib berhasil)
+          if (insRes.error && /tier|column/i.test(insRes.error.message || '')) {
+            return client.from('vouchers').insert(buildVoucherRows(false)).then(function (r2) {
+              return { res: r2, droppedTier: true };
+            });
+          }
+          return { res: insRes, droppedTier: false };
+        }).then(function (out) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Semua';
+          var insRes = out.res;
+          if (insRes.error) {
+            stateEl.textContent = '';
+            alert('Gagal simpan voucher: ' + insRes.error.message);
+            return;
+          }
+          stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+          if (out.droppedTier) {
+            console.warn('[voucher] kolom "tier" tidak ada di tabel — disimpan tanpa kolom tier');
+          }
+          loadVouchers();
+        });
+      });
+    });
+
+    // ============ Affiliate Management ============
+    var affiliatesCache = null;
+    var commissionsCache = null;
+    var commissionFilter = 'all';
+
+    function affRp(n) { return 'Rp ' + Number(n || 0).toLocaleString('id-ID'); }
+
+    function loadAffiliates() {
+      if (!client) return;
+      client.from('affiliates').select('*').order('created_at', { ascending: false }).then(function (r) {
+        if (r.error) {
+          document.getElementById('affiliatesBody').innerHTML =
+            '<tr><td colspan="8" class="l-meta">Gagal load affiliate: ' + esc(r.error.message || '') + '</td></tr>';
+          return;
+        }
+        affiliatesCache = r.data || [];
+        client.from('affiliate_commissions').select('*').order('created_at', { ascending: false }).then(function (r2) {
+          commissionsCache = (!r2.error && r2.data) ? r2.data : [];
+          refreshCommissionCounts();
+          renderAffiliates();
+          renderCommissions();
+          renderAffKpis();
+        });
+      });
+    }
+
+    function affCommissionSum(code) {
+      var sum = 0;
+      (commissionsCache || []).forEach(function (c) {
+        if (c.affiliate_code === code && c.status !== 'void') sum += Number(c.commission_amount || 0);
+      });
+      return sum;
+    }
+
+    function renderAffKpis() {
+      var affs = affiliatesCache || [];
+      var comms = (commissionsCache || []).filter(function (c) { return c.status !== 'void'; });
+      var sales = comms.length;
+      var pending = comms.filter(function (c) { return c.status === 'pending'; }).reduce(function (s, c) { return s + Number(c.commission_amount || 0); }, 0);
+      var paid = comms.filter(function (c) { return c.status === 'paid'; }).reduce(function (s, c) { return s + Number(c.commission_amount || 0); }, 0);
+      function kpi(label, value, big) {
+        return '<div class="d-kpi' + (big ? ' is-big' : '') + '"><span>' + label + '</span><b>' + value + '</b></div>';
+      }
+      var el = document.getElementById('affKpis');
+      if (el) {
+        el.innerHTML =
+          kpi('Affiliate', affs.length) +
+          kpi('Penjualan referral', sales) +
+          kpi('Komisi belum dibayar', affRp(pending), true) +
+          kpi('Komisi sudah dibayar', affRp(paid));
+      }
+      var badge = document.getElementById('countMenuAffiliates');
+      if (badge) badge.textContent = affs.length || '';
+    }
+
+    function renderAffiliates() {
+      var body = document.getElementById('affiliatesBody');
+      var empty = document.getElementById('affiliatesEmpty');
+      var list = affiliatesCache || [];
+      if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = list.map(function (a) {
+        var typeSel =
+          '<select class="a-select aff-type" data-id="' + a.id + '">' +
+            '<option value="percent"' + (a.commission_type === 'percent' ? ' selected' : '') + '>Persen</option>' +
+            '<option value="amount"' + (a.commission_type === 'amount' ? ' selected' : '') + '>Nominal</option>' +
+          '</select>';
+        var valInput = '<input type="number" min="0" step="1" class="aff-value" data-id="' + a.id + '" value="' + Number(a.commission_value || 0) + '" style="width:110px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--text);font-family:var(--font-mono)" />';
+        var statusSel =
+          '<select class="a-select aff-status" data-id="' + a.id + '">' +
+            '<option value="active"' + (a.status === 'active' ? ' selected' : '') + '>Aktif</option>' +
+            '<option value="disabled"' + (a.status === 'disabled' ? ' selected' : '') + '>Nonaktif</option>' +
+          '</select>';
+        var hint = a.commission_type === 'percent' ? 'Nilai = %' : 'Nilai = Rp';
+        return '<tr>' +
+          '<td data-label="Email"><div class="l-name">' + esc(a.email) + '</div><div class="l-meta">' + esc(a.code) + '</div></td>' +
+          '<td data-label="Kode"><b style="font-family:var(--font-mono)">' + esc(a.code) + '</b></td>' +
+          '<td data-label="Status">' + statusSel + '</td>' +
+          '<td data-label="Komisi">' + typeSel + '<div class="l-meta">' + hint + '</div></td>' +
+          '<td data-label="Nilai">' + valInput + '</td>' +
+          '<td data-label="Klik">' + Number(a.clicks || 0) + '</td>' +
+          '<td data-label="Komisi Masuk">' + affRp(affCommissionSum(a.code)) + '</td>' +
+          '<td><button type="button" class="btn btn--ghost btn--sm aff-del" data-id="' + a.id + '">Hapus</button></td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function patchAffiliate(id, patch, cb) {
+      client.from('affiliates').update(patch).eq('id', id).then(function (r) {
+        if (r.error) { alert('Gagal simpan: ' + r.error.message); return; }
+        if (cb) cb();
+      });
+    }
+
+    function bindAffiliateControls() {
+      var body = document.getElementById('affiliatesBody');
+      if (!body) return;
+
+      body.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        if (t.classList.contains('aff-type')) {
+          patchAffiliate(t.dataset.id, { commission_type: t.value }, loadAffiliates);
+        } else if (t.classList.contains('aff-value')) {
+          var v = Number(t.value);
+          if (isNaN(v) || v < 0) { alert('Nilai komisi tidak valid.'); return; }
+          patchAffiliate(t.dataset.id, { commission_value: v }, renderAffiliates);
+        } else if (t.classList.contains('aff-status')) {
+          patchAffiliate(t.dataset.id, { status: t.value }, loadAffiliates);
+        }
+      });
+
+      body.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.classList || !t.classList.contains('aff-del')) return;
+        if (!confirm('Hapus affiliate ini? Riwayat komisinya tetap tersimpan.')) return;
+        client.from('affiliates').delete().eq('id', t.dataset.id).then(function (r) {
+          if (r.error) { alert('Gagal hapus: ' + r.error.message); return; }
+          loadAffiliates();
+        });
+      });
+    }
+
+    function setCommission(id, status) {
+      var patch = { status: status };
+      if (status === 'paid') patch.paid_at = new Date().toISOString();
+      client.from('affiliate_commissions').update(patch).eq('id', id).then(function (r) {
+        if (r.error) { alert('Gagal update komisi: ' + r.error.message); return; }
+        loadAffiliates();
+      });
+    }
+
+    function refreshCommissionCounts() {
+      var list = commissionsCache || [];
+      var counts = { all: list.length, pending: 0, paid: 0, void: 0 };
+      list.forEach(function (c) { if (counts[c.status] !== undefined) counts[c.status]++; });
+      document.getElementById('cntCommAll').textContent = counts.all;
+      document.getElementById('cntCommPending').textContent = counts.pending;
+      document.getElementById('cntCommPaid').textContent = counts.paid;
+      document.getElementById('cntCommVoid').textContent = counts.void;
+    }
+
+    function renderCommissions() {
+      var body = document.getElementById('commissionsBody');
+      var empty = document.getElementById('commissionsEmpty');
+      var list = (commissionsCache || []).filter(function (c) {
+        return commissionFilter === 'all' || c.status === commissionFilter;
+      });
+      if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = list.map(function (c) {
+        var date = c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+        var tierLabel = c.tier === 'lifetime' ? 'Lifetime' : (c.tier === 'yearly' ? 'Tahunan' : (c.tier || '—'));
+        var stLabel = c.status === 'paid' ? 'Dibayar' : (c.status === 'void' ? 'Batal' : 'Belum dibayar');
+        var statusClass = 'st-' + (c.status === 'paid' ? 'paid' : (c.status === 'void' ? 'belum' : 'pending'));
+        var actions = '';
+        if (c.status !== 'paid') actions += '<button type="button" class="btn btn--primary btn--sm comm-paid" data-id="' + c.id + '">Tandai dibayar</button> ';
+        if (c.status !== 'void') actions += '<button type="button" class="btn btn--ghost btn--sm comm-void" data-id="' + c.id + '">Batalkan</button>';
+        if (c.status === 'void') actions += '<button type="button" class="btn btn--ghost btn--sm comm-pending" data-id="' + c.id + '">Kembalikan</button>';
+        return '<tr>' +
+          '<td data-label="Tanggal">' + date + '</td>' +
+          '<td data-label="Affiliate">' + esc(c.affiliate_code) + '<div class="l-meta">' + esc(c.affiliate_email || '') + '</div></td>' +
+          '<td data-label="Pembeli">' + esc(c.customer_email || '—') + '</td>' +
+          '<td data-label="Paket">' + esc(tierLabel) + '</td>' +
+          '<td data-label="Nilai">' + affRp(c.sale_amount) + '</td>' +
+          '<td data-label="Komisi"><b>' + affRp(c.commission_amount) + '</b></td>' +
+          '<td data-label="Status"><span class="a-select ' + statusClass + '" style="display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px">' + stLabel + '</span></td>' +
+          '<td>' + actions + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function bindCommissionControls() {
+      var body = document.getElementById('commissionsBody');
+      if (!body) return;
+      body.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        if (t.classList.contains('comm-paid')) setCommission(t.dataset.id, 'paid');
+        else if (t.classList.contains('comm-void')) setCommission(t.dataset.id, 'void');
+        else if (t.classList.contains('comm-pending')) setCommission(t.dataset.id, 'pending');
+      });
+    }
+
+    document.getElementById('refreshAffiliates').addEventListener('click', loadAffiliates);
+    document.getElementById('refreshCommissions').addEventListener('click', loadAffiliates);
+    bindAffiliateControls();
+    bindCommissionControls();
+
+    document.querySelectorAll('#filtersCommissions .a-filter').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('#filtersCommissions .a-filter').forEach(function (b) { b.classList.remove('is-active'); });
+        btn.classList.add('is-active');
+        commissionFilter = btn.dataset.status;
+        renderCommissions();
+      });
+    });
+
+    document.getElementById('addAffiliate').addEventListener('click', function () {
+      var email = (prompt('Email member (harus terdaftar & status paid):') || '').trim().toLowerCase();
+      if (!email || email.indexOf('@') < 0) return;
+      client.from('members').select('status').eq('email', email).maybeSingle().then(function (mr) {
+        if (mr.error) { alert('Gagal cek member: ' + mr.error.message); return; }
+        if (!mr.data || mr.data.status !== 'paid') {
+          alert('Email ini bukan member berbayar (status: ' + (mr.data ? mr.data.status : 'tidak terdaftar') + ').');
+          return;
+        }
+        var code = (prompt('Kode referral (huruf/angka, kosongkan = otomatis):') || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!code) {
+          code = email.split('@')[0].replace(/[^a-z0-9]/gi, '').toUpperCase().slice(0, 6) +
+            String(Math.floor(Math.random() * 9000) + 1000);
+        }
+        var type = prompt('Tipe komisi:\n1 = Persen (%)\n2 = Nominal (Rp)\n\nKetik 1 atau 2:', '1');
+        if (type !== '1' && type !== '2') return;
+        var val = prompt(type === '1' ? 'Berapa persen komisi? (cth: 20)' : 'Berapa rupiah per penjualan? (cth: 100000)', type === '1' ? '20' : '100000');
+        if (!val || isNaN(val)) return;
+        client.from('affiliates').insert({
+          email: email,
+          code: code,
+          commission_type: type === '1' ? 'percent' : 'amount',
+          commission_value: Number(val),
+          status: 'active'
+        }).then(function (r) {
+          if (r.error) { alert('Gagal tambah affiliate: ' + r.error.message); return; }
+          loadAffiliates();
+        });
+      });
+    });
+
+    // ============ LANDING PAGE MANAGEMENT (section builder + live preview) ============
+    var lpCache = null;          // list cache
+    var lpEditingKey = null;     // current editing site_content key
+    var lpSections = [];         // working array of sections while editing
+    var lpPreviewTimer = null;   // debounce push draft ke iframe preview
+    var lpMetaDraft = {          // working meta (nav/footer))
+      title: '', slug: '', page_title: '', page_desc: '', accent: '#00ff88',
+      nav: { logo: '', logo_dot: '.', home_href: 'index.html', cta: { text: '', href: '' }, links: [] },
+      footer: { copy: '', links: [] }
+    };
+
+    // ---------- List landing pages ----------
+    function renderLandingPages() {
+      var body = document.getElementById('landingPagesBody');
+      var empty = document.getElementById('landingPagesEmpty');
+      var list = lpCache || [];
+      if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      body.innerHTML = list.map(function (p) {
+        var label = p.is_custom
+          ? (p.slug === 'utama' ? 'utama' : p.slug)
+          : 'utama (default)';
+        return '<tr>' +
+          '<td><b>' + esc(p.title || '(tanpa judul)') + '</b>' + (p.isFilled ? '' : ' <span class="hint">· belum diisi</span>') + (p.is_legacy ? ' <span class="hint">· key lama (dimigrasi saat simpan)</span>' : '') + '</td>' +
+          '<td data-label="Slug"><code>' + esc(label) + '</code></td>' +
+          '<td data-label="Link"><a href="' + esc(LandingPages.accessUrl(p.key)) + '" target="_blank" rel="noopener">bukak &nearr;</a></td>' +
+          '<td data-label="Update">' + (p.updated_at ? new Date(p.updated_at).toLocaleString('id-ID') : '—') + '</td>' +
+          '<td data-label="" class="a-actions">' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-edit="' + esc(p.key) + '">Edit</button>' +
+            '<button type="button" class="btn btn--ghost btn--sm" data-dup="' + esc(p.key) + '" title="Gandakan">⧉</button>' +
+            (p.is_custom ? '<button type="button" class="btn btn--ghost btn--sm" data-del="' + esc(p.key) + '" title="Hapus">✕</button>' : '') +
+          '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function loadLandingPages() {
+      LandingPages.listAll().then(function (list) {
+        lpCache = list;
+        renderLandingPages();
+      }).catch(function (e) {
+        console.error('[lp] load list', e);
+      });
+    }
+
+    document.getElementById('refreshLandingPages').addEventListener('click', loadLandingPages);
+
+    // ---------- Palette (tipe section) ----------
+    function renderPalette() {
+      var pal = document.getElementById('lpPalette');
+      pal.innerHTML = Object.keys(LandingPages.SECTION_TYPES).map(function (t) {
+        var meta = LandingPages.sectionTypeMeta(t);
+        return '<button type="button" class="lp-palette__item" data-add="' + t + '">' +
+          '<span class="lp-palette__icon">' + meta.icon + '</span>' +
+          '<span class="lp-palette__label">' + meta.label + '</span>' +
+        '</button>';
+      }).join('');
+      pal.querySelectorAll('[data-add]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          lpSections.push(LandingPages.newSection(b.dataset.add));
+          renderSections();
+          scrollToSection(lpSections[lpSections.length - 1].id);
+          pushPreview();
+        });
+      });
+    }
+
+    function scrollToSection(idOrEl) {
+      var el = (typeof idOrEl === 'string') ? document.getElementById(idOrEl) : idOrEl;
+      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // ---------- Render list section ----------
+    function renderSections() {
+      var list = document.getElementById('lpSections');
+      var empty = document.getElementById('lpSectionsEmpty');
+      if (!lpSections.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = lpSections.map(function (s, idx) {
+        var meta = LandingPages.sectionTypeMeta(s.type);
+        var summary = sectionSummary(s);
+        return '<div class="lp-sec" id="' + esc(s.id) + '" draggable="true" data-idx="' + idx + '">' +
+          '<div class="lp-sec__head">' +
+            '<span class="lp-sec__grip" title="Drag untuk urut">⋮⋮</span>' +
+            '<span class="lp-sec__icon">' + meta.icon + '</span>' +
+            '<span class="lp-sec__title">' + meta.label + '</span>' +
+            '<span class="lp-sec__summary">' + esc(summary) + '</span>' +
+            '<span class="lp-sec__pos">#' + (idx + 1) + '</span>' +
+            '<span class="lp-sec__tools">' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-up="' + idx + '" title="Naik">↑</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-down="' + idx + '" title="Turun">↓</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-open="' + esc(s.id) + '" title="Edit field">✎</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-openstyle="' + esc(s.id) + '" title="Edit style">🎨</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-dupsec="' + idx + '" title="Gandakan">⧉</button>' +
+              '<button type="button" class="btn btn--ghost btn--sm" data-delsec="' + idx + '" title="Hapus">✕</button>' +
+            '</span>' +
+          '</div>' +
+          '<div class="lp-sec__fields" id="secfields-' + esc(s.id) + '" style="display:none"></div>' +
+          '<div class="lp-sec__style" id="secstyle-' + esc(s.id) + '" style="display:none"></div>' +
+        '</div>';
+      }).join('');
+
+      list.querySelectorAll('[data-up]').forEach(function (b) {
+        b.addEventListener('click', function () { moveSection(Number(b.dataset.up), -1); });
+      });
+      list.querySelectorAll('[data-down]').forEach(function (b) {
+        b.addEventListener('click', function () { moveSection(Number(b.dataset.down), 1); });
+      });
+      list.querySelectorAll('[data-open]').forEach(function (b) {
+        b.addEventListener('click', function () { toggleSectionPanel(b.dataset.open, true); });
+      });
+      list.querySelectorAll('[data-openstyle]').forEach(function (b) {
+        b.addEventListener('click', function () { toggleSectionPanel(b.dataset.openstyle, false); });
+      });
+      list.querySelectorAll('[data-dupsec]').forEach(function (b) {
+        b.addEventListener('click', function () { duplicateSection(Number(b.dataset.dupsec)); });
+      });
+      list.querySelectorAll('[data-delsec]').forEach(function (b) {
+        b.addEventListener('click', function () { removeSection(Number(b.dataset.delsec)); });
+      });
+      bindSectionDrag(list);
+    }
+
+    function sectionSummary(s) {
+      var d = s.data || {};
+      var stab = {
+        hero: d.title || d.cta_text,
+        text: d.heading || d.body,
+        image: d.src || d.alt,
+        youtube: d.video_id ? 'Video: ' + d.video_id : '',
+        video_row: d.heading || d.video_id || d.profile_name,
+        cta: d.title || d.btn_text,
+        pricing: (d.yearly_price ? 'Rp ' + d.yearly_price : '') + (d.lifetime_price ? ' · Rp ' + d.lifetime_price : '') + (d.yearly_tier || ''),
+        stats: (d.items || []).length + ' item',
+        terminal: (d.items || []).length + ' modul',
+        rows: (d.items || []).length + ' baris',
+        cards: (d.items || []).length + ' kartu',
+        testimonials: (d.items || []).length + ' testimoni',
+        split: d.heading || d.image,
+        voucher: (d.items || []).length + ' voucher',
+        faq: (d.items || []).length + ' FAQ',
+        comm: d.title || d.btn_text,
+        divider: '—',
+        embed: 'HTML'
+      };
+      return stab[s.type] || '';
+    }
+
+    function moveSection(idx, delta) {
+      var newIdx = idx + delta;
+      if (newIdx < 0 || newIdx >= lpSections.length) return;
+      var temp = lpSections[idx];
+      lpSections[idx] = lpSections[newIdx];
+      lpSections[newIdx] = temp;
+      renderSections();
+      pushPreview();
+    }
+
+    function removeSection(idx) {
+      lpSections.splice(idx, 1);
+      renderSections();
+      pushPreview();
+    }
+
+    function duplicateSection(idx) {
+      var copy = JSON.parse(JSON.stringify(lpSections[idx]));
+      copy.id = (copy.type || 'sec') + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      lpSections.splice(idx + 1, 0, copy);
+      renderSections();
+      pushPreview();
+    }
+
+    // Drag & drop reorder (HTML5 native)
+    function bindSectionDrag(container) {
+      var items = container.querySelectorAll('.lp-sec');
+      var dragEl = null;
+      Array.prototype.forEach.call(items, function (item) {
+        item.addEventListener('dragstart', function (ev) {
+          dragEl = item;
+          item.classList.add('dragging');
+          ev.dataTransfer.effectAllowed = 'move';
+          try { ev.dataTransfer.setData('text/plain', item.dataset.idx); } catch (e) {}
+        });
+        item.addEventListener('dragend', function () {
+          item.classList.remove('dragging');
+          Array.prototype.forEach.call(container.querySelectorAll('.drag-over'), function (o) { o.classList.remove('drag-over'); });
+        });
+        item.addEventListener('dragover', function (ev) {
+          ev.preventDefault();
+          ev.dataTransfer.dropEffect = 'move';
+          item.classList.add('drag-over');
+        });
+        item.addEventListener('dragleave', function () { item.classList.remove('drag-over'); });
+        item.addEventListener('drop', function (ev) {
+          ev.preventDefault();
+          item.classList.remove('drag-over');
+          if (!dragEl || dragEl === item) return;
+          var from = Number(dragEl.dataset.idx);
+          var to = Number(item.dataset.idx);
+          if (isNaN(from) || isNaN(to)) return;
+          var moved = lpSections.splice(from, 1)[0];
+          lpSections.splice(to, 0, moved);
+          renderSections();
+          pushPreview();
+        });
+      });
+    }
+
+    // ---------- Field editor per section ----------
+    var sfCurrent = null; // penanda: fieldControl(list) butuh id section — di-set buildSectionFields
+    function fieldControl(f, val, depth) {
+      depth = depth || 0;
+      var label = '<label>' + f.label + '</label>';
+      var cls = 'field lp-field lp-depth-' + depth;
+      if (f.type === 'textarea') {
+        return '<div class="' + cls + '">' + label + '<textarea rows="' + (f.key === 'body' || f.key === 'html' || f.key === 'success_text' ? 5 : 2) + '" data-fk="' + f.key + '">' + esc(val) + '</textarea></div>';
+      }
+      if (f.type === 'select') {
+        var opts = (f.options || []).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (String(val) === String(o) ? ' selected' : '') + '>' + esc(o) + '</option>';
+        }).join('');
+        return '<div class="' + cls + '">' + label + '<select data-fk="' + f.key + '">' + opts + '</select></div>';
+      }
+      if (f.type === 'number') {
+        return '<div class="' + cls + '">' + label + '<input type="number" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'color') {
+        return '<div class="' + cls + '">' + label + '<input type="color" data-fk="' + f.key + '" value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'url') {
+        return '<div class="' + cls + '">' + label + '<input type="url" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
+      }
+      if (f.type === 'toggle') {
+        return '<div class="' + cls + ' lp-toggle">' + label +
+          '<label class="switch"><input type="checkbox" data-fk="' + f.key + '"' + (val ? ' checked' : '') + ' /><span class="switch__slider"></span></label>' +
+        '</div>';
+      }
+      if (f.type === 'list') {
+        return '<div class="' + cls + '">' + label +
+          '<div class="lp-list" data-list="' + f.key + '">' +
+            ((val && val.length) ? val.map(function (item, i) { return listItemHtml(f, item, i, depth); }).join('') : '') +
+          '</div>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list-add" data-addlist="' + esc(sfCurrent && sfCurrent.id || '') + '" data-fk="' + f.key + '" style="margin-top:8px">' + (f.addLabel || '+ Tambah') + '</button>' +
+        '</div>';
+      }
+      return '<div class="' + cls + '">' + label + '<input type="text" data-fk="' + f.key + '"' + (f.placeholder ? ' placeholder="' + esc(f.placeholder) + '"' : '') + ' value="' + esc(val) + '" /></div>';
+    }
+
+    function listItemHtml(f, item, i, depth) {
+      var subs = (f.sub || []).map(function (sf) {
+        var v = item[sf.key] != null ? item[sf.key] : '';
+        return '<div class="lp-list__field lp-depth-' + (depth + 1) + '">' + fieldControl(sf, v, depth + 1) + '</div>';
+      }).join('');
+      return '<div class="lp-list__item">' +
+        '<div class="lp-list__item-bar"><span>#' + (i + 1) + '</span>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__up" title="Naik">↑</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__down" title="Turun">↓</button>' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-list__del" title="Hapus">✕</button>' +
+        '</div>' +
+        '<div class="lp-list__body">' + subs + '</div>' +
+      '</div>';
+    }
+
+    function buildSectionFields(s) {
+      var box = document.getElementById('secfields-' + s.id);
+      if (!box) return;
+      sfCurrent = s;
+      var meta = LandingPages.sectionTypeMeta(s.type);
+      var d = s.data || {};
+      var html = '<div class="lp-fields"><div class="admin-row__head"><label>Anchor (opsional, untuk #link)</label><input type="text" data-anchor="' + esc(s.id) + '" value="' + esc(s.anchor || '') + '" placeholder="cth: video, pricing, faq" /></div>';
+      if (!meta.fields.length) html += '<div class="hint">Section ini tidak punya pengaturan lanjutan.</div>';
+      meta.fields.forEach(function (f) {
+        var val = d[f.key] != null ? d[f.key] : '';
+        html += fieldControl(f, val, 0);
+      });
+      html += '</div>';
+      box.innerHTML = html;
+
+      // anchor
+      var anchorInp = box.querySelector('[data-anchor]');
+      if (anchorInp) anchorInp.addEventListener('input', function () { s.anchor = anchorInp.value.trim(); pushPreview(); });
+
+      // simple fields
+      box.querySelectorAll('[data-fk]').forEach(function (inp) {
+        if (inp.closest('.lp-list') && inp.type !== 'checkbox') { bindListItemInput(inp); return; }
+        bindFieldInput(inp, s);
+      });
+      // toggles in list
+      box.querySelectorAll('.lp-list input[type="checkbox"][data-fk]').forEach(function (cb) { cb.addEventListener('change', function () { collectList(s, cb.dataset.fk); pushPreview(); }); });
+      // list add
+      box.querySelectorAll('[data-addlist]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var fk = b.dataset.fk;
+          s.data[fk] = s.data[fk] || [];
+          var f = meta.fields.filter(function (x) { return x.key === fk; })[0];
+          var item = {};
+          (f.sub || []).forEach(function (sf) { item[sf.key] = sf.type === 'toggle' ? false : ''; });
+          s.data[fk].push(item);
+          buildSectionFields(s);
+          pushPreview();
+        });
+      });
+      // list reorder/delete (delegasi di dalam box)
+      box.querySelectorAll('.lp-list__up, .lp-list__down, .lp-list__del').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var itemEl = b.closest('.lp-list__item');
+          var listEl = itemEl.parentElement;
+          var fk = listEl.dataset.list;
+          var idx = Array.prototype.indexOf.call(listEl.children, itemEl);
+          var arr = s.data[fk] || [];
+          if (b.classList.contains('lp-list__del')) {
+            arr.splice(idx, 1);
+          } else {
+            var n = b.classList.contains('lp-list__up') ? idx - 1 : idx + 1;
+            if (n < 0 || n >= arr.length) return;
+            var tmp = arr[idx];
+            arr[idx] = arr[n];
+            arr[n] = tmp;
+          }
+          buildSectionFields(s);
+          pushPreview();
+        });
+      });
+    }
+
+    function bindFieldInput(inp, s) {
+      inp.addEventListener('input', function () {
+        var fk = inp.dataset.fk;
+        if (inp.type === 'checkbox') {
+          s.data[fk] = inp.checked;
+        } else if (inp.tagName === 'SELECT') {
+          s.data[fk] = inp.value;
+        } else if (inp.type === 'number') {
+          s.data[fk] = inp.value === '' ? '' : Number(inp.value);
+        } else {
+          s.data[fk] = inp.value;
+        }
+        var secEl = document.getElementById(s.id);
+        var sumEl = secEl && secEl.querySelector('.lp-sec__summary');
+        if (sumEl) sumEl.textContent = sectionSummary(s);
+        pushPreview();
+      });
+      inp.addEventListener('change', function () {
+        if (inp.type === 'checkbox' || inp.tagName === 'SELECT') pushPreview();
+      });
+    }
+
+    // list item field input → langsung update objek (tanpa re-render)
+    function bindListItemInput(inp) {
+      var itemEl = inp.closest('.lp-list__item');
+      var listEl = inp.closest('.lp-list');
+      var s = sfCurrent;
+      if (!s || !itemEl || !listEl) return;
+      inp.addEventListener('input', function () {
+        var fk = inp.dataset.fk;
+        var listKey = listEl.dataset.list;
+        var idx = Array.prototype.indexOf.call(listEl.querySelectorAll('.lp-list__item'), itemEl);
+        if (!s.data[listKey]) s.data[listKey] = [];
+        var item = s.data[listKey][idx];
+        if (!item) return;
+        if (inp.type === 'checkbox') item[fk] = inp.checked;
+        else if (inp.type === 'number') item[fk] = inp.value === '' ? '' : Number(inp.value);
+        else item[fk] = inp.value;
+        pushPreview();
+      });
+      inp.addEventListener('change', function () { if (inp.type === 'checkbox') pushPreview(); });
+    }
+
+    function collectList(s, fk) {
+      var box = document.getElementById('secfields-' + s.id);
+      if (!box) return;
+      var listEl = box.querySelector('.lp-list[data-list="' + fk + '"]');
+      if (!listEl) return;
+      var out = Array.prototype.map.call(listEl.querySelectorAll('.lp-list__item'), function (item) {
+        var obj = {};
+        item.querySelectorAll('[data-fk]').forEach(function (inp) {
+          var k = inp.dataset.fk;
+          obj[k] = inp.type === 'checkbox' ? inp.checked : (inp.type === 'number' ? (inp.value === '' ? '' : Number(inp.value)) : inp.value);
+        });
+        return obj;
+      });
+      s.data[fk] = out;
+    }
+
+    function buildSectionStyle(s) {
+      var box = document.getElementById('secstyle-' + s.id);
+      if (!box) return;
+      if (!s.style) s.style = LPRender.defaultStyles();
+      var html = '<div class="lp-fields lp-style-fields"><div class="hint">Padding, warna, perataan, dan visibilitas bagian ini.</div>';
+      LPRender.STYLE_FIELDS.forEach(function (f) {
+        var val = s.style[f.key] != null ? s.style[f.key] : '';
+        html += fieldControl(f, val, 0);
+      });
+      html += '</div>';
+      box.innerHTML = html;
+      box.querySelectorAll('[data-fk]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          var fk = inp.dataset.fk;
+          if (inp.type === 'checkbox') s.style[fk] = inp.checked;
+          else if (inp.type === 'number') s.style[fk] = inp.value === '' ? '' : Number(inp.value);
+          else s.style[fk] = inp.value;
+          pushPreview();
+        });
+      });
+    }
+
+    function toggleSectionPanel(id, isFields) {
+      var key = isFields ? 'secfields-' : 'secstyle-';
+      var otherKey = isFields ? 'secstyle-' : 'secfields-';
+      var box = document.getElementById(key + id);
+      var other = document.getElementById(otherKey + id);
+      if (!box) return;
+      var show = box.style.display === 'none';
+      box.style.display = show ? 'block' : 'none';
+      if (other) other.style.display = 'none';
+      if (show) {
+        var s = lpSections.filter(function (x) { return x.id === id; })[0];
+        if (!s) return;
+        if (isFields) buildSectionFields(s);
+        else buildSectionStyle(s);
+      }
+    }
+
+    // ---------- Meta: nav & footer links (repeater rows) ----------
+    function metaLinksRow(key) {
+      var container = document.getElementById(key === 'nav' ? 'lpNavLinks' : 'lpFooterLinks');
+      var items = key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links;
+      container.innerHTML = items.map(function (l, i) {
+        return '<div class="lp-linkrow">' +
+          '<input type="text" class="lp-link-label" value="' + esc(l.label || '') + '" placeholder="Label (cth: Course)" />' +
+          '<input type="text" class="lp-link-href" value="' + esc(l.href || '') + '" placeholder="href (cth: #modules atau checkout.html)" />' +
+          '<button type="button" class="btn btn--ghost btn--sm lp-link-del" title="Hapus">✕</button>' +
+        '</div>';
+      }).join('');
+      container.querySelectorAll('.lp-link-label').forEach(function (inp, i) {
+        inp.addEventListener('input', function () { (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links)[i].label = inp.value.trim(); pushPreview(); });
+      });
+      container.querySelectorAll('.lp-link-href').forEach(function (inp, i) {
+        inp.addEventListener('input', function () { (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links)[i].href = inp.value.trim(); pushPreview(); });
+      });
+      container.querySelectorAll('.lp-link-del').forEach(function (b, i) {
+        b.addEventListener('click', function () {
+          (key === 'nav' ? lpMetaDraft.nav.links : lpMetaDraft.footer.links).splice(i, 1);
+          metaLinksRow(key);
+          pushPreview();
+        });
+      });
+    }
+
+    function bindMetaInputs() {
+      [['lp_title', function (v) { lpMetaDraft.title = v; }],
+       ['lp_page_title', function (v) { lpMetaDraft.page_title = v; }],
+       ['lp_page_desc', function (v) { lpMetaDraft.page_desc = v; }],
+       ['lp_accent', function (v) { lpMetaDraft.accent = v; }],
+       ['lp_nav_logo', function (v) { lpMetaDraft.nav.logo = v; }],
+       ['lp_nav_logo_dot', function (v) { lpMetaDraft.nav.logo_dot = v; }],
+       ['lp_home_href', function (v) { lpMetaDraft.nav.home_href = v; }],
+       ['lp_nav_cta_text', function (v) { lpMetaDraft.nav.cta.text = v; }],
+       ['lp_nav_cta_href', function (v) { lpMetaDraft.nav.cta.href = v; }],
+       ['lp_footer_copy', function (v) { lpMetaDraft.footer.copy = v; }]
+      ].forEach(function (pair) {
+        var el = document.getElementById(pair[0]);
+        if (el) el.addEventListener('input', function () { pair[1](el.value.trim()); pushPreview(); });
+      });
+      document.getElementById('lpAddNavLink').addEventListener('click', function () { lpMetaDraft.nav.links.push({ label: '', href: '' }); metaLinksRow('nav'); pushPreview(); });
+      document.getElementById('lpAddFooterLink').addEventListener('click', function () { lpMetaDraft.footer.links.push({ label: '', href: '' }); metaLinksRow('footer'); pushPreview(); });
+    }
+    bindMetaInputs();
+
+    // ---------- LIVE PREVIEW (iframe + postMessage) ----------
+    function previewUrl() {
+      if (lpEditingKey === 'homepage') return 'index.html?preview=1';
+      var slug = lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : 'utama';
+      return 'page.html?slug=' + encodeURIComponent(slug) + '&preview=1';
+    }
+
+    function loadPreviewFrame() {
+      var frame = document.getElementById('lpPreviewFrame');
+      frame.src = previewUrl();
+    }
+
+    function builtDraft() {
+      return { meta: lpMetaDraft, sections: lpSections };
+    }
+
+    function pushPreview() {
+      if (!lpEditingKey) return;
+      clearTimeout(lpPreviewTimer);
+      lpPreviewTimer = setTimeout(function () {
+        var frame = document.getElementById('lpPreviewFrame');
+        if (!frame || !frame.contentWindow) return;
+        try {
+          frame.contentWindow.postMessage({ type: 'lp-draft', content: builtDraft() }, '*');
+        } catch (e) {}
+      }, 350);
+    }
+
+    window.addEventListener('message', function (e) {
+      if (e.data && e.data.type === 'lp-ready') pushPreview();
+    });
+
+    document.getElementById('lpPreviewReload').addEventListener('click', function () {
+      loadPreviewFrame();
+    });
+
+    document.querySelectorAll('.lp-dev').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.lp-dev').forEach(function (x) { x.classList.remove('is-active'); });
+        b.classList.add('is-active');
+        var w = Number(b.dataset.w) || 1000;
+        var wrap = document.getElementById('lpPreviewWrap');
+        wrap.style.maxWidth = w + 'px';
+      });
+    });
+    var lpDevDefault = document.querySelector('.lp-dev[data-w="1000"]');
+    if (lpDevDefault) lpDevDefault.click();
+
+    // ---------- Open editor ----------
+    function openLpEditor(key) {
+      lpEditingKey = key;
+      document.getElementById('lpEditorWrap').style.display = 'block';
+      document.getElementById('lpEditorTitle').textContent = key === 'homepage' ? 'Edit Landing Utama' : 'Edit Landing: ' + key.replace(/^lp_/, '');
+
+      document.getElementById('lpFormError').style.display = 'none';
+      document.getElementById('lpFormMsg').style.display = 'none';
+      document.getElementById('lpFormState').textContent = '';
+
+      var isMain = key === 'homepage';
+      LandingPages.getByKey(key).then(function (c) {
+        var v = c || {};
+        var m = v.meta || {};
+        var def = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.meta) || {};
+        var nav = Object.assign({}, def.nav || {}, m.nav || {});
+        var footer = Object.assign({}, def.footer || {}, m.footer || {});
+        // working meta draft
+        lpMetaDraft = {
+          title: m.title || (isMain ? (def.title || '') : key.replace(/^lp_/, '')),
+          slug: isMain ? 'utama' : (m.slug || key.replace(/^lp_/, '')),
+          page_title: m.page_title || '',
+          page_desc: m.page_desc || '',
+          accent: m.accent || def.accent || '#00ff88',
+          nav: {
+            logo: nav.logo || '', logo_dot: (nav.logo_dot != null ? nav.logo_dot : '.'),
+            home_href: nav.home_href || 'index.html',
+            cta: Object.assign({ text: '', href: '' }, nav.cta || {}),
+            links: (nav.links || []).map(function (l) { return { label: l.label || '', href: l.href || '' }; })
+          },
+          footer: {
+            copy: footer.copy || '',
+            links: (footer.links || []).map(function (l) { return { label: l.label || '', href: l.href || '' }; })
+          }
+        };
+
+        document.getElementById('lp_title').value = lpMetaDraft.title;
+        document.getElementById('lp_slug').value = isMain ? '' : lpMetaDraft.slug;
+        document.getElementById('lp_page_title').value = lpMetaDraft.page_title;
+        document.getElementById('lp_page_desc').value = lpMetaDraft.page_desc;
+        document.getElementById('lp_accent').value = lpMetaDraft.accent;
+        document.getElementById('lp_nav_logo').value = lpMetaDraft.nav.logo;
+        document.getElementById('lp_nav_logo_dot').value = lpMetaDraft.nav.logo_dot;
+        document.getElementById('lp_home_href').value = lpMetaDraft.nav.home_href;
+        document.getElementById('lp_nav_cta_text').value = lpMetaDraft.nav.cta.text;
+        document.getElementById('lp_nav_cta_href').value = lpMetaDraft.nav.cta.href;
+        document.getElementById('lp_footer_copy').value = lpMetaDraft.footer.copy;
+        metaLinksRow('nav');
+        metaLinksRow('footer');
+
+        // Sections: pakai value.sections kalau ada; kalau belum, konversi dari konten lama / default
+        lpSections = normalizeSections(v, isMain);
+
+        var pv = document.getElementById('lpFormPreview');
+        pv.style.display = 'inline-flex';
+        var slug = isMain ? 'utama' : key.replace(/^lp_/, '');
+        pv.onclick = function () { window.open('page.html?slug=' + encodeURIComponent(slug), '_blank'); };
+
+        renderPalette();
+        renderSections();
+        loadPreviewFrame();
+        scrollToSection(document.getElementById('lpEditorWrap'));
+      });
+    }
+
+    // Konversi konten lama ke sections kalau belum ada value.sections
+    function normalizeSections(v, isMain) {
+      var secs;
+      if (Array.isArray(v.sections) && v.sections.length) {
+        secs = v.sections;
+      } else {
+        // konten lama → sections via renderer
+        var converted = LPRender.normalizeLegacy(v || {});
+        var meaningful = converted.some(function (s) {
+          if (s.type === 'cta' || s.type === 'divider') return false;
+          var d = s.data || {};
+          return !!d.title || !!d.heading || !!d.quote || !!d.q || !!d.hero_title || (s.type === 'pricing');
+        });
+        if (meaningful) {
+          secs = converted;
+        } else if (isMain) {
+          var defSecs = (cfg.DEFAULT_LANDING && cfg.DEFAULT_LANDING.sections) || [];
+          secs = defSecs;
+        } else {
+          return [LPRender.newSection('hero'), LPRender.newSection('cta')];
+        }
+      }
+      // Landing utama: pastikan SEMUA section default tampil di editor (satu menu)
+      if (isMain) secs = LPRender.mergeDefaults(secs);
+      return JSON.parse(JSON.stringify(secs)).map(function (s) {
+        s.data = Object.assign({}, LPRender.sectionDefaults(s.type), s.data || {});
+        s.style = Object.assign({}, LPRender.defaultStyles(), s.style || {});
+        return s;
+      });
+    }
+
+    // ---------- Save (merge + mirror legacy) ----------
+    document.getElementById('lpSaveBtn').addEventListener('click', function () {
+      var err = document.getElementById('lpFormError');
+      var msg = document.getElementById('lpFormMsg');
+      err.style.display = 'none';
+      msg.style.display = 'none';
+
+      var slugRaw = document.getElementById('lp_slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (lpEditingKey !== 'homepage' && !slugRaw) {
+        err.textContent = '⚠️ Slug/subdomain wajib diisi untuk landing custom.';
+        err.style.display = 'flex';
+        return;
+      }
+      var isMain = (lpEditingKey === 'homepage');
+      var key = isMain ? 'homepage' : LandingPages.keyOf(slugRaw || (lpEditingKey ? lpEditingKey.replace(/^lp_/, '') : ''));
+
+      // bend dari meta draft
+      lpMetaDraft.slug = isMain ? 'utama' : slugRaw;
+      lpMetaDraft.title = document.getElementById('lp_title').value.trim() || lpMetaDraft.title;
+      lpMetaDraft.page_title = document.getElementById('lp_page_title').value.trim();
+      lpMetaDraft.page_desc = document.getElementById('lp_page_desc').value.trim();
+      lpMetaDraft.accent = document.getElementById('lp_accent').value.trim() || '#00ff88';
+      lpMetaDraft.is_custom = !isMain;
+
+      // kolaps section (ambill al nilai field terakhir via data yg sudah tersimpan di lpSections)
+      var sections = lpSections.map(function (s) {
+        return { id: s.id, type: s.type, anchor: s.anchor || '', data: s.data || {}, style: s.style || {} };
+      });
+
+      // mirror legacy keys biar checkout/countdown/link lama tetap jalan
+      var pricingSec = sections.filter(function (s) { return s.type === 'pricing'; })[0];
+      var legacy = {
+        price_yearly: (pricingSec && pricingSec.data && pricingSec.data.yearly_price) || 0,
+        price_lifetime: (pricingSec && pricingSec.data && pricingSec.data.lifetime_price) || 0
+      };
+
+      var content = { sections: sections, meta: lpMetaDraft, legacy: legacy };
+
+      // merge dgn nilai existing (jangan replace total)
+      var btn = document.getElementById('lpSaveBtn');
+      var stateEl = document.getElementById('lpFormState');
+      btn.disabled = true;
+      btn.textContent = 'Menyimpan…';
+      stateEl.textContent = 'Mengirim ke Supabase…';
+
+      client.auth.getSession().then(function (sess) {
+        if (!sess.data || !sess.data.session) {
+          btn.disabled = false;
+          btn.textContent = 'Simpan Landing';
+          err.textContent = '⚠️ Session expired. Login ulang.';
+          err.style.display = 'flex';
+          stateEl.textContent = '';
+          return;
+        }
+        return client.from('site_content').select('value').eq('key', key).maybeSingle().then(function (r) {
+          var existing = (r.data && r.data.value) ? r.data.value : {};
+          var merged = Object.assign({}, existing, content, { legacy: legacy });
+          merged.sections = sections;
+          var token = sess.data.session.access_token;
+          return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content?key=eq.' + encodeURIComponent(key), {
+            method: 'PATCH',
+            headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ value: merged, updated_by: 'admin' })
+          }).then(function (resp) {
+            if (resp && resp.ok) return { ok: true };
+            // row belum ada → PK conflict → create
+            return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
+              method: 'POST',
+              headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ key: key, value: merged, updated_by: 'admin' })
+            }).then(function (r2) { return { ok: !!r2.ok, status: r2.status }; });
+          });
+        });
+      }).then(function (res) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Landing';
+        if (!res || !res.ok) {
+          stateEl.textContent = '';
+          err.textContent = '⚠️ Gagal simpan: ' + (res ? 'HTTP ' + res.status : 'session').toString() + '. Cek F12 → Console.';
+          err.style.display = 'flex';
+          return;
+        }
+        stateEl.textContent = 'Tersimpan ' + new Date().toLocaleTimeString('id-ID');
+        msg.textContent = '✅ Landing tersimpan. ' + (!isMain ? ('Akses: ' + LandingPages.accessUrl(key)) : '') + (lpEditingKey && lpEditingKey !== key ? ' Key lama dihapus (' + lpEditingKey + ').' : '');
+        msg.style.display = 'flex';
+        // Migrasi: row legacy (key tanpa prefix lp_) dihapus setelah tersimpan di key baru
+        if (lpEditingKey && lpEditingKey !== key) {
+          client.from('site_content').delete().eq('key', lpEditingKey).then(function (dr) {
+            if (dr.error) console.error('[lp] hapus key legacy', dr.error);
+            loadLandingPages();
+          });
+        } else {
+          loadLandingPages();
+        }
+      }).catch(function (e2) {
+        btn.disabled = false;
+        btn.textContent = 'Simpan Landing';
+        console.error('[lp] save catch', e2);
+        err.textContent = '⚠️ Error: ' + (e2.message || 'unknown');
+        err.style.display = 'flex';
+        stateEl.textContent = '';
+      });
+    });
+
+    document.getElementById('createLandingPage').addEventListener('click', function () {
+      var slug = prompt('Slug / subdomain landing baru (huruf kecil, angka, tanpa spasi).\nContoh: "property" → diakses lewat page.html?slug=property atau subdomain property.…');
+      if (!slug) return;
+      slug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+      if (!slug) { alert('Slug tidak valid.'); return; }
+      openLpEditor(LandingPages.keyOf(slug));
+      document.getElementById('lp_title').value = slug;
+      document.getElementById('lp_slug').value = slug;
+    });
+
+    document.body.addEventListener('click', function (e) {
+      var ed = e.target.closest('[data-edit]');
+      if (ed) { openLpEditor(ed.dataset.edit); return; }
+      var dup = e.target.closest('[data-dup]');
+      if (dup) { duplicateLanding(dup.dataset.dup); return; }
+      var del = e.target.closest('[data-del]');
+      if (del) deleteLanding(del.dataset.del);
+    });
+
+    document.getElementById('lpEditorBack').addEventListener('click', function () {
+      document.getElementById('lpEditorWrap').style.display = 'none';
+      loadLandingPages();
+    });
+
+    function duplicateLanding(key) {
+      LandingPages.getByKey(key).then(function (c) {
+        if (!c) { alert('Landing tidak ditemukan.'); return; }
+        var base = key === 'homepage' ? 'utama' : key.replace(/^lp_/, '');
+        var newSlug = base + '-copy';
+        LandingPages.get(newSlug).then(function (existing) {
+          var finalSlug = existing ? newSlug + '-' + Math.floor(Date.now() / 1000) : newSlug;
+          var content = Object.assign({}, c);
+          content.meta = Object.assign({}, c.meta || {}, { slug: finalSlug, title: (c.meta && c.meta.title ? c.meta.title : base) + ' (copy)', is_custom: true });
+          var newKey = LandingPages.keyOf(finalSlug);
+          client.auth.getSession().then(function (sess) {
+            if (!sess.data || !sess.data.session) { alert('Session expired.'); return; }
+            return fetch(cfg.SUPABASE_URL + '/rest/v1/site_content', {
+              method: 'POST',
+              headers: { 'apikey': cfg.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + sess.data.session.access_token, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+              body: JSON.stringify({ key: newKey, value: content, updated_by: 'admin' })
+            });
+          }).then(function (r) {
+            loadLandingPages();
+            if (r && !r.ok) { console.error('[lp] dup', r.status); alert('Gagal gandakan: HTTP ' + r.status); }
+            else alert('Berhasil digandakan sebagai "' + finalSlug + '".');
+          });
+        });
+      });
+    }
+
+    function deleteLanding(key) {
+      if (!confirm('Hapus landing "' + key + '"? Tidak bisa dibatalkan.')) return;
+      client.from('site_content').delete().eq('key', key).then(function (r) {
+        if (r.error) { console.error('[lp] del', r.error); alert('Gagal hapus: ' + r.error.message); return; }
+        loadLandingPages();
+      });
+    }
+  </script>
+
+  <script type="module">
+    import { initAdminModules } from './js/admin/index.js';
+
+    window.__initAdminModules = function (client, cfg) {
+      initAdminModules(client, cfg);
+    };
+
+    if (window.client && !window.__ADMIN_MODULES__) {
+      var editor = document.getElementById('editorState');
+      if (editor && editor.style.display === 'block') {
+        window.__initAdminModules(window.client, window.cfg);
+        if (window.__ADMIN_MODULES__ && window.__ADMIN_MODULES__.dashboard) window.__ADMIN_MODULES__.dashboard.load();
+      }
+    }
+  </script>
+</body>
+</html>
