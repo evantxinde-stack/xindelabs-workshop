@@ -12,6 +12,10 @@ export const metadata = {
 };
 
 const LEARN_URL = "https://learn.xindelabs.web.id";
+const SERVICE_URL = "/service";
+const MEMBER_URL = "https://learn.xindelabs.web.id/member";
+const KELAS_URL = "https://learn.xindelabs.web.id/kelas";
+const WORKSHOP_URL = "https://learn.xindelabs.web.id/workshop";
 
 type ClassRow = {
   slug: string;
@@ -65,8 +69,8 @@ const NAV = [
   { href: "#kontak", label: "kontak" },
   { href: LEARN_URL, label: "learn" },
   { href: "/blog", label: "blog" },
-  { href: "https://workshop.xindelabs.web.id", label: "workshop" },
-  { href: "https://member.xindelabs.web.id", label: "login member" },
+  { href: SERVICE_URL, label: "service" },
+  { href: MEMBER_URL, label: "login member" },
 ];
 
 function NavBurger() {
@@ -131,10 +135,10 @@ export default async function Home() {
           </nav>
           <div className="flex items-center gap-3">
             <a
-              href="#kontak"
+              href={SERVICE_URL}
               className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
             >
-              Kerja bareng
+              Work with me
             </a>
             <NavBurger />
           </div>
@@ -166,10 +170,10 @@ export default async function Home() {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
-                href="#kontak"
+                href={SERVICE_URL}
                 className="rounded-full bg-[#00ff88] px-7 py-3 text-[15px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
               >
-                Kerja bareng →
+                Work with me →
               </a>
               <a
                 href={LEARN_URL}
@@ -457,9 +461,11 @@ export default async function Home() {
               <nav className="flex gap-5">
                 <a href={LEARN_URL} className="lowercase hover:text-[#00ff88]">learn</a>
                 <Link href="/blog" className="lowercase hover:text-[#00ff88]">blog</Link>
-                <a href="https://workshop.xindelabs.web.id" className="lowercase hover:text-[#00ff88]">workshop</a>
+                <a href={SERVICE_URL} className="lowercase hover:text-[#00ff88]">service</a>
+                <a href={KELAS_URL} className="lowercase hover:text-[#00ff88]">kelas</a>
+                <a href={WORKSHOP_URL} className="lowercase hover:text-[#00ff88]">workshop</a>
                 <Link href="/portofolio" className="lowercase hover:text-[#00ff88]">portofolio</Link>
-                <a href="https://member.xindelabs.web.id" className="lowercase hover:text-[#00ff88]">member</a>
+                <a href={MEMBER_URL} className="lowercase hover:text-[#00ff88]">member</a>
               </nav>
             </div>
           </div>

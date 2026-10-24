@@ -1,12 +1,12 @@
 import Link from "next/link";
 
 export const SITE_LINKS = [
-  { href: "https://kelas.xindelabs.web.id", label: "Kelas" },
-  { href: "https://workshop.xindelabs.web.id", label: "Workshop" },
-  { href: "https://member.xindelabs.web.id", label: "Member" },
+  { href: "https://learn.xindelabs.web.id", label: "Learn" },
   { href: "/blog", label: "Blog" },
-  { href: "/portofolio", label: "Portofolio" },
-  { href: "/tutorial", label: "Tutorial" },
+  { href: "/service", label: "Service" },
+  { href: "https://learn.xindelabs.web.id/member", label: "Login Member" },
+  { href: "https://learn.xindelabs.web.id/kelas", label: "Kelas" },
+  { href: "https://learn.xindelabs.web.id/workshop", label: "Workshop" },
 ];
 
 export function SiteHeader({ active }: { active?: string }) {

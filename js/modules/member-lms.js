@@ -170,11 +170,11 @@ function renderKatalog() {
           <p style="color:var(--muted); font-size:14.5px;">${esc(cls.description||'')}</p>
           ${owned ? `<div style="font-family:var(--font-mono); font-size:13px; color:var(--green);">Progress: ${pct}%</div>` : `<div style="font-family:var(--font-mono); font-size:13px; color:var(--gold);">🔒 Belum dimiliki — upgrade kapan aja</div>`}
           ${owned ? `<button class="btn btn--primary btn--sm" onclick="window.__openClass__('${esc(cls.id)}')">Buka Kelas</button>` :
-            `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            `<div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
               <span style="font-family:var(--font-mono); color:var(--cyan);">${formatIDR(price||0)}</span>
-              <div style="display:flex; gap:8px; align-items:center;">
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <a href="https://wa.me/62895335137700?text=${encodeURIComponent('Halo XindeLabs, mau beli ' + (cls.title||'kelas'))}" target="_blank" rel="noopener" class="btn btn--ghost btn--sm" title="Tanya dulu via WhatsApp">💬</a>
-                <a href="/checkout.html?class=${esc(cls.slug)}" class="btn btn--primary btn--sm">Beli Kelas Ini</a>
+                <a href="/checkout.html?class=${encodeURIComponent(cls.id)}&class_name=${encodeURIComponent(cls.title||'Kelas')}&class_price=${price||0}&class_member_price=${cls.member_discount_price||0}" class="btn btn--primary btn--sm">Beli Kelas Ini</a>
               </div>
             </div>`}
         </div>

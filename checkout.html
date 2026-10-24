@@ -65,11 +65,18 @@
       console.warn('Gagal memuat funnel:', e);
     }
 
+    const clsId = params.get('class');
     const tier = {
       id: params.get('tier') || 'default',
-      name: params.get('tier_name') || '',
+      name: params.get('tier_name') || (clsId ? (params.get('class_name') || 'Kelas') : ''),
       price: Number(params.get('tier_price') || 0)
     };
+    if (clsId) {
+      tier.id = 'class:' + clsId;
+      if (!params.get('tier_price')) tier.price = Number(params.get('class_price') || 0);
+      tier.isClass = true;
+      tier.classId = clsId;
+    }
 
     const app = document.getElementById('checkout-app');
 

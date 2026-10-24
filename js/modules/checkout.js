@@ -99,6 +99,7 @@ export function renderCheckout(el, opts) {
       : opts.tier && opts.tier.price != null
         ? Number(opts.tier.price)
         : 0,
+    classId: opts.tier && opts.tier.isClass ? opts.tier.classId : '',
     bump: 0,
     bumpChecked: false,
     discount: 0,
@@ -275,7 +276,7 @@ export function renderCheckout(el, opts) {
       const total = recalc();
       const bumpAmount = state.freeBump ? 0 : state.bumpChecked && bumpCfg.enabled ? bumpCfg.price : 0;
       const result = await submitCheckout(
-        { ...data, tier: state.tierId, tier_name: state.tierName, total, bump_amount: bumpAmount },
+        { ...data, tier: state.tierId, tier_name: state.tierName, total, bump_amount: bumpAmount, class_id: state.classId || '' },
         funnel
       );
       if (result && opts.onSuccess) opts.onSuccess(result);
@@ -408,6 +409,7 @@ export async function submitCheckout(data, funnel) {
     voucher: data.voucher_code || null,
     funnel: funnelSlug,
     funnel_slug: funnelSlug,
+    class_id: data.class_id || '',
     lead_id: leadId,
     order_id: order ? order.id : null,
     utm_source: utm.utm_source,
