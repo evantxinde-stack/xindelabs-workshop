@@ -1,11 +1,14 @@
 /**
- * Xinde Labs — Access Gate untuk Vercel (Edge Middleware)
+ * Xinde Labs — Edge Middleware
  *
- * Cara kerja: Vercel jadi "pintu depan". Semua keputusan akses ditanyakan ke
- * gate VPS (43.133.131.126:3020 lewat HTTP), jadi kunci Supabase TIDAK perlu
- * ada di Vercel sama sekali. Hanya satu tempat yang pegang kunci: VPS.
+ * Dua tugas:
+ *   1. Shortcut URL learn: /kelas, /workshop, /member → file statik yang tepat
+ *   2. Access gate VPS untuk /deck-workshop & /pre-session
  *
- * Alur:
+ * Gate: Vercel hanya jadi "pintu depan". Keputusan akses ditanyakan ke gate
+ * VPS (43.133.131.126:3020), jadi kunci Supabase TIDAK ada di Vercel.
+ *
+ * Alur gate:
  *   1. Request masuk ke /deck-workshop atau /pre-session
  *   2. Middleware tanya gate VPS: "cookie ini valid?"
  *   3. Valid   → lanjut ke file statik di Vercel (cepat, dari edge)
@@ -23,6 +26,8 @@
  * kunci master cuma hidup di VPS.
  */
 
+import { NextResponse } from 'next/server';
+
 export const config = {
   matcher: [
     '/deck-workshop',
@@ -31,6 +36,9 @@ export const config = {
     '/pre-session',
     '/pre-session/',
     '/pre-session/:path*',
+    '/kelas',
+    '/workshop',
+    '/member',
     '/auth',
     '/auth/',
     '/api/login',
@@ -45,6 +53,25 @@ const GATE = (process.env.GATE_ORIGIN || 'https://gate.43-133-131-126.sslip.io')
 export default async function middleware(request) {
   const url = new URL(request.url);
   const path = url.pathname;
+
+  // ── Learn structure: view=kelas dipaksa untuk /kelas ──
+  if (path === '/kelas') {
+    url.pathname = '/index.html';
+    if (!url.searchParams.get('subdomain')) url.searchParams.set('subdomain', 'kelas');
+    url.searchParams.set('view', 'kelas');
+    return NextResponse.rewrite(url);
+  }
+
+  // ── Halaman member & workshop di learn: shortcut clean URL ──
+  if (path === '/workshop') {
+    url.pathname = '/workshop.html';
+    return NextResponse.rewrite(url);
+  }
+
+  if (path === '/member') {
+    url.pathname = '/member-app.html';
+    return NextResponse.rewrite(url);
+  }
 
   // ── Route khusus login: teruskan ke gate VPS, apa adanya (termasuk cookie) ──
   const isAuthRoute =
