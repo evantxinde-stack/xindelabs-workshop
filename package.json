@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test tests/*.test.ts"
+    "test": "node --experimental-strip-types --test tests/nextjs/unified-funnel.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

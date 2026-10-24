@@ -7,18 +7,21 @@ const supabase = createClient(
 );
 
 import { CreateVoucherForm } from "./create-form";
+import MemberPricing from "./member-pricing";
+import { admin } from "@/lib/supabase/server";
 
 export default async function VouchersPage() {
   requireAdmin();
-  const { data } = await supabase
-    .from("vouchers")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: classes }] = await Promise.all([
+    supabase.from("vouchers").select("*").order("created_at", { ascending: false }),
+    admin.from("classes").select("id,title,type,product_type,member_cross_sell_price").order("title"),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="text-2xl font-bold text-white">Manajemen Voucher</h1>
       <CreateVoucherForm />
+      <MemberPricing classes={classes ?? []} />
       <div className="mt-6 overflow-x-auto">
         <table className="w-full text-sm text-white/80">
           <thead>

@@ -108,6 +108,9 @@ async function load(params: Promise<{ from?: string; to?: string }>) {
   const tutorialLeads = unified.filter((u) => u.source_group === "Tutorial").length;
   const workshopLeads = unified.filter((u) => u.source_group === "Workshop").length;
   const komunitasLeads = unified.filter((u) => u.source_group === "Komunitas").length;
+  const vipOffer = unified.filter((u) => /vip/i.test(`${u.products.join(" ")} ${u.current_stage ?? ""}`)).length;
+  const courseDownsell = unified.filter((u) => /course|kelas|fast.?track/i.test(`${u.products.join(" ")} ${u.current_stage ?? ""}`)).length;
+  const freeTutorial = unified.filter((u) => u.source_group === "Tutorial" || u.products.includes("Tutorial Free")).length;
   const paidCustomers = paidCustomersSet.size;
   const workshopMembers = members.filter((m) => (m as any).status === "paid").length;
   const ordersPending = orders.filter((o) => (o as any).status === "pending").length;
@@ -134,6 +137,9 @@ async function load(params: Promise<{ from?: string; to?: string }>) {
     tutorialLeads,
     workshopLeads,
     komunitasLeads,
+    vipOffer,
+    courseDownsell,
+    freeTutorial,
     paidCustomers,
     workshopMembers,
     ordersPending,
@@ -207,6 +213,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </form>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        <Stat label="Total Omzet (Mayar)" value={rupiah(s.revenue)} tone="ok" />
         <Stat label="Total Leads" value={s.leadsTotal.toLocaleString("id-ID")} />
         <Stat label="Tutorial Leads" value={s.tutorialLeads.toLocaleString("id-ID")} />
         <Stat label="Workshop Leads" value={s.workshopLeads.toLocaleString("id-ID")} />
@@ -241,7 +248,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="panel p-5">
-        <h2 className="panel-title">Funnel</h2>
+        <h2 className="panel-title">Funnel Conversion Center</h2>
         <p className="panel-sub mt-0.5">Konversi dari lead yang masuk sampai pembayaran sukses.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
@@ -258,6 +265,20 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
               Transaksi sukses: <span className="text-white">{s.paidOrders.length}</span>
             </p>
           </div>
+          <div className="space-y-3">
+            {[['VIP Offer', s.vipOffer], ['Course Downsell', s.courseDownsell], ['Free Tutorial', s.freeTutorial]].map(([label, value]) => {
+              const n = Number(value); const pct = s.leadsTotal ? Math.round((n / s.leadsTotal) * 100) : 0;
+              return <StatusBar key={String(label)} label={`${label} (${pct}%)`} value={n} total={s.leadsTotal || 1} color="#10B981" />;
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="panel p-5">
+        <h2 className="panel-title">Member Terbaru</h2>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {s.members.slice(0, 6).map((m: any) => <div key={m.id} className="rounded-lg border border-white/10 bg-[#0A140E] p-3 text-sm"><span className="text-white">{m.name || m.email || 'Member'}</span><span className="ml-2 text-xs text-white/40">{m.product || m.tier || m.status || '—'}</span></div>)}
+          {!s.members.length && <p className="text-sm text-white/40">Belum ada member.</p>}
         </div>
       </div>
     </>

@@ -5,8 +5,11 @@ import { usePathname, useRouter } from "next/navigation";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
-  { href: "/admin/leaks", label: "Funnel Kebocoran" },
   { href: "/admin/editor", label: "Editor Landing Page" },
+  { href: "/admin/workshops", label: "Workshop Kit" },
+  { href: "/admin/sales-pages", label: "Sales Pages" },
+  { href: "/admin/vip", label: "VIP Manager" },
+  { href: "/admin/content", label: "Content Manager" },
   { href: "/admin/lms/courses", label: "Course Management" },
   { href: "/admin/unified-leads", label: "Unified Leads" },
   { href: "/admin/workshop-members", label: "Workshop Members" },

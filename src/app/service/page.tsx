@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { admin } from "@/lib/supabase/server";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
@@ -64,13 +63,7 @@ const SERVICES: Service[] = [
 ];
 
 export default async function ServicePage() {
-  const { data } = await admin.from("settings").select("value").eq("key", "wa_admin_number").maybeSingle();
-  const waNumber = String(data?.value || "").replace(/\D/g, "");
-  const waHref = waNumber
-    ? `https://wa.me/${waNumber.startsWith("0") ? "62" + waNumber.slice(1) : waNumber}?text=${encodeURIComponent(
-        "Halo XindeLabs, gw mau bahas project.",
-      )}`
-    : "https://wa.me/62895335137700?text=" + encodeURIComponent("Halo XindeLabs, gw mau bahas project.");
+  const waHref = "https://wa.me/62895335137700?text=" + encodeURIComponent("Halo XindeLabs, gw mau bahas project.");
 
   const display = "font-[family-name:var(--font-display)]";
   const hand = "font-[family-name:var(--font-hand)]";
