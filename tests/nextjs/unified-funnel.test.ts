@@ -6,7 +6,7 @@ import {
   buildUnifiedLeads,
   uniquePaidCustomers,
   computeRevenueDetailed,
-} from '../src/lib/unified-funnel.ts';
+} from '../../src/lib/unified-funnel.ts';
 
 test('1. Mapping semua source', () => {
   assert.deepEqual(mapSource('tutorial_hermes'), { source: 'tutorial_hermes', label: 'Tutorial Free', group: 'Tutorial' });
