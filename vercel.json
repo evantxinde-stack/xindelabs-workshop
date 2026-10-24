@@ -5,7 +5,7 @@
     { "source": "/auth", "destination": "/auth.html" },
     { "source": "/kelas", "destination": "/index.html?view=kelas" },
     { "source": "/workshop", "destination": "/workshop.html" },
-    { "source": "/member", "destination": "/member-app.html" },
+    { "source": "/member", "destination": "/member-app" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
