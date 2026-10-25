@@ -1,13 +1,12 @@
 -- Hermes Workshop seed. Run after 20261025000000_workshop_kit_schema.sql.
 -- Idempotent by class slug and child natural keys.
 
-insert into public.classes (slug, title, description, price, type, product_type, is_published, sort_order)
+insert into public.classes (slug, title, description, price, product_type, is_published, sort_order)
 values (
   'hermes-agent-workshop',
   'Bangun Hermes Agent dari Nol',
   'Workshop praktis delapan modul: dari mindset, AI Agent, instalasi Hermes, SOUL.md, arsitektur, skills, plugins, sampai loop engineering.',
   0,
-  'workshop',
   'workshop',
   true,
   1
@@ -15,7 +14,6 @@ values (
 on conflict (slug) do update set
   title = excluded.title,
   description = excluded.description,
-  type = excluded.type,
   product_type = excluded.product_type,
   is_published = excluded.is_published;
 
