@@ -66,11 +66,11 @@ const NAV = [
   { href: "#tentang", label: "tentang" },
   { href: "#karya", label: "karya" },
   { href: "#belajar", label: "belajar" },
-  { href: "#kontak", label: "kontak" },
   { href: LEARN_URL, label: "learn" },
   { href: "/blog", label: "blog" },
+  { href: "/portofolio", label: "portofolio" },
   { href: SERVICE_URL, label: "service" },
-  { href: MEMBER_URL, label: "login member" },
+  { href: "/tutorial", label: "tutorial" },
 ];
 
 function NavBurger() {
@@ -128,10 +128,11 @@ export default async function Home() {
             xindelabs<span className="text-[#00ff88]">.</span>
           </Link>
           <nav className="hidden items-center gap-7 font-mono text-[11px] lowercase tracking-[0.16em] text-white/55 sm:flex">
-            <a href="#tentang" className="hover:text-[#00ff88]">tentang</a>
-            <a href="#karya" className="hover:text-[#00ff88]">karya</a>
-            <a href="#belajar" className="hover:text-[#00ff88]">belajar</a>
-            <a href="#kontak" className="hover:text-[#00ff88]">kontak</a>
+            <a href={LEARN_URL} className="hover:text-[#00ff88]">learn</a>
+            <a href="/blog" className="hover:text-[#00ff88]">blog</a>
+            <a href="/portofolio" className="hover:text-[#00ff88]">portofolio</a>
+            <a href={SERVICE_URL} className="hover:text-[#00ff88]">service</a>
+            <a href="/tutorial" className="rounded-full bg-[#10B981] px-3 py-1.5 font-bold text-[#050A07]">tutorial</a>
           </nav>
           <div className="flex items-center gap-3">
             <a

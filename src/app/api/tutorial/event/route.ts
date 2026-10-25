@@ -1,0 +1,2 @@
+import { admin } from "@/lib/supabase/server";
+export async function POST(req: Request) { const b = await req.json().catch(() => null); if (!b?.lead_id || !b?.event_type) return Response.json({ error: "lead_id dan event_type wajib" }, { status: 400 }); const { data, error } = await admin.from("pipeline_events").insert({ lead_id: b.lead_id, event_type: b.event_type, meta: { step: b.step ?? null, funnel: "tutorial_hermes" } }).select().single(); if (error) return Response.json({ error: error.message }, { status: 400 }); return Response.json({ data }); }

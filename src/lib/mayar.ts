@@ -18,11 +18,11 @@ export const PRODUCTS = {
   },
 } as const;
 
-export type Product = keyof typeof PRODUCTS;
+export type Product = keyof typeof PRODUCTS | (string & {});
 
 export function productPrice(product: Product, tier?: LmsTier): number {
   if (product === "fast_track") return FAST_TRACK_TIERS[tier ?? "yearly"];
-  return PRODUCTS[product].price;
+  return PRODUCTS[product as keyof typeof PRODUCTS]?.price ?? 0;
 }
 
 const BASE =
@@ -65,7 +65,7 @@ export async function createInvoice(input: {
   tier?: LmsTier;
   amount?: number;
 }): Promise<Invoice> {
-  const product = PRODUCTS[input.product];
+  const product = PRODUCTS[input.product as keyof typeof PRODUCTS] ?? { name: input.product };
   if (!input.mobile) {
     throw new Error("Nomor WhatsApp wajib diisi untuk membuat invoice. Hubungi admin.");
   }
