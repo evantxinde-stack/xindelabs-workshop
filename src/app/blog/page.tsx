@@ -34,7 +34,7 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] font-sans text-white">
-      <SiteHeader active="Blog" />
+      <SiteHeader active="blog" />
       <main className="mx-auto max-w-6xl px-4 py-14">
         <span className="badge">blog hermes agent</span>
         <h1 className="mt-4 text-4xl font-bold md:text-5xl">Catatan & Tulisan</h1>

@@ -70,7 +70,7 @@ export default async function ServicePage() {
 
   return (
     <div className="min-h-screen bg-[#09090b] font-sans text-[#f4f2ee] antialiased">
-      <SiteHeader active="Service" />
+      <SiteHeader active="service" />
 
       <main className="mx-auto max-w-6xl px-5 pb-24 pt-16">
         <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">service</p>

@@ -68,7 +68,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
 
   return (
     <div className="min-h-screen bg-[var(--background)] font-sans text-white">
-      <SiteHeader active="Blog" />
+      <SiteHeader active="blog" />
       <main className="mx-auto max-w-3xl px-4 py-14">
         <Link href="/blog" className="font-mono text-sm text-[var(--accent)]">
           ← Semua artikel

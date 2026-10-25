@@ -32,7 +32,7 @@ export default async function PortfolioPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] font-sans text-white">
-      <SiteHeader active="Portofolio" />
+      <SiteHeader active="portofolio" />
       <main className="mx-auto max-w-6xl px-4 py-14">
         <span className="badge">portofolio</span>
         <h1 className="mt-4 text-4xl font-bold md:text-5xl">Yang pernah kita bangun</h1>
