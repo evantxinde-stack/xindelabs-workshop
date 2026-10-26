@@ -23,9 +23,18 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
 export function LearnHeader() {
   return <header className="sticky top-0 z-40 border-b border-white/10 bg-[#09090b]/85 backdrop-blur">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
-      <Link href="/learn" className={`${display} text-xl font-bold tracking-tight text-white`}>
-        xindelabs<span className={neon}>.</span> <span className="font-mono text-[12px] font-normal text-white/55">learn</span>
-      </Link>
+      <div className="flex items-center gap-4">
+        <a
+          href="https://xindelabs.web.id"
+          className="font-mono text-[11px] lowercase tracking-[0.16em] text-white/40 transition hover:text-[#00ff88]"
+          aria-label="Balik ke Main Hub"
+        >
+          ← main
+        </a>
+        <Link href="/learn" className={`${display} text-xl font-bold tracking-tight text-white`}>
+          xindelabs<span className={neon}>.</span> <span className="font-mono text-[12px] font-normal text-white/55">learn</span>
+        </Link>
+      </div>
       <nav className="hidden items-center gap-7 font-mono text-[11px] lowercase tracking-[0.16em] text-white/55 sm:flex">
         {LEARN_LINKS.map((l) => (
           <Link key={l.href} href={l.href} className="transition hover:text-[#00ff88]">{l.label}</Link>
