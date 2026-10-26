@@ -1,326 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Section } from "../../shared";
 
-export const dynamic = "force-dynamic";
+type ProductType = "course" | "workshop" | "vip";
+type ClassRow = { id: string; slug: string; title: string; description: string | null; price: number | null; product_type: ProductType | "bundle"; is_published: boolean; sort_order: number; trailer_youtube_id?: string | null; member_cross_sell_price?: number | null; workshop_meet_url?: string | null; workshop_replay_url?: string | null };
+type FormState = Partial<Omit<ClassRow, "price" | "sort_order" | "member_cross_sell_price">> & { price?: number | string | null; sort_order?: number | string; member_cross_sell_price?: number | string | null };
 
-const TYPE_ICON = {
-  video: "▶",
-  text: "📄",
-  file: "📁",
-  quiz: "❓",
-} as any;
+const toNumber = (value: unknown) => value === "" || value == null ? null : Number(value);
 
-type Lesson = {
-  id: string;
-  title: string;
-  type: "video" | "text" | "file" | "quiz";
-  duration?: string;
-  youtubeId?: string;
-};
+const normalize = (form: FormState) => ({ ...form, price: toNumber(form.price), sort_order: Number(form.sort_order || 0), member_cross_sell_price: toNumber(form.member_cross_sell_price) });
 
-type Module = {
-  id: string;
-  title: string;
-  lessons: Lesson[];
-};
+const empty: FormState = { title: "", slug: "", description: "", price: "", is_published: false, sort_order: 0, trailer_youtube_id: "", member_cross_sell_price: "", workshop_meet_url: "", workshop_replay_url: "" };
 
-type Course = {
-  id: string;
-  productId?: string;
-  title: string;
-  description: string;
-  level: string;
-  updatedAt: string;
-  modules: Module[];
-};
-
-const initialCourses: Course[] = [
-  {
-    id: "cr1",
-    productId: "p1",
-    title: "Hermes Agent Course",
-    description: "10 modul step-by-step membangun AI Agent untuk sales.",
-    level: "Pemula - Pro",
-    updatedAt: new Date().toISOString().slice(0, 10),
-    modules: [
-      {
-        id: "m1",
-        title: "Mindset & Pengenalan",
-        lessons: [
-          { id: "l1", title: "Mindset Using AI Agent", type: "video", duration: "12 menit", youtubeId: "M7lc1UVf-VE" },
-          { id: "l2", title: "Intro ke AI Agent", type: "video", duration: "15 menit", youtubeId: "M7lc1UVf-VE" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "cr2",
-    productId: "p4",
-    title: "Bundle Agent Kesehatan & Sales",
-    description: "Hermes Health + Hermes Akuntansi lengkap.",
-    level: "Menengah",
-    updatedAt: new Date().toISOString().slice(0, 10),
-    modules: [
-      {
-        id: "m4",
-        title: "Hermes Health",
-        lessons: [
-          { id: "l11", title: "Pengingat & Pemantauan", type: "video", duration: "16 menit" },
-        ],
-      },
-    ],
-  },
+const TABS: { key: ProductType; label: string; hint: string }[] = [
+  { key: "course", label: "Kelas", hint: "Course dan materi belajar" },
+  { key: "workshop", label: "Workshop", hint: "Workshop live, replay, dan pre-session" },
+  { key: "vip", label: "VIP Lounge", hint: "Program bimbingan dan akses VIP" },
 ];
+const money = (n: number | null | undefined) => n == null ? "—" : `Rp${Number(n).toLocaleString("id-ID")}`;
 
-function ModuleBlock({ course, onUpdate }: { course: Course; onUpdate: (c: Course) => void }) {
-  const [open, setOpen] = useState<string | null>(course.modules[0]?.id ?? null);
-
-  const addModule = () => {
-    const newModule: Module = {
-      id: `m_${Date.now()}`,
-      title: "Modul Baru",
-      lessons: [],
-    };
-    onUpdate({ ...course, modules: [...course.modules, newModule] });
-  };
-
-  const deleteModule = (moduleId: string) => {
-    const updatedModules = course.modules.filter((m) => m.id !== moduleId);
-    onUpdate({ ...course, modules: updatedModules });
-    if (open === moduleId) setOpen(updatedModules[0]?.id ?? null);
-  };
-
-  const addLesson = (moduleId: string) => {
-    const newLesson: Lesson = {
-      id: `l_${Date.now()}`,
-      title: "Lesson Baru",
-      type: "video",
-    };
-    const updatedModules = course.modules.map((m) =>
-      m.id === moduleId ? { ...m, lessons: [...m.lessons, newLesson] } : m
-    );
-    onUpdate({ ...course, modules: updatedModules });
-  };
-
-  const deleteLesson = (moduleId: string, lessonId: string) => {
-    const updatedModules = course.modules.map((m) => {
-      if (m.id !== moduleId) return m;
-      return { ...m, lessons: m.lessons.filter((l) => l.id !== lessonId) };
-    });
-    onUpdate({ ...course, modules: updatedModules });
-  };
-
-  const updateModuleTitle = (moduleId: string, title: string) => {
-    const updatedModules = course.modules.map((m) => (m.id === moduleId ? { ...m, title } : m));
-    onUpdate({ ...course, modules: updatedModules });
-  };
-
-  const updateLesson = (moduleId: string, lessonId: string, updates: Partial<Lesson>) => {
-    const updatedModules = course.modules.map((m) => {
-      if (m.id !== moduleId) return m;
-      return {
-        ...m,
-        lessons: m.lessons.map((l) => (l.id === lessonId ? { ...l, ...updates } : l)),
-      };
-    });
-    onUpdate({ ...course, modules: updatedModules });
-  };
-
-  return (
-    <div className="space-y-[14px]">
-      {course.modules.map((mod, mi) => (
-        <div key={mod.id} className="border border-white/20 rounded-[12px] overflow-hidden bg-[#0A1D14]">
-          <div
-            className="w-full flex items-center gap-[12px] px-[18px] py-[16px] text-left cursor-pointer hover:bg-white/5"
-            onClick={() => setOpen(open === mod.id ? null : mod.id)}
-          >
-            <span className="font-mono text-[11px] text-white/40">{String(mi + 1).padStart(2, "0")}</span>
-            <input
-              value={mod.title}
-              onChange={(e) => updateModuleTitle(mod.id, e.target.value)}
-              className="flex-1 bg-transparent text-white font-semibold text-[15px] border-b border-transparent hover:border-white/30 focus:border-[#00FF88] outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-            <span className="font-mono text-[11.5px] text-white/40">{mod.lessons.length} lesson</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (confirm("Hapus module ini?")) deleteModule(mod.id);
-              }}
-              className="ml-2 px-2 py-1 text-xs text-red-400 hover:bg-white/5 rounded"
-            >
-              Hapus
-            </button>
-          </div>
-          {open === mod.id && (
-            <div className="border-t border-white/10 px-[18px] py-[10px]">
-              {mod.lessons.map((lesson) => (
-                <div key={lesson.id} className="flex flex-col gap-2 py-[10px] border-b border-white/10 last:border-0">
-                  <div className="flex items-center gap-[12px]">
-                    <span className="text-[var(--color-green-dim)] flex-shrink-0">{TYPE_ICON[lesson.type] || "📄"}</span>
-                    <input
-                      value={lesson.title}
-                      onChange={(e) => updateLesson(mod.id, lesson.id, { title: e.target.value })}
-                      className="flex-1 bg-transparent text-white text-[14px] border-b border-transparent hover:border-white/30 focus:border-[#00FF88] outline-none"
-                    />
-                    <select
-                      value={lesson.type}
-                      onChange={(e) => updateLesson(mod.id, lesson.id, { type: e.target.value as any })}
-                      className="bg-[#0A1D14] border border-white/20 rounded px-2 py-1 text-xs text-white"
-                    >
-                      <option value="video">video</option>
-                      <option value="text">text</option>
-                      <option value="file">file</option>
-                      <option value="quiz">quiz</option>
-                    </select>
-                    <button
-                      onClick={() => deleteLesson(mod.id, lesson.id)}
-                      className="px-2 py-1 text-xs text-red-400 hover:bg-white/5 rounded"
-                    >
-                      Hapus
-                    </button>
-                  </div>
-                  {lesson.type === "video" && (
-                    <div className="flex gap-2 ml-8">
-                      <input
-                        placeholder="YouTube ID"
-                        value={lesson.youtubeId || ""}
-                        onChange={(e) => updateLesson(mod.id, lesson.id, { youtubeId: e.target.value })}
-                        className="flex-1 bg-[#0A1D14] border border-white/20 rounded px-2 py-1 text-xs text-white"
-                      />
-                      <input
-                        placeholder="Durasi"
-                        value={lesson.duration || ""}
-                        onChange={(e) => updateLesson(mod.id, lesson.id, { duration: e.target.value })}
-                        className="w-24 bg-[#0A1D14] border border-white/20 rounded px-2 py-1 text-xs text-white"
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={() => addLesson(mod.id)}
-                className="flex items-center gap-[8px] py-[12px] font-mono text-[12.5px] text-[#00FF88] hover:text-white cursor-pointer"
-              >
-                + Tambah Lesson
-              </button>
-            </div>
-          )}
-        </div>
-      ))}
-
-      <button
-        onClick={addModule}
-        className="w-full flex items-center justify-center gap-[8px] py-[14px] rounded-[12px] border border-dashed border-white/40 font-mono text-[13px] text-[#00FF88] hover:bg-white/5 cursor-pointer"
-      >
-        + Tambah Module
-      </button>
-    </div>
-  );
-}
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-1 block text-xs text-white/50">{label}</span>{children}</label>; }
 
 export default function AdminCoursesPage() {
-  const [courses, setCourses] = useState<Course[]>(initialCourses);
-  const [selected, setSelected] = useState(courses[0]?.id);
+  const [tab, setTab] = useState<ProductType>("course");
+  const [rows, setRows] = useState<ClassRow[]>([]);
+  const [selected, setSelected] = useState<ClassRow | null>(null);
+  const [form, setForm] = useState<FormState>(empty);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const filtered = useMemo(() => rows.filter((x) => x.product_type === tab || (tab === "course" && x.product_type === "bundle")), [rows, tab]);
 
-  const course = courses.find((c) => c.id === selected);
+  async function load() { setLoading(true); const r = await fetch("/api/admin/classes"); const j = await r.json(); setRows(j.data ?? []); setLoading(false); }
+  useEffect(() => { load(); }, []);
+  function choose(row: ClassRow) { setSelected(row); setForm({ ...row }); setMessage(""); }
+  function newItem() { setSelected(null); setForm({ ...empty, product_type: tab }); setMessage(""); }
+  function set(key: keyof ClassRow, value: unknown) { setForm((x) => ({ ...x, [key]: value })); }
+  async function save(e: React.FormEvent) { e.preventDefault(); setSaving(true); setMessage(""); const method = selected ? "PATCH" : "POST"; const body = selected ? { ...normalize(form), id: selected.id } : { ...normalize(form), product_type: tab }; const r = await fetch("/api/admin/classes", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); if (!r.ok) setMessage(j.error || "Gagal menyimpan"); else { setMessage("Tersimpan"); await load(); if (j.data) choose(j.data); } setSaving(false); }
 
-  const updateCourse = (updated: Course) => {
-    setCourses(courses.map((c) => (c.id === updated.id ? updated : c)));
-  };
-
-  const addCourse = () => {
-    const newCourse: Course = {
-      id: `cr_${Date.now()}`,
-      title: "Course Baru",
-      description: "",
-      level: "Pemula",
-      updatedAt: new Date().toISOString().slice(0, 10),
-      modules: [],
-    };
-    setCourses([...courses, newCourse]);
-    setSelected(newCourse.id);
-  };
-
-  const deleteCourse = (courseId: string) => {
-    if (!confirm("Hapus course ini?")) return;
-    const filtered = courses.filter((c) => c.id !== courseId);
-    setCourses(filtered);
-    if (selected === courseId) {
-      setSelected(filtered[0]?.id);
-    }
-  };
-
-  return (
-    <>
-      <header className="scroll-mt-20 mb-6">
-        <h1 className="text-2xl font-bold">Course Management</h1>
-        <p className="mt-0.5 text-sm text-white/45">Kelola courses, modules & lessons.</p>
-      </header>
-      <div className="flex gap-[10px] mb-[20px] flex-wrap">
-        {courses.map((c) => (
-          <button
-            key={c.id}
-            onClick={() => setSelected(c.id)}
-            className={`px-[16px] py-[9px] rounded-full font-mono text-[12.5px] border cursor-pointer transition-colors ${
-              selected === c.id
-                ? "text-[#00FF88] border-[#00FF88] bg-[rgba(0,255,136,0.06)]"
-                : "text-white/60 border-white/20 hover:text-white"
-            }`}
-          >
-            {c.title}
-          </button>
-        ))}
-        <button
-          onClick={addCourse}
-          className="px-[16px] py-[9px] rounded-full font-mono text-[12.5px] border border-[#00FF88] text-[#00FF88] hover:bg-[rgba(0,255,136,0.06)]"
-        >
-          + Tambah Course
-        </button>
-      </div>
-
-      {course && (
-        <div className="space-y-4">
-          <div className="panel p-5 space-y-4">
-            <div className="flex justify-between items-start">
-              <h2 className="panel-title">Edit Course</h2>
-              <button
-                onClick={() => deleteCourse(course.id)}
-                className="px-3 py-1.5 text-xs text-red-400 border border-red-400/30 rounded hover:bg-red-400/10"
-              >
-                Hapus Course
-              </button>
-            </div>
-            <div>
-              <label className="text-xs text-white/45">Judul Course</label>
-              <input
-                value={course.title}
-                onChange={(e) => updateCourse({ ...course, title: e.target.value })}
-                className="input-dark mt-1 w-full"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-white/45">Deskripsi</label>
-              <textarea
-                value={course.description}
-                onChange={(e) => updateCourse({ ...course, description: e.target.value })}
-                className="input-dark mt-1 w-full h-20"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-white/45">Level</label>
-              <input
-                value={course.level}
-                onChange={(e) => updateCourse({ ...course, level: e.target.value })}
-                className="input-dark mt-1 w-full"
-              />
-            </div>
-          </div>
-          <ModuleBlock course={course} onUpdate={updateCourse} />
-        </div>
-      )}
-    </>
-  );
+  return <>
+    <header className="mb-6"><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#00ff88]">// learn catalog</p><h1 className="mt-2 text-2xl font-bold">Katalog LMS</h1><p className="mt-1 max-w-2xl text-sm leading-6 text-white/45">Atur semua isi Learn dari satu tempat. Pilih kategori, edit produk, lalu lihat status tampilnya di katalog.</p></header>
+    <div className="mb-5 flex flex-wrap gap-2">{TABS.map((x) => <button key={x.key} onClick={() => { setTab(x.key); setSelected(null); setForm({ ...empty, product_type: x.key }); }} className={`rounded-full border px-4 py-2 text-sm transition ${tab === x.key ? "border-[#00ff88] bg-[#00ff88] font-bold text-[#04110D]" : "border-white/15 text-white/55 hover:border-[#00ff88] hover:text-white"}`}>{x.label}</button>)}</div>
+    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <Section title={TABS.find((x) => x.key === tab)?.label || "Katalog"} sub={TABS.find((x) => x.key === tab)?.hint}>
+        {loading ? <p className="text-sm text-white/45">Memuat katalog…</p> : <div className="space-y-2">{filtered.map((row) => <button key={row.id} onClick={() => choose(row)} className={`flex w-full items-center justify-between gap-4 rounded-xl border p-4 text-left transition ${selected?.id === row.id ? "border-[#00ff88] bg-[#00ff88]/[.06]" : "border-white/10 bg-white/[.02] hover:border-white/25"}`}><span><strong className="block text-sm text-white">{row.title}</strong><span className="mt-1 block text-xs text-white/40">/{row.slug} · {money(row.price)}</span></span><span className={`rounded-full border px-2 py-1 text-[10px] uppercase ${row.is_published ? "border-[#00ff88]/30 text-[#00ff88]" : "border-white/15 text-white/40"}`}>{row.is_published ? "tayang" : "draft"}</span></button>)}{!filtered.length && <p className="py-6 text-sm text-white/40">Belum ada produk di kategori ini.</p>}<button onClick={newItem} className="btn-outline mt-2 w-full">+ Tambah {TABS.find((x) => x.key === tab)?.label}</button></div>}
+      </Section>
+      <Section title={selected ? "Edit produk" : `Tambah ${TABS.find((x) => x.key === tab)?.label}`} sub="Perubahan tersimpan ke katalog Learn.">
+        <form onSubmit={save} className="space-y-3">
+          <Field label="Nama yang tampil"><input className="input-dark" value={form.title || ""} onChange={(e) => set("title", e.target.value)} required /></Field>
+          <Field label="Slug URL"><input className="input-dark" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} placeholder="contoh: hermes-agent-workshop" required /></Field>
+          <Field label="Deskripsi singkat"><textarea className="input-dark min-h-20" value={form.description || ""} onChange={(e) => set("description", e.target.value)} /></Field>
+          <div className="grid grid-cols-2 gap-3"><Field label="Harga"><input className="input-dark" type="number" min="0" value={form.price ?? ""} onChange={(e) => set("price", e.target.value)} /></Field><Field label="Urutan"><input className="input-dark" type="number" value={form.sort_order ?? 0} onChange={(e) => set("sort_order", e.target.value)} /></Field></div>
+          {tab === "course" && <><Field label="Link video pengantar"><input className="input-dark" value={form.trailer_youtube_id || ""} onChange={(e) => set("trailer_youtube_id", e.target.value)} placeholder="YouTube ID (opsional)" /></Field><Field label="Harga khusus member"><input className="input-dark" type="number" min="0" value={form.member_cross_sell_price ?? ""} onChange={(e) => set("member_cross_sell_price", e.target.value)} /></Field></>}
+          {tab === "workshop" && <><Field label="Link meeting"><input className="input-dark" value={form.workshop_meet_url || ""} onChange={(e) => set("workshop_meet_url", e.target.value)} placeholder="https://…" /></Field><Field label="Link replay"><input className="input-dark" value={form.workshop_replay_url || ""} onChange={(e) => set("workshop_replay_url", e.target.value)} placeholder="https://…" /></Field></>}
+          <label className="flex items-center gap-2 pt-2 text-sm text-white/70"><input type="checkbox" checked={Boolean(form.is_published)} onChange={(e) => set("is_published", e.target.checked)} /> Tampilkan di katalog Learn</label>
+          {message && <p className={`text-sm ${message === "Tersimpan" ? "text-[#00ff88]" : "text-red-300"}`}>{message}</p>}
+          <button disabled={saving} className="btn-primary w-full disabled:opacity-50">{saving ? "Menyimpan…" : "Simpan perubahan"}</button>
+        </form>
+      </Section>
+    </div>
+  </>;
 }
