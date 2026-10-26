@@ -10,8 +10,6 @@ const btn =
 const input =
   "w-full rounded-lg border border-white/12 bg-black/40 px-4 py-3 text-[14px] text-white outline-none placeholder:text-white/30 focus:border-[#00ff88]";
 
-const STEPS = ["Data diri", "VIP", "Kelas", "Tutorial gratis"];
-
 export default function TutorialFunnel({ vip, course }: { vip: any; course: any }) {
   const [step, setStep] = useState(0);
   const [lead, setLead] = useState<any>(null);
@@ -56,19 +54,6 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-bold leading-tight md:text-5xl">
           Mulai bangun <span className={neon}>agent</span> pertamamu.
         </h1>
-
-        <div className="mt-8 flex flex-wrap gap-2">
-          {STEPS.map((x, i) => (
-            <span
-              key={x}
-              className={`rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] ${
-                i <= step ? "bg-[#00ff88] text-[#0a1f12]" : "bg-white/5 text-white/40"
-              }`}
-            >
-              {i + 1}. {x}
-            </span>
-          ))}
-        </div>
 
         <div className="mt-10">
           {step === 0 && (
