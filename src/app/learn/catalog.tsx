@@ -33,7 +33,7 @@ export function LearnHeader() {
       </nav>
       <div className="flex items-center gap-3">
         <Link href="/learn/login" className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">
-          Login Member
+          login member
         </Link>
         <details className="relative sm:hidden">
           <summary aria-label="Menu" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-white/15 text-white/70 [&::-webkit-details-marker]:hidden">
