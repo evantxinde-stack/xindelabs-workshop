@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 
 const neon = "text-[#00ff88]";
-const card = "rounded-2xl border border-white/10 bg-[#0c0c0f] p-8";
+const card = "rounded-2xl border border-white/10 bg-[#0B1F16] p-8";
 const mono = "font-mono text-[11px] uppercase tracking-[0.18em]";
 const btn =
   "rounded-full bg-[#00ff88] px-6 py-3 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]";
@@ -49,7 +49,7 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white">
+    <div className="min-h-screen bg-[#04110D] text-white">
       <SiteHeader />
       <main className="mx-auto max-w-4xl px-5 py-14">
         <p className={`${mono} ${neon}`}>// jalur belajar</p>
