@@ -132,7 +132,7 @@ export default async function Home() {
             <a href="/blog" className="hover:text-[#00ff88]">blog</a>
             <a href="/portofolio" className="hover:text-[#00ff88]">portofolio</a>
             <a href={SERVICE_URL} className="hover:text-[#00ff88]">service</a>
-            <a href="/tutorial" className="rounded-full bg-[#10B981] px-3 py-1.5 font-bold text-[#050A07]">tutorial</a>
+            <a href="/tutorial" className="hover:text-[#00ff88]">tutorial</a>
           </nav>
           <div className="flex items-center gap-3">
             <a
