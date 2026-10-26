@@ -34,7 +34,7 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
           <Link
             href="/tutorial"
-            className="rounded-full bg-[#10B981] px-3 py-1.5 font-bold text-[#050A07]"
+            className={`transition hover:text-[#00ff88] ${active === "tutorial" ? "text-[#00ff88]" : ""}`}
           >
             tutorial
           </Link>

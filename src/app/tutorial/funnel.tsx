@@ -50,7 +50,7 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
 
   return (
     <div className="min-h-screen bg-[#04110D] text-white">
-      <SiteHeader />
+      <SiteHeader active="tutorial" />
       <main className="mx-auto max-w-4xl px-5 py-14">
         <p className={`${mono} ${neon}`}>// jalur belajar</p>
         <h1 className="mt-4 font-[family-name:var(--font-display)] text-4xl font-bold leading-tight md:text-5xl">
