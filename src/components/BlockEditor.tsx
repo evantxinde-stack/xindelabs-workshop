@@ -327,7 +327,7 @@ export function BlockEditor() {
           </div>
 
         <div className="grid items-start gap-5 lg:grid-cols-2">
-          <div className="space-y-3">
+          <div className="order-2 space-y-3 lg:order-1">
           {blocks.length === 0 && (
             <p className="text-sm text-white/40">
               Tidak ada block. Tambah block pertama di bawah.
@@ -462,7 +462,11 @@ export function BlockEditor() {
           </div>
           </div>
 
-          <div className="lg:sticky lg:top-4">
+          <div className="order-1 lg:order-2 lg:sticky lg:top-4">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-[#00ff88]">Preview langsung</p>
+              <span className="text-xs text-white/40">Perubahan terlihat di sini</span>
+            </div>
             <LivePreview blocks={blocks} device={device} onDevice={setDevice} />
           </div>
         </div>
