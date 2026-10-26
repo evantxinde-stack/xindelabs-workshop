@@ -63,9 +63,6 @@ const hand = "font-[family-name:var(--font-hand)]";
 
 // Satu sumber nav buat desktop + burger mobile
 const NAV = [
-  { href: "#tentang", label: "tentang" },
-  { href: "#karya", label: "karya" },
-  { href: "#belajar", label: "belajar" },
   { href: LEARN_URL, label: "learn" },
   { href: "/blog", label: "blog" },
   { href: "/portofolio", label: "portofolio" },
