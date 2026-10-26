@@ -35,12 +35,11 @@ export default function AdminSidebar() {
   }
   return (
     <aside className="sidebar lg:sticky lg:top-0 lg:h-screen lg:flex-col">
-      <div className="flex items-center gap-2.5 px-5 py-5">
-        <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#00FF88] shadow-[0_0_12px_var(--glow)]" />
-        <div className="leading-tight">
-          <p className="text-sm font-bold tracking-wide">XindeLabs Unified Funnel</p>
-          <p className="text-[11px] text-white/40">Control Panel</p>
-        </div>
+      <div className="flex items-baseline gap-2 px-5 py-5">
+        <a href="https://xindelabs.web.id" className="text-xl font-bold tracking-tight text-white">
+          xindelabs<span className="text-[#00FF88]">.</span>
+        </a>
+        <span className="font-mono text-[12px] text-white/55">admin</span>
       </div>
       <nav className="hidden px-3 lg:block">
         {NAV.map((n) => (
@@ -56,14 +55,24 @@ export default function AdminSidebar() {
           <button type="submit" className="nav-btn w-full text-left">Logout</button>
         </form>
       </nav>
-      <div className="lg:hidden overflow-x-auto px-3 py-2">
-        <div className="flex gap-1">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={`nav-btn whitespace-nowrap${isActive(n.href) ? " nav-btn-active" : ""}`}>
-              {n.label}
-            </Link>
-          ))}
-        </div>
+      <div className="px-3 py-2 lg:hidden">
+        <details className="relative">
+          <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 font-mono text-[11px] uppercase tracking-[0.14em] text-white/65 [&::-webkit-details-marker]:hidden">
+            admin menu
+            <span className="text-[#00FF88]">☰</span>
+          </summary>
+          <nav className="absolute left-0 right-0 top-12 z-50 rounded-xl border border-white/10 bg-[#0B1F16] p-2 shadow-2xl">
+            {NAV.map((n) => (
+              <Link key={n.href} href={n.href} className={`nav-btn${isActive(n.href) ? " nav-btn-active" : ""}`}>
+                {n.label}
+              </Link>
+            ))}
+            <a href="/" className="nav-btn">Lihat Situs ↗</a>
+            <form action="/api/admin/logout" method="post" onSubmit={handleLogout}>
+              <button type="submit" className="nav-btn w-full text-left">Logout</button>
+            </form>
+          </nav>
+        </details>
       </div>
     </aside>
   );

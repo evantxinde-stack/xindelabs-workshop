@@ -9,21 +9,27 @@ const supabase = createClient(
 import { CreateVoucherForm } from "./create-form";
 import MemberPricing from "./member-pricing";
 import { admin } from "@/lib/supabase/server";
+import { Section } from "@/app/admin/shared";
 
 export default async function VouchersPage() {
   requireAdmin();
   const [{ data }, { data: classes }] = await Promise.all([
     supabase.from("vouchers").select("*").order("created_at", { ascending: false }),
-    admin.from("classes").select("id,title,type,product_type,member_cross_sell_price").order("title"),
+    admin.from("classes").select("id,title,product_type,member_cross_sell_price").order("title"),
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-white">Manajemen Voucher</h1>
+    <div>
+      <header className="mb-5">
+        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#00ff88]">// settings</p>
+        <h1 className="mt-2 text-2xl font-bold text-white">Manajemen Voucher</h1>
+        <p className="mt-1 text-sm text-white/45">Kode diskon dan harga cross-sell member.</p>
+      </header>
       <CreateVoucherForm />
       <MemberPricing classes={classes ?? []} />
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full text-sm text-white/80">
+      <Section title="Voucher aktif" sub="Daftar kode yang tersimpan di sistem.">
+        <div className="overflow-x-auto">
+        <table className="tbl w-full">
           <thead>
             <tr className="border-b border-white/10 text-left">
               <th className="py-2 pr-4">Kode</th>
@@ -49,7 +55,8 @@ export default async function VouchersPage() {
             ))}
           </tbody>
         </table>
-      </div>
+        </div>
+      </Section>
     </div>
   );
 }
