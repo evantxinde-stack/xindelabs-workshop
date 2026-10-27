@@ -59,6 +59,7 @@ export async function provisionLmsAccess(input: {
   email: string;
   name?: string;
   tier?: string;
+  payment_option?: "annual" | "lifetime";
   product?: string;
 }): Promise<{
   ok: boolean;

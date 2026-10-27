@@ -1,5 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert';
+import { isPaymentOption, classPrice } from '../../src/lib/mayar.ts';
+test('payment options validate and price from selected class field', () => {
+  assert.equal(isPaymentOption('annual'), true);
+  assert.equal(isPaymentOption('monthly'), false);
+  assert.equal(classPrice({ annual_price: 120, lifetime_price: 300, price: 999 }, 'annual'), 120);
+  assert.equal(classPrice({ lifetime_price: null, price: 999 }, 'lifetime'), 999);
+});
+
 import {
   mapSource,
   parseWorkshopAmountFromNotes,

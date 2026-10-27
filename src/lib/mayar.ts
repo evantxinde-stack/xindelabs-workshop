@@ -1,4 +1,17 @@
 export type LmsTier = "yearly" | "lifetime";
+export type PaymentOption = "annual" | "lifetime";
+
+export function isPaymentOption(value: unknown): value is PaymentOption {
+  return value === "annual" || value === "lifetime";
+}
+
+export function classPrice(cls: { price?: number | null; annual_price?: number | null; lifetime_price?: number | null }, option: PaymentOption): number {
+  return Number(option === "annual" ? cls.annual_price : cls.lifetime_price ?? cls.price);
+}
+
+export function annualProductMapping(slug: string) {
+  return process.env[`MAYAR_ANNUAL_PRODUCT_${slug.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`];
+}
 
 export const FAST_TRACK_TIERS: Record<LmsTier, number> = {
   yearly: 599000,
