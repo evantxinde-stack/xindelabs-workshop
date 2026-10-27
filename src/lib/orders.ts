@@ -10,16 +10,21 @@ const STATUS_BY_PRODUCT: Record<string, string> = {
   fast_track: "fast_track_paid",
 };
 
-async function provisionForOrder(order: { product: string; tier?: string | null; lead_id: string }) {
-  if (order.product !== "fast_track") return;
+async function provisionForOrder(order: { product: string; tier?: string | null; lead_id: string; class_id?: string | null }) {
+  if (order.product !== "fast_track" && !order.class_id) return;
   const { data: lead } = await admin
     .from("leads")
     .select("email, name")
     .eq("id", order.lead_id)
     .maybeSingle();
   if (!lead?.email) return;
+  let product = order.product;
+  if (order.class_id) {
+    const { data: cls } = await admin.from("classes").select("slug").eq("id", order.class_id).maybeSingle();
+    product = cls?.slug ?? product;
+  }
   try {
-    await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly" });
+    await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly", product });
   } catch (e) {
     console.error("[order] lms provision failed", {
       leadId: order.lead_id,

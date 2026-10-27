@@ -64,6 +64,8 @@ export async function createInvoice(input: {
   leadId: string;
   tier?: LmsTier;
   amount?: number;
+  productName?: string;
+  classId?: string;
 }): Promise<Invoice> {
   const product = PRODUCTS[input.product as keyof typeof PRODUCTS] ?? { name: input.product };
   if (!input.mobile) {
@@ -75,7 +77,7 @@ export async function createInvoice(input: {
         ? " (Lifetime)"
         : " (Tahunan 12 bulan)"
       : "";
-  const description = `Pembelian ${product.name}${tierLabel}`;
+  const description = `Pembelian ${input.productName ?? product.name}${tierLabel}`;
   const rate = input.amount ?? productPrice(input.product, input.tier);
   const json = await mayar<{
     data: { id: string; transactionId: string; link: string };
@@ -89,7 +91,7 @@ export async function createInvoice(input: {
       expiredAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
       items: [{ quantity: 1, rate, description }],
       redirectUrl: `${process.env.APP_URL}/checkout/success?product=${input.product}&lead=${input.leadId}`,
-      extraData: { leadId: input.leadId, product: input.product, tier: input.tier ?? null },
+      extraData: { leadId: input.leadId, product: input.product, tier: input.tier ?? null, classId: input.classId ?? null },
     }),
   });
   return {
