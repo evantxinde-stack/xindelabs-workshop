@@ -75,12 +75,24 @@ export async function provisionLmsAccess(input: {
 
   const { data: existing } = await admin
     .from("members")
-    .select("tier, lms_password, paid_until")
+    .select("tier, lms_password, paid_until, product")
     .eq("email", email)
     .maybeSingle();
 
   const password = existing?.lms_password ?? randomPassword();
   if (!existing?.lms_password) await createAuthUser(email, password);
+
+  // Ownership is a comma-separated slug list; merging keeps earlier purchases
+  // (including order bumps) accessible instead of replacing them.
+  const owned = new Set(
+    [
+      ...String((existing as { product?: string | null } | null)?.product ?? "").split(","),
+      product,
+    ]
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean)
+  );
+  const productList = Array.from(owned).join(",");
 
   const finalTier: LmsTier = existing?.tier === "lifetime" ? "lifetime" : tier;
   const option: PaymentOption =
@@ -93,7 +105,7 @@ export async function provisionLmsAccess(input: {
       {
         email,
         status: "paid",
-        product,
+        product: productList,
         tier: finalTier,
         payment_option: option,
         billing_status: "active",

@@ -10,7 +10,7 @@ const STATUS_BY_PRODUCT: Record<string, string> = {
   fast_track: "fast_track_paid",
 };
 
-async function provisionForOrder(order: { product: string; tier?: string | null; lead_id: string; class_id?: string | null }) {
+async function provisionForOrder(order: { product: string; tier?: string | null; lead_id: string; class_id?: string | null; bump_class_id?: string | null; payment_option?: string | null }) {
   if (order.product !== "fast_track" && !order.class_id) return;
   const { data: lead } = await admin
     .from("leads")
@@ -23,13 +23,23 @@ async function provisionForOrder(order: { product: string; tier?: string | null;
     const { data: cls } = await admin.from("classes").select("slug").eq("id", order.class_id).maybeSingle();
     product = cls?.slug ?? product;
   }
-  try {
-    await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly", product, payment_option: (order as any).payment_option === "annual" ? "annual" : "lifetime" });
-  } catch (e) {
-    console.error("[order] lms provision failed", {
-      leadId: order.lead_id,
-      error: e instanceof Error ? e.message : String(e),
-    });
+  let bumpProduct: string | null = null;
+  if (order.bump_class_id) {
+    const { data: bumpCls } = await admin.from("classes").select("slug").eq("id", order.bump_class_id).maybeSingle();
+    bumpProduct = bumpCls?.slug ?? null;
+  }
+  const option = order.payment_option === "annual" ? "annual" : "lifetime";
+  for (const slug of [product, bumpProduct]) {
+    if (!slug) continue;
+    try {
+      await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly", product: slug, payment_option: option });
+    } catch (e) {
+      console.error("[order] lms provision failed", {
+        leadId: order.lead_id,
+        product: slug,
+        error: e instanceof Error ? e.message : String(e),
+      });
+    }
   }
 }
 

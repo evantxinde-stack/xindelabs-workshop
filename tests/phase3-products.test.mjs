@@ -44,7 +44,7 @@ test('paid annual order writes member billing window, paid order passes the opti
   assert.match(lms, /payment_option: option/);
   assert.match(lms, /billing_status: "active"/);
   assert.match(lms, /nextPaidUntil\(option, existing\?\.paid_until\)/);
-  assert.match(orders, /payment_option: \(order as any\)\.payment_option === "annual" \? "annual" : "lifetime"/);
+  assert.match(orders, /payment_option: option/);
 });
 
 test('paid_until: lifetime never expires, annual renews from the current period', () => {
