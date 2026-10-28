@@ -1,66 +1,25 @@
 import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
+import { SERVICE_LINES } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Service — XindeLabs",
   description:
-    "Layanan XindeLabs: AI agent otonom, funnel & checkout, konten Instagram, Meta Ads, membership & LMS. Work with me.",
+    "Empat lini jasa XindeLabs: Instalasi AI untuk Bisnis, Automation Bisnis, Vibe Marketing, Pembuatan Aplikasi Bisnis. Work with me.",
 };
 
-type Service = {
-  n: string;
-  title: string;
-  desc: string;
-  points: string[];
-  harga: string;
-};
+const SERVICES = SERVICE_LINES.map((s) => ({
+  n: s.number,
+  slug: s.slug,
+  title: s.title,
+  desc: s.description,
+  points: s.points,
+  harga: s.price,
+}));
 
-const SERVICES: Service[] = [
-  {
-    n: "01",
-    title: "AI Agent & Automasi Operasional",
-    desc: "Agent yang jalan 24/7 di server: follow-up leads, rekap, laporan, customer care — tanpa lo suruh tiap hari.",
-    points: ["Hermes agent di VPS", "Integrasi WhatsApp & email", "Jadwal & laporan otomatis"],
-    harga: "mulai Rp 3,5jt setup + Rp 750rb/bln",
-  },
-  {
-    n: "02",
-    title: "Funnel & Checkout Otomatis",
-    desc: "Landing → payment gateway → akses produk, semuanya otomatis. Bayar masuk, akses terbuka dalam hitungan detik.",
-    points: ["Funnel multi-step", "Mayar / Midtrans / QRIS", "Auto-grant akses LMS"],
-    harga: "mulai Rp 4,5jt",
-  },
-  {
-    n: "03",
-    title: "Instagram Engine",
-    desc: "Riset hook, produksi carousel, posting terjadwal, dan auto-DM per brand. Feed tetap hidup walau lo nggak pegang HP.",
-    points: ["Carousel & caption auto", "Jadwal 3×/hari", "Auto-DM keyword"],
-    harga: "mulai Rp 2,5jt + Rp 1jt/bln",
-  },
-  {
-    n: "04",
-    title: "Meta Ads Management",
-    desc: "Testing terstruktur multi-niche: copy, visual, budget, evaluasi H+3/H+5/H+7. Yang menang discale, yang kalah dimatikan.",
-    points: ["Riset audiens & Ad Library", "Copy + visual testing", "Laporan evaluasi berkala"],
-    harga: "mulai Rp 3jt/bln + ad spend",
-  },
-  {
-    n: "05",
-    title: "Membership & LMS",
-    desc: "Area member, kelas online, tier, poin, voucher, dan affiliate — akses terkunci rapi sampai pembayaran masuk.",
-    points: ["Gate akses per produk", "Tier & poin member", "Voucher + affiliate"],
-    harga: "mulai Rp 6jt",
-  },
-  {
-    n: "06",
-    title: "Content Ecosystem",
-    desc: "Satu sistem untuk banyak brand: riset, produksi, distribusi, sampai pengukuran. Konsisten tanpa nambah orang.",
-    points: ["Multi-brand calendar", "Repurpose lintas platform", "Dashboard performa"],
-    harga: "mulai Rp 4jt/bln",
-  },
-];
+/* Legacy six-card copy replaced by the shared four-line catalog. */
 
 export default async function ServicePage() {
   const waHref = "https://wa.me/62895335137700?text=" + encodeURIComponent("Halo XindeLabs, gw mau bahas project.");
@@ -83,9 +42,9 @@ export default async function ServicePage() {
           sisanya bisa nyusul.
         </p>
 
-        <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2">
           {SERVICES.map((s) => (
-            <div key={s.n} className="flex flex-col bg-[#0c0c0f] p-6">
+            <div key={s.n} id={s.slug} className="flex scroll-mt-24 flex-col bg-[#0c0c0f] p-6">
               <span className="font-mono text-[11px] text-[#00ff88]">{s.n}</span>
               <h2 className={`${display} mt-3 text-[17px] font-bold leading-snug`}>{s.title}</h2>
               <p className="mt-2 text-[13.5px] leading-relaxed text-white/55">{s.desc}</p>
@@ -134,6 +93,13 @@ export default async function ServicePage() {
               Liat karya dulu
             </Link>
           </div>
+          <p className="mt-6 text-[13.5px] text-white/45">
+            Belum siap project? Mulai dari{" "}
+            <Link href="/tutorial" className="font-semibold text-[#00ff88] underline-offset-4 hover:underline">
+              tutorial gratis + komunitas
+            </Link>{" "}
+            dulu.
+          </p>
         </div>
       </main>
 

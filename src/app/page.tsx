@@ -3,6 +3,7 @@ import Link from "next/link";
 import { admin } from "@/lib/supabase/server";
 import { formatIDR, stripTags } from "@/lib/content";
 import { LeadForm } from "@/components/LeadForm";
+import { SERVICE_LINES } from "@/lib/services";
 
 export const dynamic = "force-dynamic";
 
@@ -34,15 +35,6 @@ type WorkRow = {
   category: string | null;
   link_url: string | null;
 };
-
-const SKILLS = [
-  { n: "01", t: "Tim Bot Otonom", d: "Agent yang jalan di VPS, kerja 24/7 tanpa kamu suruh." },
-  { n: "02", t: "Funnel & Checkout", d: "Landing ke payment ke akses produk, semuanya otomatis." },
-  { n: "03", t: "Instagram Engine", d: "Konten, posting, dan engagement jalan sendiri per brand." },
-  { n: "04", t: "Ads & Copy", d: "Meta Ads yang dites cepat, copy yang menutup penjualan." },
-  { n: "05", t: "Membership & LMS", d: "Area member, kelas online, akses terbuka setelah bayar." },
-  { n: "06", t: "Content Ecosystem", d: "Riset, hook, publikasi: satu sistem untuk banyak brand." },
-];
 
 const TRACK_RECORD = [
   "Tim bot hermes yang jalan harian di VPS",
@@ -253,13 +245,14 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-3">
-            {SKILLS.map((s) => (
-              <div key={s.n} className="bg-[#0c0c0f] p-6">
-                <span className="font-mono text-[11px] text-[#00ff88]">{s.n}</span>
-                <h3 className={`${display} mt-3 text-[16px] font-bold`}>{s.t}</h3>
-                <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/50">{s.d}</p>
-              </div>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2">
+            {SERVICE_LINES.map((s) => (
+              <Link key={s.slug} href={`/service#${s.slug}`} className="group bg-[#0c0c0f] p-6 transition hover:bg-[#0f1b14]">
+                <span className="font-mono text-[11px] text-[#00ff88]">{s.number}</span>
+                <h3 className={`${display} mt-3 text-[16px] font-bold group-hover:text-[#00ff88]`}>{s.title}</h3>
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-white/50">{s.short}</p>
+                <span className="mt-4 block font-mono text-[10px] uppercase tracking-[0.14em] text-white/35 group-hover:text-[#00ff88]">lihat detail →</span>
+              </Link>
             ))}
           </div>
         </section>
