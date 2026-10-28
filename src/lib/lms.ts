@@ -1,18 +1,12 @@
 import { randomBytes } from "node:crypto";
 import { admin } from "@/lib/supabase/server";
+import { nextPaidUntil, type PaymentOption } from "@/lib/billing";
 
 export const LMS_URL =
   process.env.NEXT_PUBLIC_LMS_URL ?? "https://xindelabs-workshop.vercel.app";
 
 export const WORKSHOP_PRODUCT = "build-your-own-personalized-agent";
 export type LmsTier = "yearly" | "lifetime";
-
-export function membershipPeriodEnd(option: "annual" | "lifetime") {
-  if (option === "lifetime") return null;
-  const end = new Date();
-  end.setUTCFullYear(end.getUTCFullYear() + 1);
-  return end.toISOString();
-}
 
 function randomPassword() {
   return randomBytes(9).toString("base64url").slice(0, 12);
@@ -81,29 +75,17 @@ export async function provisionLmsAccess(input: {
 
   const { data: existing } = await admin
     .from("members")
-    .select("tier, lms_password")
+    .select("tier, lms_password, paid_until")
     .eq("email", email)
     .maybeSingle();
 
-  if (existing?.lms_password) {
-    return {
-      ok: true,
-      email,
-      tier: existing.tier === "lifetime" ? "lifetime" : tier,
-      lms_password: existing.lms_password,
-      lms_url: LMS_URL,
-    };
-  }
+  const password = existing?.lms_password ?? randomPassword();
+  if (!existing?.lms_password) await createAuthUser(email, password);
 
-  const password = randomPassword();
-  await createAuthUser(email, password);
-
-  const paidUntil =
-    tier === "lifetime"
-      ? null
-      : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10);
+  const finalTier: LmsTier = existing?.tier === "lifetime" ? "lifetime" : tier;
+  const option: PaymentOption =
+    finalTier === "lifetime" ? "lifetime" : input.payment_option ?? "annual";
+  const paidUntil = nextPaidUntil(option, existing?.paid_until);
 
   await admin
     .from("members")
@@ -112,12 +94,14 @@ export async function provisionLmsAccess(input: {
         email,
         status: "paid",
         product,
-        tier,
+        tier: finalTier,
+        payment_option: option,
+        billing_status: "active",
         paid_until: paidUntil,
         lms_password: password,
       },
       { onConflict: "email" }
     );
 
-  return { ok: true, email, tier, lms_password: password, lms_url: LMS_URL };
+  return { ok: true, email, tier: finalTier, lms_password: password, lms_url: LMS_URL };
 }

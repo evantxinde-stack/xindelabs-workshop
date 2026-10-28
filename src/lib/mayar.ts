@@ -30,6 +30,18 @@ export function classPrice(
   return Number(cls.lifetime_price ?? cls.price);
 }
 
+export function allowedPaymentOptions(cls?: {
+  payment_options?: string[] | null;
+  annual_price?: number | null;
+} | null): PaymentOption[] {
+  const list = (Array.isArray(cls?.payment_options) ? cls.payment_options : []).filter(isPaymentOption);
+  const withoutAnnual =
+    list.includes("annual") && !(Number(cls?.annual_price) > 0)
+      ? list.filter((x) => x !== "annual")
+      : list;
+  return (withoutAnnual.length ? withoutAnnual : ["lifetime"]) as PaymentOption[];
+}
+
 export function annualProductMapping(slug: string) {
   return process.env[`MAYAR_ANNUAL_PRODUCT_${slug.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`];
 }

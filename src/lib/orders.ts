@@ -24,7 +24,7 @@ async function provisionForOrder(order: { product: string; tier?: string | null;
     product = cls?.slug ?? product;
   }
   try {
-    await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly", product });
+    await provisionLmsAccess({ email: lead.email, name: lead.name, tier: order.tier ?? "yearly", product, payment_option: (order as any).payment_option === "annual" ? "annual" : "lifetime" });
   } catch (e) {
     console.error("[order] lms provision failed", {
       leadId: order.lead_id,
