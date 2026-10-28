@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { admin } from "@/lib/supabase/server";
 import { formatIDR, stripTags } from "@/lib/content";
+import { LeadForm } from "@/components/LeadForm";
 
 export const dynamic = "force-dynamic";
 
@@ -442,6 +443,24 @@ export default async function Home() {
                   @xindelabs.id ↗
                 </span>
               </a>
+            </div>
+
+            <div className="mt-10 max-w-xl rounded-2xl border border-white/10 bg-[#0B1F16]/70 p-6">
+              <p className="font-mono text-[11px] lowercase tracking-[0.18em] text-[#00ff88]">
+                // mulai dari sini
+              </p>
+              <h3 className={`${display} mt-3 text-xl font-bold`}>Ceritain bisnisnya</h3>
+              <p className="mt-2 text-sm text-white/55">
+                Isi 4 field, gw balas langsung via WhatsApp.
+              </p>
+              <div className="mt-5">
+                <LeadForm
+                  buttonTxt="Kirim & lanjut WhatsApp"
+                  buttonTxtLoading="Mengirim…"
+                  note="Data lo aman, cuma dipakai buat follow-up."
+                  redirect="/service"
+                />
+              </div>
             </div>
           </div>
         </section>

@@ -4,14 +4,26 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { demoMode, trackEvent } from "@/lib/funnel";
 
+const BUSINESS_FIELDS = [
+  "Instalasi AI untuk Bisnis",
+  "Otomatisasi Proses Bisnis",
+  "Vibe Marketing / Konten",
+  "Pembuatan Aplikasi Bisnis",
+  "Produk Digital / Kelas Online",
+  "Belajar AI Agent",
+  "Lainnya",
+];
+
 export function LeadForm({
   buttonTxt,
   buttonTxtLoading,
   note,
+  redirect,
 }: {
   buttonTxt: string;
   buttonTxtLoading: string;
   note: string;
+  redirect?: string;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -24,6 +36,7 @@ export function LeadForm({
       name: String(fd.get("name") || "").trim(),
       email: String(fd.get("email") || "").trim(),
       whatsapp: String(fd.get("whatsapp") || "").trim(),
+      business_field: String(fd.get("business_field") || "").trim(),
     };
     if (!payload.name || !payload.email) return;
 
@@ -57,7 +70,7 @@ export function LeadForm({
 
     if (leadId) {
       try { trackEvent(leadId, "lead_form_submitted", { source: "tutorial_hermes", landing_page: "/" }); } catch {}
-      setTimeout(() => router.push(`/vip-coaching?lead=${leadId}`), foundDup ? 1200 : 0);
+      setTimeout(() => router.push(redirect ? `${redirect}?lead=${leadId}` : `/vip-coaching?lead=${leadId}`), foundDup ? 1200 : 0);
       return;
     }
     setSubmitting(false);
@@ -101,6 +114,24 @@ export function LeadForm({
           placeholder="08xxxxxxxxxx"
           className="input-futuristic"
         />
+      </div>
+      <div>
+        <label htmlFor="business_field" className="mb-1 block text-sm font-medium text-white/70">
+          Bidang Bisnis
+        </label>
+        <select
+          id="business_field"
+          name="business_field"
+          defaultValue=""
+          className="input-futuristic"
+        >
+          <option value="">Pilih bidang bisnis (opsional)</option>
+          {BUSINESS_FIELDS.map((f) => (
+            <option key={f} value={f}>
+              {f}
+            </option>
+          ))}
+        </select>
       </div>
       <button
         type="submit"
