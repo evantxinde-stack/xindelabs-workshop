@@ -1,7 +1,14 @@
 import { admin } from "@/lib/supabase/server";
 import { certificateStatus, maskEmail } from "@/lib/insights";
+import { certificatePrintTitle } from "@/lib/certificate";
+import { CertificatePrintButton } from "@/components/CertificatePrintButton";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ number: string }> }) {
+  const { number } = await params;
+  return { title: certificatePrintTitle(decodeURIComponent(number)) };
+}
 
 export default async function CertificatePage({ params }: { params: Promise<{ number: string }> }) {
   const { number } = await params;
@@ -58,9 +65,12 @@ export default async function CertificatePage({ params }: { params: Promise<{ nu
           </p>
         )}
 
-        <a href="https://xindelabs.web.id" className="mt-10 inline-block rounded-lg bg-[#00ff88] px-4 py-3 font-bold text-[#050A07]">
-          xindelabs.web.id
-        </a>
+        <div className="mt-10 flex flex-wrap gap-3 print:hidden">
+          {valid && <CertificatePrintButton />}
+          <a href="https://xindelabs.web.id" className="inline-block rounded-lg bg-[#00ff88] px-4 py-3 font-bold text-[#050A07]">
+            xindelabs.web.id
+          </a>
+        </div>
       </div>
     </main>
   );

@@ -194,6 +194,10 @@ export async function dispatchDueEmails(leadId?: string) {
   return { sent, skipped };
 }
 
+export async function sendCertificateEmail(input: { to: string; subject: string; html: string }) {
+  return sendViaResend(input.to, input.subject, input.html);
+}
+
 function fail(id: string, attempts: number, error: string) {
   return admin
     .from("email_queue")

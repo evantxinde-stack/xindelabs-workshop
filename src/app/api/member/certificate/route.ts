@@ -2,6 +2,22 @@ import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { admin } from "@/lib/supabase/server";
 import { billingAccess, ownsClass } from "@/app/learn/access";
+import { certificateEmail } from "@/lib/certificate";
+import { sendCertificateEmail } from "@/lib/email";
+
+function appUrl() {
+  return process.env.APP_URL ?? "http://localhost:3000";
+}
+
+async function sendCertificateNotice(email: string, certificateNumber: string, classId: string) {
+  const [{ data: cls }, { data: member }] = await Promise.all([
+    admin.from("classes").select("title").eq("id", classId).maybeSingle(),
+    admin.from("members").select("name").eq("email", email).maybeSingle(),
+  ]);
+  const mail = certificateEmail({ email, name: member?.name, certificateNumber, classTitle: cls?.title ?? "kelas XindeLabs", appUrl: appUrl() });
+  return sendCertificateEmail(mail);
+}
+
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -27,5 +43,6 @@ export async function POST(req: Request) {
   const certificateNumber = `XL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
   const { data, error } = await admin.from("certificates").insert({ email, class_id: body.class_id, certificate_number: certificateNumber }).select().single();
   if (error) return Response.json({ error: error.message }, { status: 400 });
-  return Response.json({ data });
+  const delivery = await sendCertificateNotice(email, certificateNumber, body.class_id).catch(() => ({ ok: false as const }));
+  return Response.json({ data, email_pending: !delivery.ok });
 }
