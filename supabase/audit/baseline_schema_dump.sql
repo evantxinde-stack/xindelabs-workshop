@@ -11,8 +11,8 @@ where table_schema = 'public'
     'sales_page_config','page_blocks','vouchers','vip_config','vip_workspace',
     'leads','pipeline_events','email_queue','email_templates','settings',
     'workshop_decks','workshop_pre_sessions','workshop_pre_session_progress',
-    'discord_role_mappings','entitlements','coupons','coupon_redemptions',
-    'order_bumps','upsells','lead_submissions'
+    'discord_role_map','modules','courses','enrollments','programs','funnels',
+    'funnel_steps','affiliates','transactions','vip_bookings','vip_sessions'
   )
 order by table_name, ordinal_position;
 

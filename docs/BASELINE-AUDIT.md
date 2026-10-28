@@ -138,3 +138,41 @@ Sampai nomor 1 ada, migration tidak ditulis — supaya tidak bentrok dengan sche
 - [x] Main Hub state
 - [x] Build hijau + 12/12 test hijau + code graph terbarui
 - [ ] Schema produksi (butuh aksi user: jalankan SQL audit)
+
+## 12. Schema produksi terverifikasi (2026-10-28, Supabase SQL Editor)
+
+Schema ternyata **jauh lebih siap** dari perkiraan dari kode. Koreksi terhadap bab sebelumnya:
+
+- Nama tabel benar: `discord_role_map` (bukan `discord_role_mappings`). Sudah berisi `product_key`, `program_slug`, `class_slug`, `bundle_slug`, `guild_id` (default `1260441398449143948`), `role_id`, `role_name`, `priority`, `is_active`.
+- **`entitlements` tidak diperlukan.** Model akses sudah ada di `members`: `owned_classes text[]`, `has_all_access`, `is_all_access`, `billing_status` (`active`/`grace`/`read_only`/`revoked`), `grace_until`, `revoked_at`, `paid_until`, `payment_option` (`annual`/`lifetime`), `membership_metadata jsonb`.
+- **`coupons` tidak diperlukan.** `vouchers` sudah punya `type` (`percent`/`nominal`), `value`, `max_uses`, `used_count`, `starts_at`, `expires_at`, `active`, `tier`, plus FK `affiliate_owner_id` dan `funnel_id` → program affiliate sudah terpasang.
+- `classes` sudah punya: `product_type` (CHECK: `course`/`workshop`/`vip`/`bundle`), `price`, `member_discount_price`, `member_cross_sell_price`, `annual_price`, `lifetime_price`, `payment_options text[]` (CHECK: subset `{annual,lifetime}`, tidak boleh kosong), `early_bird_price`, `early_bird_until`, `early_bird_quota`, `discord_role_id`, `trailer_youtube_id`, `workshop_date`, `workshop_meet_url`, `workshop_replay_url`, `archived_at`, `membership_metadata`.
+- `orders` sudah punya: `class_id` FK, `lead_id` FK, `product`, `tier`, `voucher_code`, `amount`, `discount_amount`, `bump_amount`, `early_bird` bool, `payment_option`, `billing_status` (`one_time`/`active`/`grace`/`read_only`/`revoked`/`upgraded`), `grace_until`, `status` (CHECK: `pending`/`paid`/`closed`/`expired`), `mayar_invoice_id`, `mayar_transaction_id`, `payment_url`, `email`, `whatsapp`, `discord_id`, `discord_role_id`, `funnel_slug`, `subdomain`, `membership_metadata`.
+  - CHECK penting: `product = ANY('vip','fast_track') OR class_id IS NOT NULL` → order non-VIP **wajib** punya `class_id`.
+- `sales_page_config` sudah lengkap: `headline`, `subheadline`, `hero_badge`, `vsl_youtube_id`, `problem_blocks`, `stats`, `benefits`, `testimonials`, `faq_items`, `cta_label`, `final_headline`, `final_subheadline`, `countdown_type` (`fixed`/`evergreen`/`none`) + `countdown_ends_at` + `countdown_duration_minutes`, `sales_notification_*`, `is_default`, `is_published`, `slug` UNIQUE, `class_id` FK.
+- `vouchers.type` default `'percent'` dan ada kolom `tier` default `'all'` → diskon persen **dan** nominal sudah didukung.
+- `leads` sudah punya `name`, `email`, `whatsapp`, `phone`, `discord_id`, `status`, `current_stage`, `source`, `ref`, `is_vip`, 5 kolom `utm_*`, `funnel_slug`, `last_stage_at`, `notes`.
+- `lesson_progress` punya kolom ganda lama↔baru: `is_completed` + `completed`, `user_id` + `email` + `class_id`. **Jangan dihapus** (dipakai kode berbeda).
+- Ada tabel legacy yang tidak dipakai kode sekarang: `courses`, `programs`, `modules`, `enrollments`, `member_progress`, `transactions`, `funnels`, `funnel_steps`, `affiliates`, `affiliate_commissions`, `vip_*` (banyak). Biarkan, jangan diubah (per instruksi mempertahankan desain lama).
+- RLS aktif di hampir semua tabel. **RLS mati** di: `vip_config`, `vip_workspace`, `workshop_decks`, `workshop_pre_session_progress`, `workshop_pre_sessions`.
+
+### Implikasi desain (menghemat kerja)
+
+1. Annual membership = kelas dengan `payment_options` mengandung `annual` + `annual_price`, bukan tabel/tipe produk baru. **Tidak perlu ubah CHECK `product_type`** di fase awal.
+2. All-access lifetime = `payment_options` mengandung `lifetime` + `lifetime_price`; akses penuh diwakili `members.has_all_access` / `is_all_access`.
+3. Cross-sell member price sudah ada kolomnya (`member_cross_sell_price`) → fitur "beli kelas lain lebih murah" tidak butuh schema baru, cuma logika harga.
+4. Voucher persen/nominal + limit + expiry + tier sudah tersedia → tinggal pastikan `/api/checkout` memakainya (belum terverifikasi).
+5. Order bump: kolom `bump_amount` ada, tabel konfigurasi bump belum. Cukup tambah tabel additive kalau fiturnya dipakai.
+
+### Gap yang benar-benar perlu migration (minimal)
+
+| Kebutuhan | Status | Tindakan |
+|---|---|---|
+| Field "Bidang Bisnis" pada form lead | belum ada | `alter table leads add column if not exists business_field text` |
+| Konfigurasi order bump/upsell | belum ada | tabel baru additive, hanya kalau fitur dipakai |
+| Relasi produk → kursus lain (cross-sell) | belum ada | skip; hitung dari `member_cross_sell_price` dulu |
+| Reminder renewal annual | belum ada | cron + `members.paid_until`/`grace_until`; tanpa schema baru |
+| Audit log auto-role Discord | partial (`role_assigned_at` ada) | cukup |
+| Duplikasi `is_all_access` vs `has_all_access` | ada | jangan ubah; pilih satu sebagai sumber kebenaran saat baca (pakai `is_all_access` yang NOT NULL) |
+
+Kesimpulan: Fase 1 bisa jalan **tanpa** migration besar. Satu-satunya perubahan schema yang mendesak hanya `leads.business_field`.
