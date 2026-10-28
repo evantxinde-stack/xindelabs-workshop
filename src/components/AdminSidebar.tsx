@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/unified-leads", label: "Unified Leads" },
   { href: "/admin/workshop-members", label: "Workshop Members" },
   { href: "/admin/membership", label: "Membership & Renewal" },
+  { href: "/admin/members", label: "Member Insights" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/pipeline", label: "Pipeline Events" },
   { href: "/admin/emails", label: "Email Logs" },
