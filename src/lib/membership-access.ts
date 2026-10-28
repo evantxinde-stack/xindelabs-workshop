@@ -9,6 +9,15 @@ function allAccess(m: any): boolean {
   return ALL_ACCESS.some((k) => m?.[k] === true);
 }
 
+const PRODUCT_ALIASES: Record<string, string[]> = {
+  "kelas-bangun-hermes-agent": ["build-your-own-personalized-agent"],
+};
+
+export function classProductSlugs(cls: any): string[] {
+  const slug = String(cls?.slug ?? "").toLowerCase();
+  return [slug, ...(PRODUCT_ALIASES[slug] ?? [])].filter(Boolean);
+}
+
 export function memberProducts(member: any): string[] {
   const raw = member?.owned_classes;
   const list = Array.isArray(raw)
@@ -38,12 +47,12 @@ export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
   const access = billingAccess(member);
   if (access === "none") return false;
   if (allAccess(member) || member.is_vip === true) return true;
-  const slug = String(cls?.slug ?? "").toLowerCase();
-  if (!slug) return false;
-  if (memberProducts(member).includes(slug)) return true;
+  const slugs = classProductSlugs(cls);
+  if (!slugs.length) return false;
+  if (memberProducts(member).some((p) => slugs.includes(p))) return true;
   return orders.some(
     (o) =>
       o?.status === "paid" &&
-      (o.class_id === cls?.id || String(o.product ?? "").toLowerCase() === slug)
+      (o.class_id === cls?.id || slugs.includes(String(o.product ?? "").toLowerCase()))
   );
 }
