@@ -4,7 +4,7 @@ import { isAdminRequest } from "@/lib/admin-session";
 
 async function auth(req: NextRequest) { return isAdminRequest(req); }
 function youtubeId(value: unknown) { const raw = String(value || "").trim(); if (!raw) return null; try { const u = new URL(raw); if (u.hostname.includes("youtu.be")) return u.pathname.slice(1) || null; if (u.hostname.includes("youtube.com")) return u.searchParams.get("v") || u.pathname.split("/").filter(Boolean).pop() || null; } catch {} return raw.replace(/^.*(?:v=|youtu\.be\/)/, "").split(/[?&#]/)[0] || null; }
-function lessonPayload(b: any) { return { title: String(b.title || "").trim(), youtube_id: youtubeId(b.youtube_id), prompt: b.prompt || null, pdf_url: b.pdf_url || null, sort_order: Number(b.sort_order || 0) }; }
+function lessonPayload(b: any) { const id = youtubeId(b.youtube_id); return { title: String(b.title || "").trim(), youtube_id: id, youtube_embed_url: id ? `https://www.youtube.com/embed/${id}` : null, prompt: b.prompt || null, pdf_url: b.pdf_url || null, sort_order: Number(b.sort_order || 0) }; }
 export async function GET(req: NextRequest) {
   if (!(await auth(req))) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const classId = req.nextUrl.searchParams.get("class_id");
