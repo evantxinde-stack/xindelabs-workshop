@@ -10,7 +10,9 @@ const btn =
 const input =
   "w-full rounded-lg border border-white/12 bg-black/40 px-4 py-3 text-[14px] text-white outline-none placeholder:text-white/30 focus:border-[#00ff88]";
 
-export default function TutorialFunnel({ vip, course }: { vip: any; course: any }) {
+const EVENTS: Record<number, string> = { 0: "lead_capture", 1: "vip_offer_viewed", 2: "course_downsell_viewed", 3: "free_tutorial_viewed" };
+
+export default function TutorialFunnel({ vip, course, free }: { vip: any; course: any; free?: { href: string; learn: string } }) {
   const [step, setStep] = useState(0);
   const [lead, setLead] = useState<any>(null);
   const [form, setForm] = useState({ name: "", email: "", whatsapp: "" });
@@ -23,7 +25,7 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lead_id: lead.leadId,
-          event_type: ["lead_capture", "vip_offer_viewed", "course_downsell_viewed", "free_tutorial_viewed"][next],
+          event_type: EVENTS[next],
           step: next,
         }),
       });
@@ -81,11 +83,11 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
 
           {step === 1 && (
             <Offer
-              title="Bimbingan VIP 1-on-1"
+              title={vip?.title || "Bimbingan VIP 1-on-1"}
               video={vip?.vsl_youtube_id}
-              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} tersisa.`}
+              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} tersisa.${vip?.price_label ? ` Investasi ${vip.price_label}.` : ""}`}
               primary="Ambil Slot VIP Sekarang"
-              href={`/checkout/vip?lead=${lead?.leadId || ""}`}
+              href={`${vip?.checkout_href || "/checkout/vip"}?lead=${lead?.leadId || ""}`}
               secondary="Belum butuh bimbingan VIP, lihat opsi belajar mandiri"
               onSecondary={() => advance(2)}
             />
@@ -93,11 +95,11 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
 
           {step === 2 && (
             <Offer
-              title="Kelas & Workshop Hermes Agent"
+              title={course?.title || "Kelas & Workshop Hermes Agent"}
               video={course?.trailer_youtube_id}
-              description="Bangun agent Hermes dari nol dengan materi terstruktur dan praktik langsung."
+              description={`Bangun agent Hermes dari nol dengan materi terstruktur dan praktik langsung.${course?.price_label ? ` Mulai ${course.price_label}${course?.regular_label ? ` (normal ${course.regular_label})` : ""}.` : ""}`}
               primary="Daftar Kelas Sekarang"
-              href={`/checkout/${course?.slug || "fast_track"}`}
+              href={`${course?.checkout_href || "/checkout/fast_track"}${lead?.leadId ? `?lead=${lead.leadId}` : ""}`}
               secondary="Lewati penawaran, lanjut ke Tutorial Gratis"
               onSecondary={() => advance(3)}
               countdown
@@ -111,8 +113,11 @@ export default function TutorialFunnel({ vip, course }: { vip: any; course: any 
               <p className="mt-4 text-white/55">
                 Tutorial gratis, materi dasar, dan komunitas untuk lanjut praktik bersama.
               </p>
-              <a href="/join-group" className={`${btn} mt-7 inline-block`}>
+              <a href={free?.href || "/join-group"} className={`${btn} mt-7 inline-block`}>
                 Gabung Komunitas Discord
+              </a>
+              <a href={free?.learn || "/learn"} className="mt-4 block text-[13px] text-white/40 underline hover:text-white/70">
+                Buka akses tutorial + area member
               </a>
             </section>
           )}
