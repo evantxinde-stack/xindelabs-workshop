@@ -12,5 +12,9 @@ export default async function SalesPage({ params }: { params: Promise<{ slug: st
     config.class_id ? admin.from("classes").select("*").eq("id", config.class_id).maybeSingle() : Promise.resolve({ data: null }),
     config.class_id ? admin.from("lessons").select("id,title,sort_order").eq("class_id", config.class_id).order("sort_order") : Promise.resolve({ data: [] }),
   ]);
+  if (product) {
+    const { count } = await admin.from("orders").select("id", { count: "exact", head: true }).eq("class_id", product.id).eq("early_bird", true).eq("status", "paid");
+    (product as any).early_bird_used = count ?? 0;
+  }
   return <SalesPageClient config={config} product={product} lessons={lessons ?? []} />;
 }
