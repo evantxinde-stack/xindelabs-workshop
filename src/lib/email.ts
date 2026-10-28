@@ -6,8 +6,12 @@ const BATCH = 50;
 
 type Vars = Record<string, string>;
 
-function appUrl() {
-  return process.env.APP_URL ?? "http://localhost:3000";
+export function appUrl() {
+  const explicit = process.env.APP_URL?.trim();
+  if (explicit) return explicit.replace(/\/$/, "");
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (vercel) return `https://${vercel}`;
+  return "http://localhost:3000";
 }
 
 const htmlEscape = (s: string) =>

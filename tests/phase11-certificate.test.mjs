@@ -39,6 +39,12 @@ test("certificate page offers print/save PDF and remains verification-first", ()
   assert.match(page, /certificate_number/);
 });
 
+test("app url never falls back to localhost when Vercel exposes the production host", () => {
+  const email = read("src/lib/email.ts");
+  assert.match(email, /export function appUrl/);
+  assert.match(email, /VERCEL_PROJECT_PRODUCTION_URL/);
+});
+
 test("email module exposes certificate delivery without leaking the API key", () => {
   const email = read("src/lib/email.ts");
   assert.match(email, /export async function sendCertificateEmail/);

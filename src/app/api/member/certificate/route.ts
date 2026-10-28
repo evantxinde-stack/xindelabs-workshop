@@ -3,11 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { admin } from "@/lib/supabase/server";
 import { billingAccess, ownsClass } from "@/app/learn/access";
 import { certificateEmail } from "@/lib/certificate";
-import { sendCertificateEmail } from "@/lib/email";
-
-function appUrl() {
-  return process.env.APP_URL ?? "http://localhost:3000";
-}
+import { appUrl, sendCertificateEmail } from "@/lib/email";
 
 async function sendCertificateNotice(email: string, certificateNumber: string, classId: string) {
   const [{ data: cls }, { data: member }] = await Promise.all([
