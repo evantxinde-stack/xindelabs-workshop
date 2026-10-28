@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { createClient } from "@supabase/supabase-js";
 import { admin } from "@/lib/supabase/server";
-import { billingAccess } from "@/app/learn/access";
+import { billingAccess, ownsClass } from "@/app/learn/access";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -14,6 +14,9 @@ export async function POST(req: Request) {
   const { data: member } = await admin.from("members").select("*").eq("email", user.email.toLowerCase()).maybeSingle();
   if (billingAccess(member) !== "active") return Response.json({ error: "Selesaikan renewal untuk klaim sertifikat" }, { status: 403 });
   const email = user.email.toLowerCase();
+  const { data: cls } = await admin.from("classes").select("id,slug").eq("id", body.class_id).maybeSingle();
+  const { data: orders } = await admin.from("orders").select("class_id,product,status").eq("email", email).eq("status", "paid");
+  if (!ownsClass(member, cls, orders ?? [])) return Response.json({ error: "Kelas ini tidak kamu miliki" }, { status: 403 });
   const [{ count: total }, { count: completed }] = await Promise.all([
     admin.from("lessons").select("id", { count: "exact", head: true }).eq("class_id", body.class_id),
     admin.from("lesson_progress").select("id", { count: "exact", head: true }).eq("class_id", body.class_id).eq("email", email).eq("completed", true),

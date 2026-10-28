@@ -44,7 +44,19 @@ async function buildVars(
     lms_url: process.env.NEXT_PUBLIC_LMS_URL ?? "https://xindelabs-workshop.vercel.app",
     lms_email: lead.email,
     lms_password: "",
+    paid_until: "",
+    renewal_url: `${app}/learn/dashboard`,
   };
+  if (sequenceKey === "renewal_reminder") {
+    const { data: member } = await admin
+      .from("members")
+      .select("paid_until, product")
+      .eq("email", lead.email)
+      .maybeSingle();
+    if (member?.paid_until) vars.paid_until = String(member.paid_until).slice(0, 10);
+    const slug = String(member?.product ?? "").split(",")[0].trim();
+    if (slug) vars.renewal_url = `${app}/checkout/${slug}`;
+  }
   if (sequenceKey === "fasttrack_access") {
     const { data: member } = await admin
       .from("members")
