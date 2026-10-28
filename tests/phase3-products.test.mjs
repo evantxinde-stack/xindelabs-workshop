@@ -21,6 +21,7 @@ test('annual price ignores early bird, lifetime price honours it', () => {
   const cls = { price: 999, annual_price: 599, lifetime_price: 999, early_bird_price: 499, early_bird_quota: 10, early_bird_used: 1 };
   assert.equal(classPrice(cls, "annual"), 599);
   assert.equal(classPrice(cls, "lifetime"), 499);
+  assert.equal(classPrice({ ...cls, annual_price: null }, "annual"), 499);
   assert.equal(earlyBirdOpen(cls), true);
 });
 

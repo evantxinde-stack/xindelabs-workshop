@@ -25,7 +25,7 @@ export function classPrice(
   },
   option: PaymentOption
 ): number {
-  if (option === "annual") return Number(cls.annual_price);
+  if (option === "annual") { const annual = Number(cls.annual_price); return Number.isFinite(annual) && annual > 0 ? annual : Number(cls.lifetime_price ?? cls.price); }
   if (earlyBirdOpen(cls)) return Number(cls.early_bird_price);
   return Number(cls.lifetime_price ?? cls.price);
 }
