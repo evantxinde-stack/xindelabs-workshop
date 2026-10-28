@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/server";
+import { isValidEmail } from "@/lib/validate";
 
 export async function POST(req: Request) {
   try {
@@ -14,8 +15,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "business field too long" }, { status: 400 });
     }
 
-    if (!name || !email) {
-      return NextResponse.json({ error: "missing required fields" }, { status: 400 });
+    if (!name || !isValidEmail(email)) {
+      return NextResponse.json({ error: "name and valid email required" }, { status: 400 });
     }
 
     // Try to find existing lead by email

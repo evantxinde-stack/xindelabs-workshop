@@ -1,4 +1,5 @@
 import { admin } from "@/lib/supabase/server";
+import { isValidEmail } from "@/lib/validate";
 
 const MAX_ATTEMPTS = 5;
 const BATCH = 50;
@@ -145,6 +146,17 @@ export async function dispatchDueEmails(leadId?: string) {
       .maybeSingle();
     if (unsub) {
       await admin.from("email_queue").update({ status: "skipped" }).eq("id", q.id);
+      skipped++;
+      continue;
+    }
+
+    // An unusable address can never succeed: park it as skipped so it stops
+    // burning attempts and shows up as a data problem instead of a silent sink.
+    if (!isValidEmail(lead.email)) {
+      await admin
+        .from("email_queue")
+        .update({ status: "skipped", error: `invalid lead email: ${lead.email}` })
+        .eq("id", q.id);
       skipped++;
       continue;
     }
