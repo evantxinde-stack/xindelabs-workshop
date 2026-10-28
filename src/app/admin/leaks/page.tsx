@@ -4,10 +4,12 @@ import { StatusBar } from "../charts";
 export const dynamic = "force-dynamic";
 
 export default async function LeaksPage() {
-  const [events, leads, orders] = await Promise.all([
+  const [events, leads, orders, progress, certificates] = await Promise.all([
     admin.from("pipeline_events").select("id,lead_id,event_type,created_at"),
     admin.from("leads").select("id,status,source,created_at"),
-    admin.from("orders").select("id,lead_id,product,status"),
+    admin.from("orders").select("id,lead_id,product,status,amount"),
+    admin.from("lesson_progress").select("email,class_id,completed"),
+    admin.from("certificates").select("email,class_id"),
   ]);
 
   const ev = events.data ?? [];
@@ -17,7 +19,20 @@ export default async function LeaksPage() {
   const checkoutVisited = distinct((e) => e.event_type === "checkout_visited");
   const checkoutInit = distinct((e) => e.event_type === "checkout_initiated");
 
-  const paidLeads = new Set((orders.data ?? []).filter((o) => o.status === "paid").map((o) => o.lead_id));
+  const paidOrders = (orders.data ?? []).filter((o) => o.status === "paid");
+  const paidLeads = new Set(paidOrders.map((o) => o.lead_id));
+
+  const progressRows = progress.data ?? [];
+  const learners = new Set(progressRows.filter((p) => p.completed).map((p) => p.email));
+  const certificated = new Set((certificates.data ?? []).map((c) => String(c.email).toLowerCase()));
+
+  const revenue = paidOrders.reduce((sum, o) => sum + Number(o.amount ?? 0), 0);
+  const revenueByProduct = new Map<string, number>();
+  for (const o of paidOrders) {
+    const key = o.product || "lainnya";
+    revenueByProduct.set(key, (revenueByProduct.get(key) ?? 0) + Number(o.amount ?? 0));
+  }
+  const idr = (n: number) => `Rp${n.toLocaleString("id-ID")}`;
 
   const allLeads = leads.data ?? [];
   const engaged = new Set(ev.map((e) => e.lead_id));
@@ -29,6 +44,8 @@ export default async function LeaksPage() {
     { key: "checkout_buka", label: "Checkout Dibuka", leads: checkoutVisited.size, hint: "checkout_visited" },
     { key: "checkout_mulai", label: "Checkout Dimulai", leads: checkoutInit.size, hint: "checkout_initiated" },
     { key: "bayar", label: "Pembayaran Sukses", leads: paidLeads.size, hint: "orders paid" },
+    { key: "belajar", label: "Mulai Belajar", leads: learners.size, hint: "lesson_progress completed (email)" },
+    { key: "sertifikat", label: "Sertifikat Diterbitkan", leads: certificated.size, hint: "certificates" },
   ];
 
   const eventBreakdown = new Map<string, number>();
@@ -78,6 +95,11 @@ export default async function LeaksPage() {
         </div>
       </div>
 
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="panel p-5"><p className="panel-sub">Pendapatan paid</p><p className="mt-2 text-2xl font-bold text-[#00FF88]">{idr(revenue)}</p><p className="mt-1 text-xs text-white/40">{paidOrders.length} order sukses</p></div>
+        <div className="panel p-5"><p className="panel-sub">Mulai belajar</p><p className="mt-2 text-2xl font-bold">{learners.size}</p><p className="mt-1 text-xs text-white/40">email unik selesai lesson</p></div>
+        <div className="panel p-5"><p className="panel-sub">Sertifikat</p><p className="mt-2 text-2xl font-bold">{certificated.size}</p><p className="mt-1 text-xs text-white/40">sertifikat diterbitkan</p></div>
+      </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="panel p-5">
           <h2 className="panel-title">Event Pipeline</h2>
@@ -98,6 +120,16 @@ export default async function LeaksPage() {
             {[...bySource.entries()].map(([src, n]) => (
               <StatusBar key={src} label={src} value={n} total={allLeads.length || 1} color="#7f9cff" />
             ))}
+          </div>
+        </div>
+        <div className="panel p-5">
+          <h2 className="panel-title">Pendapatan per Produk</h2>
+          <p className="panel-sub mt-0.5">Order paid dijumlahkan per produk.</p>
+          <div className="mt-3 space-y-3">
+            {[...revenueByProduct.entries()].sort((a, b) => b[1] - a[1]).map(([product, sum]) => (
+              <StatusBar key={product} label={`${product} · ${idr(sum)}`} value={sum} total={revenue || 1} color="#00FF88" />
+            ))}
+            {!revenueByProduct.size && <p className="text-sm text-white/40">Belum ada order paid.</p>}
           </div>
         </div>
       </div>
