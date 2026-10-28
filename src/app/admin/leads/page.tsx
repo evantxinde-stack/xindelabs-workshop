@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 async function getLeads() {
   const { data } = await admin
     .from("leads")
-    .select("id,name,email,whatsapp,status,source,current_stage,created_at")
+    .select("id,name,email,whatsapp,status,source,current_stage,created_at,business_field")
     .order("created_at", { ascending: false })
     .limit(50);
   return data ?? [];

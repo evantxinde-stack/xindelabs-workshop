@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { admin } from "@/lib/supabase/server";
 import { formatIDR, stripTags } from "@/lib/content";
+import { LeadForm } from "@/components/LeadForm";
 
 export const dynamic = "force-dynamic";
 
@@ -414,34 +415,54 @@ export default async function Home() {
               satu workflow sampai sistem operasional penuh.
             </p>
 
-            <div className="mt-10 grid gap-6 sm:grid-cols-2">
-              {waHref ? (
-                <a href={waHref} target="_blank" rel="noopener noreferrer" className="group">
+            <div className="mt-10 grid gap-10 md:grid-cols-[1.05fr_.95fr] md:items-start">
+              <div className="grid gap-6 sm:grid-cols-2">
+                {waHref ? (
+                  <a href={waHref} target="_blank" rel="noopener noreferrer" className="group">
+                    <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/45">
+                      whatsapp
+                    </span>
+                    <span
+                      className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
+                    >
+                      Chat langsung ↗
+                    </span>
+                  </a>
+                ) : null}
+                <a
+                  href="https://instagram.com/xindelabs.id"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group"
+                >
                   <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/45">
-                    whatsapp
+                    instagram
                   </span>
                   <span
                     className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
                   >
-                    Chat langsung ↗
+                    @xindelabs.id ↗
                   </span>
                 </a>
-              ) : null}
-              <a
-                href="https://instagram.com/xindelabs.id"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-              >
-                <span className="font-mono text-[10.5px] uppercase tracking-[0.16em] text-white/45">
-                  instagram
-                </span>
-                <span
-                  className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
-                >
-                  @xindelabs.id ↗
-                </span>
-              </a>
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-[#0B1F16]/70 p-6">
+                <p className="font-mono text-[11px] lowercase tracking-[0.18em] text-[#00ff88]">
+                  // mulai dari sini
+                </p>
+                <h3 className={`${display} mt-3 text-xl font-bold`}>Ceritain bisnisnya</h3>
+                <p className="mt-2 text-sm text-white/55">
+                  Isi 4 field, gw balas langsung via WhatsApp.
+                </p>
+                <div className="mt-5">
+                  <LeadForm
+                    buttonTxt="Kirim & lanjut WhatsApp"
+                    buttonTxtLoading="Mengirim…"
+                    note="Data lo aman, cuma dipakai buat follow-up."
+                    redirect="/service"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </section>

@@ -7,7 +7,12 @@ export async function POST(req: Request) {
     const name = String(body.name || "").trim();
     const email = String(body.email || "").trim();
     const whatsapp = String(body.whatsapp || "").trim();
+    const business_field = String(body.business_field || "").trim();
     const source = String(body.source || "tutorial_hermes").trim();
+
+    if (business_field.length > 120) {
+      return NextResponse.json({ error: "business field too long" }, { status: 400 });
+    }
 
     if (!name || !email) {
       return NextResponse.json({ error: "missing required fields" }, { status: 400 });
@@ -44,6 +49,7 @@ export async function POST(req: Request) {
         email: email.toLowerCase(),
         whatsapp,
         source,
+        business_field: business_field || null,
       })
       .select("id")
       .single();

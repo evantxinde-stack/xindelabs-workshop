@@ -13,6 +13,7 @@ export type LeadRow = {
   status: string | null;
   source: string | null;
   created_at: string | null;
+  business_field?: string | null;
 };
 
 function fmt(d: string | null) {
@@ -119,6 +120,7 @@ export function LeadsManager({ leads }: { leads: LeadRow[] }) {
               <th>Nama</th>
               <th>Email</th>
               <th>WA</th>
+              <th>Bidang</th>
               <th>Status</th>
               <th>Created</th>
               <th>Follow-up WA</th>
@@ -133,6 +135,7 @@ export function LeadsManager({ leads }: { leads: LeadRow[] }) {
                   <td>{l.name}</td>
                   <td>{l.email}</td>
                   <td>{l.whatsapp ?? "—"}</td>
+                  <td>{l.business_field ?? "—"}</td>
                   <td>{l.status ?? "—"}</td>
                   <td>{fmt(l.created_at)}</td>
                   <td>
@@ -156,7 +159,7 @@ export function LeadsManager({ leads }: { leads: LeadRow[] }) {
             })}
             {leads.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-white/40">
+                <td colSpan={7} className="py-6 text-center text-white/40">
                   Belum ada leads
                 </td>
               </tr>
