@@ -5,6 +5,14 @@ export function isPaymentOption(value: unknown): value is PaymentOption {
   return value === "annual" || value === "lifetime";
 }
 
+export function earlyBirdOpen(
+  cls: { early_bird_price?: number | null; early_bird_until?: string | null; early_bird_quota?: number | null; early_bird_used?: number }
+): boolean {
+  if (cls.early_bird_price == null || !Number.isFinite(Number(cls.early_bird_price)) || Number(cls.early_bird_price) < 0) return false;
+  if (cls.early_bird_until && new Date(cls.early_bird_until).getTime() <= Date.now()) return false;
+  return cls.early_bird_quota == null || Number(cls.early_bird_used || 0) < Number(cls.early_bird_quota);
+}
+
 export function classPrice(
   cls: {
     price?: number | null;
@@ -12,13 +20,13 @@ export function classPrice(
     lifetime_price?: number | null;
     early_bird_price?: number | null;
     early_bird_until?: string | null;
+    early_bird_quota?: number | null;
+    early_bird_used?: number;
   },
   option: PaymentOption
 ): number {
   if (option === "annual") return Number(cls.annual_price);
-  const earlyBird = Number(cls.early_bird_price);
-  const earlyBirdOpen = !cls.early_bird_until || new Date(cls.early_bird_until).getTime() > Date.now();
-  if (Number.isFinite(earlyBird) && earlyBird >= 0 && cls.early_bird_price != null && earlyBirdOpen) return earlyBird;
+  if (earlyBirdOpen(cls)) return Number(cls.early_bird_price);
   return Number(cls.lifetime_price ?? cls.price);
 }
 

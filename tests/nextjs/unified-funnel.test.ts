@@ -1,6 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { isPaymentOption, classPrice } from '../../src/lib/mayar.ts';
+import { isPaymentOption, classPrice, earlyBirdOpen } from '../../src/lib/mayar.ts';
+test('early bird active by deadline and quota', () => {
+  const future = new Date(Date.now() + 86400000).toISOString();
+  const past = new Date(Date.now() - 86400000).toISOString();
+  assert.equal(earlyBirdOpen({ early_bird_price: 100 }), true);
+  assert.equal(earlyBirdOpen({ early_bird_price: null }), false);
+  assert.equal(earlyBirdOpen({ early_bird_price: 100, early_bird_until: past }), false);
+  assert.equal(earlyBirdOpen({ early_bird_price: 100, early_bird_until: future }), true);
+  assert.equal(earlyBirdOpen({ early_bird_price: 100, early_bird_quota: 5, early_bird_used: 4 }), true);
+  assert.equal(earlyBirdOpen({ early_bird_price: 100, early_bird_quota: 5, early_bird_used: 5 }), false);
+  assert.equal(classPrice({ early_bird_price: 250, price: 500, early_bird_quota: 3, early_bird_used: 3 }, 'lifetime'), 500);
+  assert.equal(classPrice({ early_bird_price: 250, price: 500, early_bird_quota: 3, early_bird_used: 2 }, 'lifetime'), 250);
+});
+
 test('payment options validate and price from selected class field', () => {
   assert.equal(isPaymentOption('annual'), true);
   assert.equal(isPaymentOption('monthly'), false);
