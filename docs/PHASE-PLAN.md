@@ -41,7 +41,7 @@ Setelah bayar
 | 2 | Struktur jasa: 4 lini di Main Hub + halaman `/service` dari satu sumber data, funnel gratis tetap jadi pintu masuk | ✅ live (`db69e5d`) |
 | 3 | Produk & harga di `classes`: kelas single, workshop, all-access lifetime, annual membership, VIP, early bird (deadline + quota), cross-sell member price | ✅ live (`259792e`) |
 | 4 | Checkout end-to-end: voucher (persen/nominal, limit, expiry), order bump, verifikasi ulang `/api/checkout` + `/api/mayar/webhook` dengan test | ✅ live (`720ad9d`) |
-| 5 | Funnel tutorial jadi ladder resmi: langkah VIP & kelas ambil dari data produk, event tracking rapi, langkah terakhir = akses tutorial + komunitas gratis | ⏳ |
+| 5 | Funnel tutorial jadi ladder resmi: langkah VIP & kelas ambil dari data produk, event tracking rapi, langkah terakhir = akses tutorial + komunitas gratis | ✅ live (`25e9168`) |
 | 6 | Membership & LMS: gate akses terpusat dari `members` (`owned_classes`, `is_all_access`, `billing_status`, `grace_until`), progress + sertifikat digital, reminder renewal annual | ⏳ |
 | 7 | Auto-role Discord dari `discord_role_map` + email onboarding (Resend) + AI bantu generate landing page | ⏳ |
 | 8 | Admin ramah pemula, laporan mingguan Telegram, laporan penjualan, polishing | ⏳ |
