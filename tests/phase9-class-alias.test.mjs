@@ -9,6 +9,16 @@ test("legacy BYOPA product slug still unlocks the renamed class", () => {
   assert.equal(ownsClass(annualPaid, cls, []), true);
 });
 
+test("empty owned_classes does not mask the product slug", () => {
+  // Production rows carry owned_classes: [] — that must not hide `product`.
+  assert.equal(ownsClass({ ...annualPaid, owned_classes: [] }, cls, []), true);
+});
+
+test("owned_classes and product are unioned, not either/or", () => {
+  assert.equal(ownsClass({ ...annualPaid, product: "vip", owned_classes: ["build-your-own-personalized-agent"] }, cls, []), true);
+  assert.equal(ownsClass({ ...annualPaid, product: "build-your-own-personalized-agent", owned_classes: ["vip"] }, cls, []), true);
+});
+
 test("unrelated class stays locked for that member", () => {
   assert.equal(ownsClass(annualPaid, { id: "cd9300ed", slug: "mentoring-vip-bulanan" }, []), false);
 });

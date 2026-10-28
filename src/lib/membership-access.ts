@@ -20,9 +20,10 @@ export function classProductSlugs(cls: any): string[] {
 
 export function memberProducts(member: any): string[] {
   const raw = member?.owned_classes;
-  const list = Array.isArray(raw)
-    ? raw
-    : String(member?.product ?? "").split(",");
+  const list = [
+    ...(Array.isArray(raw) ? raw : String(raw ?? "").split(",")),
+    ...String(member?.product ?? "").split(","),
+  ];
   return list
     .map((x: unknown) => String(x ?? "").trim().toLowerCase())
     .filter(Boolean);
