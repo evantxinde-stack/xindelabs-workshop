@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
 
-export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; early_bird_price?: number | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
+export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; early_bird_price?: number | null; sales_page_slug?: string | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
 
 const LEARN_LINKS = [
   { href: "/learn/kelas", label: "kelas" },
@@ -27,7 +27,7 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
   return <article className="rounded-2xl border border-white/10 bg-[#0B1F16] p-5">
     <div className="flex items-start justify-between gap-3"><span className="rounded-full border border-white/15 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-white/55">{type}</span>{locked && <span aria-label="Terkunci" title="Belum dimiliki" className="text-lg">🔒</span>}</div>
     <h2 className="mt-4 text-xl font-bold text-white">{item.title}</h2><p className="mt-2 min-h-12 text-sm leading-6 text-white/55">{item.description || "Materi praktis XindeLabs untuk membangun sistem digital yang berjalan."}</p>
-    <div className="mt-5 flex items-center justify-between gap-3"><strong className="flex items-baseline gap-2"><span className={neon}>{priceNode}</span>{hasSale && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>{locked && onSelect ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button> : <Link href={`https://xindelabs.web.id/checkout/${item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Detail / Beli</Link>}</div>
+    <div className="mt-5 flex items-center justify-between gap-3"><strong className="flex items-baseline gap-2"><span className={neon}>{priceNode}</span>{hasSale && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>{locked && onSelect ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button> : <Link href={item.sales_page_slug ? `https://xindelabs.web.id/p/${item.sales_page_slug}` : `https://xindelabs.web.id/checkout/${item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">{item.sales_page_slug ? "Lihat detail" : "Detail / Beli"}</Link>}</div>
   </article>;
 }
 
