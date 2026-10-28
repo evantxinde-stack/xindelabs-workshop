@@ -1,5 +1,6 @@
 import { dispatchDueEmails } from "@/lib/email";
 import { reconcilePendingPayments } from "@/lib/orders";
+import { revokeExpiredMemberships } from "@/lib/membership";
 
 export async function POST(req: Request) {
   const provided =
@@ -11,11 +12,12 @@ export async function POST(req: Request) {
 
   let result;
   try {
-    const [emails, payments] = await Promise.all([
+    const [emails, payments, memberships] = await Promise.all([
       dispatchDueEmails(),
       reconcilePendingPayments(),
+      revokeExpiredMemberships(),
     ]);
-    result = { emails, payments };
+    result = { emails, payments, memberships };
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : "dispatch failed" }, { status: 500 });
   }

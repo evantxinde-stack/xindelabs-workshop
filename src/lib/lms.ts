@@ -7,6 +7,13 @@ export const LMS_URL =
 export const WORKSHOP_PRODUCT = "build-your-own-personalized-agent";
 export type LmsTier = "yearly" | "lifetime";
 
+export function membershipPeriodEnd(option: "annual" | "lifetime") {
+  if (option === "lifetime") return null;
+  const end = new Date();
+  end.setUTCFullYear(end.getUTCFullYear() + 1);
+  return end.toISOString();
+}
+
 function randomPassword() {
   return randomBytes(9).toString("base64url").slice(0, 12);
 }
