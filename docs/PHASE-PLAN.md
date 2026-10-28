@@ -38,8 +38,8 @@ Setelah bayar
 |---|---|---|
 | 0 | Audit baseline, backup tag, branch fitur | ✅ selesai (`3bbcaae`) |
 | 1 | `leads.business_field`, form lead Main Hub (Nama, Email, WA, Bidang Bisnis), atribusi source terpisah hub vs tutorial | ✅ live (`b645e3a`) |
-| 2 | Struktur jasa: 4 lini di Main Hub + halaman `/service` dari satu sumber data, funnel gratis tetap jadi pintu masuk | 🚧 jalan |
-| 3 | Produk & harga di `classes`: kelas single, workshop, all-access lifetime, annual membership, VIP, early bird (deadline + quota), cross-sell member price | ⏳ |
+| 2 | Struktur jasa: 4 lini di Main Hub + halaman `/service` dari satu sumber data, funnel gratis tetap jadi pintu masuk | ✅ live (`db69e5d`) |
+| 3 | Produk & harga di `classes`: kelas single, workshop, all-access lifetime, annual membership, VIP, early bird (deadline + quota), cross-sell member price | ✅ live (`259792e`) |
 | 4 | Checkout end-to-end: voucher (persen/nominal, limit, expiry), order bump, verifikasi ulang `/api/checkout` + `/api/mayar/webhook` dengan test | ⏳ |
 | 5 | Funnel tutorial jadi ladder resmi: langkah VIP & kelas ambil dari data produk, event tracking rapi, langkah terakhir = akses tutorial + komunitas gratis | ⏳ |
 | 6 | Membership & LMS: gate akses terpusat dari `members` (`owned_classes`, `is_all_access`, `billing_status`, `grace_until`), progress + sertifikat digital, reminder renewal annual | ⏳ |
