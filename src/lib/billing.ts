@@ -52,3 +52,19 @@ export function graceUntil(paidUntil: string, graceDays = GRACE_DAYS): string {
     .toISOString()
     .slice(0, 10);
 }
+
+/**
+ * A purchase is a renewal, not a first sale, when the buyer already owns this
+ * product and is not a lifetime member. Renewals restore lapsed access and send
+ * the confirmation email instead of a first-time onboarding.
+ */
+export function isRenewal(member: any, product?: string | null): boolean {
+  if (!member) return false;
+  if (member.tier === "lifetime" || member.payment_option === "lifetime") return false;
+  if (!product) return false;
+  const owned = String(member.product ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return owned.includes(String(product).trim().toLowerCase());
+}

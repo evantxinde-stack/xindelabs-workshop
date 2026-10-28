@@ -109,6 +109,8 @@ export async function provisionLmsAccess(input: {
         tier: finalTier,
         payment_option: option,
         billing_status: "active",
+        grace_until: null,
+        revoked_at: null,
         paid_until: paidUntil,
         lms_password: password,
       },

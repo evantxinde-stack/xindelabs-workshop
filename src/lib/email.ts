@@ -47,7 +47,7 @@ async function buildVars(
     paid_until: "",
     renewal_url: `${app}/learn/dashboard`,
   };
-  if (sequenceKey === "renewal_reminder") {
+  if (sequenceKey === "renewal_reminder" || sequenceKey === "renewal_confirmed") {
     const { data: member } = await admin
       .from("members")
       .select("paid_until, product")
@@ -57,7 +57,7 @@ async function buildVars(
     const slug = String(member?.product ?? "").split(",")[0].trim();
     if (slug) vars.renewal_url = `${app}/checkout/${slug}`;
   }
-  if (sequenceKey === "fasttrack_access") {
+  if (sequenceKey === "fasttrack_access" || sequenceKey === "renewal_confirmed") {
     const { data: member } = await admin
       .from("members")
       .select("lms_password")
@@ -101,18 +101,18 @@ async function sendViaResend(to: string, subject: string, html: string) {
   return { ok: true as const, id: (json?.id ?? null) as string | null };
 }
 
-export async function dispatchDueEmails() {
+export async function dispatchDueEmails(leadId?: string) {
   const now = new Date(Date.now() + 90_000).toISOString();
   const sentAt = new Date().toISOString();
-  const { data: cols, error } = await admin
+  const query = admin
     .from("email_queue")
     .select(
       "id, lead_id, sequence_id, template_id, attempts, email_sequences!inner(key)"
     )
     .eq("status", "pending")
     .lte("scheduled_for", now)
-    .lt("attempts", MAX_ATTEMPTS)
-    .limit(BATCH);
+    .lt("attempts", MAX_ATTEMPTS);
+  const { data: cols, error } = await (leadId ? query.eq("lead_id", leadId) : query).limit(BATCH);
 
   if (error) throw new Error(error.message);
   let sent = 0;
