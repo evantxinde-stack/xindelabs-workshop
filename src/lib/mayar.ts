@@ -5,8 +5,21 @@ export function isPaymentOption(value: unknown): value is PaymentOption {
   return value === "annual" || value === "lifetime";
 }
 
-export function classPrice(cls: { price?: number | null; annual_price?: number | null; lifetime_price?: number | null }, option: PaymentOption): number {
-  return Number(option === "annual" ? cls.annual_price : cls.lifetime_price ?? cls.price);
+export function classPrice(
+  cls: {
+    price?: number | null;
+    annual_price?: number | null;
+    lifetime_price?: number | null;
+    early_bird_price?: number | null;
+    early_bird_until?: string | null;
+  },
+  option: PaymentOption
+): number {
+  if (option === "annual") return Number(cls.annual_price);
+  const earlyBird = Number(cls.early_bird_price);
+  const earlyBirdOpen = !cls.early_bird_until || new Date(cls.early_bird_until).getTime() > Date.now();
+  if (Number.isFinite(earlyBird) && earlyBird >= 0 && cls.early_bird_price != null && earlyBirdOpen) return earlyBird;
+  return Number(cls.lifetime_price ?? cls.price);
 }
 
 export function annualProductMapping(slug: string) {
