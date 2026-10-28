@@ -40,7 +40,7 @@ Setelah bayar
 | 1 | `leads.business_field`, form lead Main Hub (Nama, Email, WA, Bidang Bisnis), atribusi source terpisah hub vs tutorial | ✅ live (`b645e3a`) |
 | 2 | Struktur jasa: 4 lini di Main Hub + halaman `/service` dari satu sumber data, funnel gratis tetap jadi pintu masuk | ✅ live (`db69e5d`) |
 | 3 | Produk & harga di `classes`: kelas single, workshop, all-access lifetime, annual membership, VIP, early bird (deadline + quota), cross-sell member price | ✅ live (`259792e`) |
-| 4 | Checkout end-to-end: voucher (persen/nominal, limit, expiry), order bump, verifikasi ulang `/api/checkout` + `/api/mayar/webhook` dengan test | ⏳ |
+| 4 | Checkout end-to-end: voucher (persen/nominal, limit, expiry), order bump, verifikasi ulang `/api/checkout` + `/api/mayar/webhook` dengan test | ✅ live (`720ad9d`) |
 | 5 | Funnel tutorial jadi ladder resmi: langkah VIP & kelas ambil dari data produk, event tracking rapi, langkah terakhir = akses tutorial + komunitas gratis | ⏳ |
 | 6 | Membership & LMS: gate akses terpusat dari `members` (`owned_classes`, `is_all_access`, `billing_status`, `grace_until`), progress + sertifikat digital, reminder renewal annual | ⏳ |
 | 7 | Auto-role Discord dari `discord_role_map` + email onboarding (Resend) + AI bantu generate landing page | ⏳ |
@@ -57,3 +57,20 @@ Setelah bayar
 3. `/service` merender 4 lini yang sama + rincian, harga, dan anchor per lini, tetap memakai desain yang sudah ada.
 4. Funnel tutorial gratis, sales page, dan checkout **tidak diubah** di fase ini.
 5. Verifikasi: build + test hijau, `/` dan `/service` 200 di production, 4 lini muncul, link anchor bekerja.
+
+## Fase 4 — detail kerja
+
+1. `src/lib/checkout.ts` — helper murni tanpa DB: `normalizeVoucherType` (legacy `amount` → `fixed`), `applyDiscount` (clamp ≥ 0), `orderTotal`, `bumpOffer`, `callbackTokenOk`, `parseMayarEvent`.
+2. `/api/checkout`:
+   - select kolom bump, hitung bump dari data `classes` (nominal server-side, bukan dari client),
+   - voucher dihitung setelah subtotal + bump,
+   - order menyimpan `bump_amount` + `bump_class_id`.
+3. Checkout form: checkbox order bump + total sebelum voucher, kirim `order_bump`.
+4. `/api/mayar/webhook`:
+   - header `x-callback-token` vs `MAYAR_CALLBACK_TOKEN` → 401 kalau beda,
+   - `parseMayarEvent` hanya menerima `payment.received` berstatus paid/success/settled/capture,
+   - invoice diverifikasi ulang ke Mayar (`getInvoiceStatus`) sebelum fulfill,
+   - `markOrderPaid` tetap idempoten (order sudah `paid` → provision ulang, tidak dobel).
+5. `src/lib/orders.ts` + `src/lib/lms.ts`: order bump ikut diprovision; `members.product` digabung (union slug), bukan ditimpa, supaya pembelian lama tidak hilang.
+6. Migration additive `supabase/migrations/20261029070000_checkout_bump.sql` (`classes.bump_*`, `orders.bump_class_id`) — sudah diterapkan ke production.
+7. Verifikasi: `35/35` test PASS, `npm run build` PASS, `git diff --check` bersih, production `/`, `/service`, `/tutorial`, `/learn`, `/checkout/vip` HTTP 200.
