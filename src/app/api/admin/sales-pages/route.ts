@@ -3,7 +3,14 @@ import { admin } from "@/lib/supabase/server";
 import { isAdminRequest } from "@/lib/admin-session";
 
 const SLUG = /^[a-z0-9][a-z0-9-]{1,80}$/;
-const COLUMNS = "id,slug,class_id,headline,subheadline,vsl_youtube_id,countdown_type,countdown_ends_at,countdown_duration_minutes,sales_notification_enabled,sales_notification_config,faq_items,is_default,is_published,updated_at";
+const COLUMNS = "id,slug,class_id,headline,subheadline,vsl_youtube_id,hero_badge,problem_blocks,stats,benefits,testimonials,cta_label,final_headline,final_subheadline,countdown_type,countdown_ends_at,countdown_duration_minutes,sales_notification_enabled,sales_notification_config,faq_items,is_default,is_published,updated_at";
+
+function jsonArray(value: unknown, field: string): { error: string } | { value: unknown[] } {
+  let parsed: unknown = value ?? [];
+  if (typeof parsed === "string") { try { parsed = JSON.parse(parsed); } catch { return { error: `${field} JSON tidak valid` }; } }
+  if (!Array.isArray(parsed)) return { error: `${field} harus berupa JSON array` };
+  return { value: parsed };
+}
 
 function parse(body: any): { error: string } | { data: Record<string, unknown> } {
   if (!body || typeof body !== "object") return { error: "Data tidak valid" };
@@ -15,12 +22,22 @@ function parse(body: any): { error: string } | { data: Record<string, unknown> }
   let notice = body.sales_notification_config ?? {};
   if (typeof notice === "string") { try { notice = JSON.parse(notice); } catch { return { error: "Notification JSON tidak valid" }; } }
   if (!notice || typeof notice !== "object" || Array.isArray(notice)) return { error: "Notification harus berupa JSON object" };
+  const blocks = jsonArray(body.problem_blocks, "Problem"), statsList = jsonArray(body.stats, "Stats"), benefitList = jsonArray(body.benefits, "Benefits"), quoteList = jsonArray(body.testimonials, "Testimonials");
+  for (const result of [blocks, statsList, benefitList, quoteList]) if ("error" in result) return { error: result.error };
   return { data: {
     slug,
     class_id: body.class_id || null,
     headline: body.headline || null,
     subheadline: body.subheadline || null,
     vsl_youtube_id: body.vsl_youtube_id || null,
+    hero_badge: body.hero_badge || null,
+    problem_blocks: "value" in blocks ? blocks.value : [],
+    stats: "value" in statsList ? statsList.value : [],
+    benefits: "value" in benefitList ? benefitList.value : [],
+    testimonials: "value" in quoteList ? quoteList.value : [],
+    cta_label: body.cta_label || null,
+    final_headline: body.final_headline || null,
+    final_subheadline: body.final_subheadline || null,
     countdown_type: ["fixed", "evergreen", "none"].includes(body.countdown_type) ? body.countdown_type : "evergreen",
     countdown_ends_at: body.countdown_ends_at || null,
     countdown_duration_minutes: Number(body.countdown_duration_minutes || 30),
