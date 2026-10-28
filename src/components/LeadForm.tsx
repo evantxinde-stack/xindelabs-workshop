@@ -19,11 +19,13 @@ export function LeadForm({
   buttonTxtLoading,
   note,
   redirect,
+  source = "tutorial_hermes",
 }: {
   buttonTxt: string;
   buttonTxtLoading: string;
   note: string;
   redirect?: string;
+  source?: string;
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +54,7 @@ export function LeadForm({
         const res = await fetch("/api/lead", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...payload, source: "tutorial_hermes" }),
+          body: JSON.stringify({ ...payload, source }),
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.leadId) {
@@ -69,7 +71,7 @@ export function LeadForm({
     }
 
     if (leadId) {
-      try { trackEvent(leadId, "lead_form_submitted", { source: "tutorial_hermes", landing_page: "/" }); } catch {}
+      try { trackEvent(leadId, "lead_form_submitted", { source, landing_page: "/" }); } catch {}
       setTimeout(() => router.push(redirect ? `${redirect}?lead=${leadId}` : `/vip-coaching?lead=${leadId}`), foundDup ? 1200 : 0);
       return;
     }
