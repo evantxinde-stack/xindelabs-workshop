@@ -81,3 +81,60 @@ Database: semua migration fase ini harus additive (`add column if not exists`, `
 3. Deploy Vercel Preview dulu untuk perubahan UI, baru `main`.
 4. Migration additive saja. Kalau perlu hapus kolom → putuskan terpisah, jangan digabung.
 5. Tidak mengubah `/api/checkout` dan `/api/mayar/webhook` kecuali ada test pendamping.
+
+## 7. Automation map (n8n dari repo)
+
+| File | Nama workflow | Nodes | Trigger | Alur |
+|---|---|---|---|---|
+| `n8n-workflow-mayar-create-payment.json` | BYOPA - Create Payment (Mayar, 2 Tier + Voucher) | 10 | webhook + manual | Build Mayar Payload → Mayar Checkout → Extract payment_url → Simpan Leads (Supabase) → Apps Script (Lead ke Sheets + Email) → Respond Voucher Ditolak |
+| `n8n-workflow-mayar-callback.json` | Workshop - Mayar Callback + Auto Email | 11 | webhook + manual | Parse Callback → IF Pembayaran Sukses → Siapkan Data LMS → Finalisasi Lead Paid → Provision LMS Access → Kirim Email (Resend) → Log Non-Paid; **Discord Assign Role** sudah ada |
+| `n8n-workflow-hermes-agent.json` | Hermes Agent - Command Bridge | 10 | webhook | Route & Build Prompt → Hermes LLM → Normalize Output → Catat agent_logs → IF Publish Artikel → Publish blog_posts |
+| `n8n-workflow-create-payment.json` | Workshop - Create Payment (Tripay) | 5 | webhook | Legacy Tripay, dipertahankan, tidak dipakai flow baru |
+| `n8n-workflow-tripay-callback.json` | Workshop - Tripay Callback | 6 | webhook | Legacy Tripay, dipertahankan |
+
+Poin penting:
+- **Discord auto-role sudah punya node di workflow callback** (`Code: Discord Assign Role`). Fase fulfillment tidak perlu bikin dari nol, cukup hubungkan ke sumber data yang benar (order → produk → mapping role).
+- Hermes Command Bridge sudah bisa publish `blog_posts`. Ini jalur yang akan dipakai untuk AI generate landing/konten di fase 6.
+- Tripay = legacy. Jangan hapus karena instruksi mempertahankan desain/logika lama, tapi jangan dipakai untuk flow baru.
+
+## 8. Environment inventory (nama saja, nilai tidak disimpan)
+
+- App: `APP_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_APP_HOST`, `NEXT_PUBLIC_LMS_URL`, `NEXT_PUBLIC_GROUP_URL`, `NODE_ENV`
+- DB: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Payment: `MAYAR_API_KEY`, `MAYAR_ENV`
+- Auth/admin: `ADMIN_PASSWORD`, `ADMIN_SECRET`
+- Internal: `PROVISION_LMS_SECRET`, `CRON_SECRET`, `HERMES_API_KEY`
+- Email: `RESEND_API_KEY`, `RESEND_FROM`, `RESEND_API_BASE`
+
+Belum ada: variabel Discord (bot token / guild id) di app — auto-role masih di sisi n8n. Kalau nanti app perlu menulis mapping role, ini yang ditambah.
+
+## 9. Main Hub & halaman jasa — state sekarang
+
+- `/` (474 baris): konten jasa sudah ada tapi bertema umum ("semua yang lo kerjain ulang tiap hari", "Bikin sistemnya yang jaga"), navigasi: portofolio, service, tutorial, tentang, belajar, workshop. Belum distruktur ke 4 lini jasa dan belum ada form lead dengan field Bidang Bisnis.
+- `/service` (143 baris): render dari data `{s.title}` — sumber data perlu dicek (array inline atau Supabase `site_content`).
+- `/portofolio` (87 baris): mengambil `portfolio` dari Supabase.
+- Lead form existing sudah menangkap `name`, `email`, `whatsapp`, `company`, `message`, `kind` (`/api/lead`, `/api/partnership`, `partnership_inquiries`).
+- CTA WhatsApp sudah ada dan nomornya sudah benar: `wa.me/62895335137700` (= 0895335137700).
+
+Kesimpulan: Fase 1 bukan bikin ulang, tapi **restruktur konten + tambah field "Bidang Bisnis"** dan rapikan navigasi.
+
+## 10. Yang masih dibutuhkan sebelum menulis migration
+
+1. Hasil `supabase/audit/baseline_schema_dump.sql` (tipe kolom, constraint, enum, status RLS). Lokal tidak bisa diambil karena `.env.local` masih placeholder → `Invalid API key`.
+2. Konfirmasi daftar produk/offering final: kelas single, workshop, all-package lifetime, annual, VIP + harganya.
+3. Konfirmasi nama guild/channel Discord dan daftar role yang mau dipakai.
+
+Sampai nomor 1 ada, migration tidak ditulis — supaya tidak bentrok dengan schema produksi yang sudah jalan.
+
+## 11. Status Fase 0
+
+- [x] Backup tag + baseline commit
+- [x] Branch fitur
+- [x] Repo route map
+- [x] Database map (dari kode)
+- [x] Payment & fulfillment map
+- [x] Automation map
+- [x] Env inventory
+- [x] Main Hub state
+- [x] Build hijau + 12/12 test hijau + code graph terbarui
+- [ ] Schema produksi (butuh aksi user: jalankan SQL audit)
