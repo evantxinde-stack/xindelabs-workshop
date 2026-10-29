@@ -22,7 +22,7 @@ test("member auth has canonical OAuth redirect, logout, and password settings", 
   const login = readFileSync(new URL("../src/app/learn/login/page.tsx", import.meta.url), "utf8");
   const dashboard = readFileSync(new URL("../src/app/learn/dashboard/page.tsx", import.meta.url), "utf8");
   const menu = readFileSync(new URL("../src/components/MemberAccountMenu.tsx", import.meta.url), "utf8");
-  assert.match(login, /\/api\/member\/callback/);
+  assert.match(login, /\/learn\/auth\/callback/);
   assert.match(login, /learn\.xindelabs\.web\.id/);
   assert.match(dashboard, /MemberAccountMenu/);
   assert.match(menu, /\/api\/member\/logout/);
