@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { demoMode, trackEvent } from "@/lib/funnel";
 
 const BUSINESS_FIELDS = [
+  "Pelatihan AI for Business/Company",
+  "AI Event Speaker",
   "Instalasi AI untuk Bisnis",
   "Otomatisasi Proses Bisnis",
   "Vibe Marketing / Konten",

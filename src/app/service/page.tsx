@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LeadForm } from "@/components/LeadForm";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
 import { SERVICE_LINES } from "@/lib/services";
 
@@ -16,7 +17,6 @@ const SERVICES = SERVICE_LINES.map((s) => ({
   title: s.title,
   desc: s.description,
   points: s.points,
-  harga: s.price,
 }));
 
 /* Legacy six-card copy replaced by the shared four-line catalog. */
@@ -56,9 +56,31 @@ export default async function ServicePage() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-auto pt-5 font-mono text-[11.5px] text-white/40">{s.harga}</p>
+              <Link
+                href="/service#konsultasi"
+                className="mt-auto pt-5 font-mono text-[11.5px] font-bold text-[#00ff88] transition hover:text-white"
+              >
+                Konsultasikan sekarang →
+              </Link>
             </div>
           ))}
+        </div>
+
+        <div id="konsultasi" className="mt-14 scroll-mt-24 rounded-2xl border border-[#00ff88]/30 bg-[#07130d] p-8 md:p-10">
+          <p className="font-mono text-[11px] lowercase tracking-[0.18em] text-[#00ff88]">lead capture / konsultasi</p>
+          <h2 className={`${display} mt-3 text-[clamp(1.5rem,3vw,2rem)] font-bold leading-tight`}>Konsultasikan sekarang.</h2>
+          <p className="mt-3 max-w-xl text-[14.5px] leading-relaxed text-white/60">
+            Pilih kebutuhan lo, isi kontak. Gw balas langsung buat bahas scope, format, dan langkah paling masuk akal.
+          </p>
+          <div className="mt-7 max-w-xl">
+            <LeadForm
+              buttonTxt="Konsultasikan sekarang"
+              buttonTxtLoading="Mengirim…"
+              note="Data lo aman, cuma dipakai buat follow-up konsultasi."
+              redirect="/service"
+              source="service-consultation"
+            />
+          </div>
         </div>
 
         <div className="mt-14 rounded-2xl border border-[#00ff88]/30 bg-[#07130d] p-8 md:p-10">
