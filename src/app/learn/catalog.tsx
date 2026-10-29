@@ -31,6 +31,16 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
   </article>;
 }
 
+export function BackToClasses() {
+  return <Link href="/learn/dashboard" className={`${mono} inline-block rounded-full border border-white/15 px-3 py-1.5 text-white/60 transition hover:border-[#00ff88]/50 hover:text-[#00ff88]`}>← home kelas</Link>;
+}
+
+export function memberPrice(item: ClassRow): number {
+  const member = Number(item.member_cross_sell_price);
+  if (Number.isFinite(member) && member > 0) return member;
+  return Number(item.price) || 0;
+}
+
 export function LearnHeader() {
   return <header className="sticky top-0 z-40 border-b border-white/10 bg-[#09090b]/85 backdrop-blur">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
