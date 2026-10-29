@@ -18,5 +18,5 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
     admin.from("lesson_progress").select("lesson_id,class_id,completed").eq("email", email).eq("class_id", cls.id),
     admin.from("certificates").select("certificate_number").eq("email", email).eq("class_id", cls.id).maybeSingle(),
   ]);
-  return <LearnShell><h1 className="text-4xl font-bold">{cls.title}</h1><CoursePlayer cls={cls} lessons={lessonRows} initialDone={doneLessonIds(progress ?? [], cls.id)} existingCertificate={certificate?.certificate_number ?? ""} /></LearnShell>;
+  return <LearnShell><div className="mb-6"><BackToClasses /></div><h1 className="text-4xl font-bold">{cls.title}</h1><CoursePlayer cls={cls} lessons={lessonRows} initialDone={doneLessonIds(progress ?? [], cls.id)} existingCertificate={certificate?.certificate_number ?? ""} /></LearnShell>;
 }
