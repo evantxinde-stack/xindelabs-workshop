@@ -12,6 +12,9 @@ const adminApi = read("src/app/api/admin/classes/route.ts");
 const locked = read("src/app/learn/locked-detail.tsx");
 const course = read("src/app/learn/course/[slug]/page.tsx");
 const quickUpsell = read("src/app/learn/dashboard/quick-upsell.tsx");
+const access = read("src/app/learn/access.ts");
+const kelasPage = read("src/app/learn/kelas/page.tsx");
+const learnPage = read("src/app/learn/page.tsx");
 
 test("catalog cards render a cover image with a graceful fallback", () => {
   assert.match(lib, /cover_image/);
@@ -22,7 +25,7 @@ test("catalog cards render a cover image with a graceful fallback", () => {
 });
 
 test("catalog cards show a status badge and an entitlement-aware action", () => {
-  assert.match(catalog, /const badge = free \? "Gratis" : locked \? "Terkunci" : hasSale \? "Early bird" : type/);
+  assert.match(catalog, /const badge = owned \? "Dimiliki" : free \? "Gratis" : locked \? "Terkunci" : hasSale \? "Early bird" : type/);
   assert.match(catalog, /Lihat benefit/);
   assert.match(catalog, /FreeAccessButton/);
   assert.match(catalog, /Buka akses/);
@@ -40,6 +43,20 @@ test("locked course detail has cover, curriculum preview, and purchase CTA", () 
   assert.match(locked, /Tanya dulu via WhatsApp/);
   assert.match(course, /<LockedDetail/);
   assert.match(quickUpsell, /<LockedDetail/);
+});
+
+test("catalog CTA switches to access for owned products and detail for the rest", () => {
+  assert.match(catalog, /owned = false/);
+  assert.match(catalog, /owned \? "Dimiliki"/);
+  assert.match(catalog, /Akses kelas/);
+  assert.match(catalog, /Masuk workshop/);
+  assert.match(catalog, /Lihat detail/);
+  assert.match(access, /export async function catalogOwnership/);
+  assert.match(access, /ownsClass\(member, cls, orders \?\? \[\]\)/);
+  assert.match(kelasPage, /catalogOwnership\(items\)/);
+  assert.match(kelasPage, /ownedKeys=\{\[...owned\]\}/);
+  assert.match(learnPage, /catalogOwnership\(items\)/);
+  assert.ok(!/redirect\("\/learn\/login"\)/.test(kelasPage), "public catalog must not force login");
 });
 
 test("catalog page groups products behind category filters", () => {

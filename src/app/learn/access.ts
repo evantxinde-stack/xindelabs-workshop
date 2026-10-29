@@ -17,3 +17,10 @@ export async function learnMember() {
 }
 export async function isAdminMember() { const password = process.env.ADMIN_PASSWORD || ""; const token = (await cookies()).get(ADMIN_COOKIE)?.value; return Boolean(password && token && token === await sessionToken(password)); }
 export function youtubeUrl(id: string) { return id.startsWith("http") ? id : `https://www.youtube.com/embed/${encodeURIComponent(id)}`; }
+
+export async function catalogOwnership(classes: any[]) {
+  const { user, member } = await learnMember();
+  if (!user?.email) return new Set<string>();
+  const { data: orders } = await admin.from("orders").select("class_id,product,status").eq("email", user.email).eq("status", "paid");
+  return new Set(classes.flatMap((cls) => ownsClass(member, cls, orders ?? []) ? [String(cls.id), String(cls.slug)] : []));
+}

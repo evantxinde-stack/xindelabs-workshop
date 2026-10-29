@@ -13,7 +13,7 @@ const neon = "text-[#00ff88]";
 const display = "font-[family-name:var(--font-display)]";
 const mono = "font-mono text-[11px] uppercase tracking-[0.18em]";
 
-export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow; locked?: boolean; onSelect?: (item: ClassRow) => void }) {
+export function ProductCard({ item, locked = false, owned = false, onSelect }: { item: ClassRow; locked?: boolean; owned?: boolean; onSelect?: (item: ClassRow) => void }) {
   const type = item.product_type || item.type || "course";
   const regular = Number(item.price);
   const now = classPrice(item as any, "lifetime");
@@ -23,8 +23,11 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
   const formatPrice = (value: number) => `Rp${value.toLocaleString("id-ID")}`;
   const cover = typeof item.cover_image === "string" && item.cover_image.trim() ? item.cover_image.trim() : null;
   const priceNode = free ? "Gratis" : hasSale ? compact(now) : Number.isFinite(regular) && regular > 0 ? compact(regular) : "Lihat detail";
-  const badge = free ? "Gratis" : locked ? "Terkunci" : hasSale ? "Early bird" : type;
-  const action = locked && onSelect
+  const badge = owned ? "Dimiliki" : free ? "Gratis" : locked ? "Terkunci" : hasSale ? "Early bird" : type;
+  const ownedHref = type === "workshop" ? `/learn/workshop/${item.slug}` : `/learn/course/${item.slug}`;
+  const action = owned
+    ? <span className="flex items-center gap-3"><Link href={ownedHref} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">{type === "workshop" ? "Masuk workshop" : "Akses kelas"}</Link></span>
+    : locked && onSelect
     ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button>
     : free && type === "workshop"
       ? <FreeAccessButton slug={item.slug} />
