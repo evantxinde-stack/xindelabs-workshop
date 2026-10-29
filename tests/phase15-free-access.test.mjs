@@ -22,7 +22,8 @@ test("free workshop claim requires member session and persists both identifiers"
 
 test("catalog uses the free-access action instead of checkout for zero-price workshops", () => {
   assert.match(catalog, /FreeAccessButton/);
-  assert.match(catalog, /Number\(item\.price\) === 0 && type === "workshop"/);
+  assert.match(catalog, /const free = Number\(item\.price\) === 0/);
+  assert.match(catalog, /free && type === "workshop"/);
   assert.match(button, /\/api\/member\/free-access/);
 });
 

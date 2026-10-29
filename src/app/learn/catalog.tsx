@@ -2,7 +2,7 @@ import Link from "next/link";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
 import FreeAccessButton from "./free-access-button";
 
-export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; early_bird_price?: number | null; sales_page_slug?: string | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
+export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; early_bird_price?: number | null; sales_page_slug?: string | null; cover_image?: string | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
 
 const LEARN_LINKS = [
   { href: "/learn/kelas", label: "kelas" },
@@ -18,17 +18,33 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
   const regular = Number(item.price);
   const now = classPrice(item as any, "lifetime");
   const hasSale = earlyBirdOpen(item as any) && Number.isFinite(regular) && now < regular;
+  const free = Number(item.price) === 0;
   const compact = (value: number) => `Rp${Math.round(value / 1000)}K`;
   const formatPrice = (value: number) => `Rp${value.toLocaleString("id-ID")}`;
-  const priceNode = !Number.isFinite(regular) || regular <= 0
-    ? "Lihat detail"
-    : hasSale
-      ? compact(now)
-      : compact(regular);
-  return <article className="rounded-2xl border border-white/10 bg-[#0B1F16] p-5">
-    <div className="flex items-start justify-between gap-3"><span className="rounded-full border border-white/15 px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-white/55">{type}</span>{locked && <span aria-label="Terkunci" title="Belum dimiliki" className="text-lg">🔒</span>}</div>
-    <h2 className="mt-4 text-xl font-bold text-white">{item.title}</h2><p className="mt-2 min-h-12 text-sm leading-6 text-white/55">{item.description || "Materi praktis XindeLabs untuk membangun sistem digital yang berjalan."}</p>
-    <div className="mt-5 flex items-center justify-between gap-3"><strong className="flex items-baseline gap-2"><span className={neon}>{priceNode}</span>{hasSale && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>{locked && onSelect ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button> : Number(item.price) === 0 && type === "workshop" ? <FreeAccessButton slug={item.slug}/> : <span className="flex items-center gap-2"><Link href={`https://xindelabs.web.id/p/${item.sales_page_slug || item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat detail</Link><Link href={`https://xindelabs.web.id/checkout/${item.slug}`} className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition hover:text-[#00ff88]">beli</Link></span>}</div>
+  const cover = typeof item.cover_image === "string" && item.cover_image.trim() ? item.cover_image.trim() : null;
+  const priceNode = free ? "Gratis" : hasSale ? compact(now) : Number.isFinite(regular) && regular > 0 ? compact(regular) : "Lihat detail";
+  const badge = free ? "Gratis" : locked ? "Terkunci" : hasSale ? "Early bird" : type;
+  const action = locked && onSelect
+    ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button>
+    : free && type === "workshop"
+      ? <FreeAccessButton slug={item.slug} />
+      : <span className="flex items-center gap-3"><Link href={`https://xindelabs.web.id/p/${item.sales_page_slug || item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">{free ? "Buka akses" : "Lihat detail"}</Link>{!free && <Link href={`https://xindelabs.web.id/checkout/${item.slug}`} className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition hover:text-[#00ff88]">beli</Link>}</span>;
+  return <article className="group flex flex-col overflow-hidden rounded-3xl border border-[#00ff88]/15 bg-[#0B1F16] transition hover:border-[#00ff88]/45 hover:shadow-[0_0_40px_-12px_rgba(0,255,136,0.35)]">
+    <div className="relative aspect-video overflow-hidden bg-[#06140D]">
+      {cover
+        ? <img src={cover} alt="" loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"/>
+        : <div className="grid h-full w-full place-items-center bg-[radial-gradient(circle_at_30%_20%,rgba(0,255,136,0.18),transparent_60%)]"><span className="font-mono text-[11px] uppercase tracking-[0.3em] text-white/25">{type}</span></div>}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0B1F16] via-[#0B1F16]/25 to-transparent"/>
+      <span className={`absolute left-3 top-3 rounded-full border px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] backdrop-blur ${free ? "border-[#00ff88]/60 bg-[#00ff88]/15 text-[#00ff88]" : "border-white/20 bg-black/40 text-white/70"}`}>{badge}</span>
+    </div>
+    <div className="flex flex-1 flex-col p-5">
+      <h2 className="text-xl font-bold leading-snug text-white">{item.title}</h2>
+      <p className="mt-3 text-sm leading-6 text-white/55">{item.description || "Materi praktis XindeLabs untuk membangun sistem digital yang berjalan."}</p>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
+        <strong className="flex items-baseline gap-2"><span className={free ? "text-[#00ff88]" : neon}>{priceNode}</span>{hasSale && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>
+        {action}
+      </div>
+    </div>
   </article>;
 }
 

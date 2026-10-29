@@ -2,7 +2,7 @@ import { admin } from "@/lib/supabase/server";
 
 // Catalog rows + which sales page (if any) should be the detail destination.
 export async function loadCatalog(types?: string[]) {
-  let query = admin.from("classes").select("id,slug,title,description,price,early_bird_price,early_bird_until,early_bird_quota,product_type,is_published,sort_order").eq("is_published", true);
+  let query = admin.from("classes").select("id,slug,title,description,price,early_bird_price,early_bird_until,early_bird_quota,product_type,is_published,sort_order,cover_image").eq("is_published", true);
   if (types) query = query.in("product_type", types);
   const [{ data }, { data: pages }, { data: eb }] = await Promise.all([
     query.order("sort_order"),
