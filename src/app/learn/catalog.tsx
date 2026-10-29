@@ -28,7 +28,7 @@ export function ProductCard({ item, locked = false, onSelect }: { item: ClassRow
     ? <button onClick={() => onSelect(item)} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Lihat benefit</button>
     : free && type === "workshop"
       ? <FreeAccessButton slug={item.slug} />
-      : <span className="flex items-center gap-3"><Link href={`https://xindelabs.web.id/p/${item.sales_page_slug || item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">{free ? "Buka akses" : "Lihat detail"}</Link>{!free && <Link href={`https://xindelabs.web.id/checkout/${item.slug}`} className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition hover:text-[#00ff88]">beli</Link>}</span>;
+      : <span className="flex items-center gap-3"><Link href={`/learn/course/${item.slug}`} className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">{free ? "Buka akses" : "Lihat detail"}</Link>{!free && <Link href={`https://xindelabs.web.id/checkout/${item.slug}`} className="font-mono text-[11px] uppercase tracking-wider text-white/50 transition hover:text-[#00ff88]">beli</Link>}</span>;
   return <article className="group flex flex-col overflow-hidden rounded-3xl border border-[#00ff88]/15 bg-[#0B1F16] transition hover:border-[#00ff88]/45 hover:shadow-[0_0_40px_-12px_rgba(0,255,136,0.35)]">
     <div className="relative aspect-video overflow-hidden bg-[#06140D]">
       {cover

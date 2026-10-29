@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 const course = readFileSync(new URL("../src/app/learn/course/[slug]/page.tsx", import.meta.url), "utf8");
 const workshop = readFileSync(new URL("../src/app/learn/workshop/[slug]/page.tsx", import.meta.url), "utf8");
 const catalog = readFileSync(new URL("../src/app/learn/catalog.tsx", import.meta.url), "utf8");
+const lockedDetail = readFileSync(new URL("../src/app/learn/locked-detail.tsx", import.meta.url), "utf8");
 
 test("course and workshop pages provide a return-to-classes link", () => {
   assert.match(course, /BackToClasses/);
@@ -13,10 +14,10 @@ test("course and workshop pages provide a return-to-classes link", () => {
 });
 
 test("locked member pages show member pricing before checkout", () => {
-  assert.match(course, /member_cross_sell_price/);
-  assert.match(workshop, /member_cross_sell_price/);
-  assert.match(course, /Beli harga member/);
-  assert.match(workshop, /harga member/);
+  assert.match(course + lockedDetail, /member_cross_sell_price/);
+  assert.match(workshop + lockedDetail, /member_cross_sell_price/);
+  assert.match(course + lockedDetail, /Beli akses|Beli harga member/);
+  assert.match(workshop + lockedDetail, /harga member|Beli akses/);
 });
 
 test("existing members can recover a password from the login page", () => {
