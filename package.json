@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --experimental-strip-types --test tests/nextjs/unified-funnel.test.ts tests/phase1-lead-business-field.test.mjs tests/phase2-service-lines.test.mjs tests/phase3-products.test.mjs tests/phase4-checkout.test.mjs tests/phase5-tutorial-ladder.test.mjs tests/phase6-membership.test.mjs tests/phase6-billing.test.mjs tests/phase6-gates.test.mjs tests/phase7-transactional-email.test.mjs tests/phase8-operations.test.mjs tests/phase9-learning.test.mjs tests/phase9-class-alias.test.mjs tests/phase10-insights.test.mjs tests/phase11-certificate.test.mjs tests/phase11-existing-member-access.test.mjs tests/phase11-dashboard-schema.test.mjs"
+    "test": "node --experimental-strip-types --test tests/nextjs/unified-funnel.test.ts tests/phase1-lead-business-field.test.mjs tests/phase2-service-lines.test.mjs tests/phase3-products.test.mjs tests/phase4-checkout.test.mjs tests/phase5-tutorial-ladder.test.mjs tests/phase6-membership.test.mjs tests/phase6-billing.test.mjs tests/phase6-gates.test.mjs tests/phase7-transactional-email.test.mjs tests/phase8-operations.test.mjs tests/phase9-learning.test.mjs tests/phase9-class-alias.test.mjs tests/phase10-insights.test.mjs tests/phase11-certificate.test.mjs tests/phase11-existing-member-access.test.mjs tests/phase11-dashboard-schema.test.mjs tests/phase12-membership-auth.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",

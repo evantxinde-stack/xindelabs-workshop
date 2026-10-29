@@ -44,10 +44,19 @@ export function billingAccess(member: any): Access {
   return "none";
 }
 
+function isVipClass(cls: any): boolean {
+  const value = `${cls?.slug ?? ""} ${cls?.product_type ?? ""}`.toLowerCase();
+  return value.includes("vip") || value.includes("mentoring");
+}
+
 export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
   const access = billingAccess(member);
   if (access === "none") return false;
-  if (allAccess(member) || member.is_vip === true) return true;
+  if (isVipClass(cls)) return member.is_vip === true;
+  if (allAccess(member) || member.is_vip === true || member.payment_option === "lifetime") return true;
+  if (member.payment_option === "annual" || member.payment_option === "yearly") {
+    return classProductSlugs(cls).includes("kelas-bangun-hermes-agent") || classProductSlugs(cls).includes("build-your-own-personalized-agent");
+  }
   const slugs = classProductSlugs(cls);
   if (!slugs.length) return false;
   const products = memberProducts(member);

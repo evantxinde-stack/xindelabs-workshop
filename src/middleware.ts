@@ -60,6 +60,12 @@ function routeByHost(
   }
 
   if (isPreviewHost(hostname)) {
+    if (hostname.endsWith(".vercel.app") && pathname.startsWith("/learn")) {
+      const review = new URL(req.url).searchParams.get("site");
+      if (review !== "learn") {
+        return NextResponse.redirect(new URL(`${pathname}${req.nextUrl.search}`, "https://learn.xindelabs.web.id"), 308);
+      }
+    }
     const site = searchParams.get("site");
     if (site === "learn" && !pathname.startsWith("/learn")) {
       const url = new URL(prefixedPath("/learn", pathname), req.url);
