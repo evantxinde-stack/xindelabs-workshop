@@ -50,7 +50,12 @@ function isVipClass(cls: any): boolean {
 }
 
 export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
+  const freeWorkshop = cls?.product_type === "workshop" && Number(cls?.price) === 0;
   const access = billingAccess(member);
+  if (freeWorkshop) {
+    const ids = [String(cls?.id ?? "").toLowerCase(), ...classProductSlugs(cls)];
+    return memberProducts(member).some((p) => ids.includes(p));
+  }
   if (access === "none") return false;
   if (isVipClass(cls)) return member.is_vip === true;
   if (allAccess(member) || member.is_vip === true || member.payment_option === "lifetime") return true;
