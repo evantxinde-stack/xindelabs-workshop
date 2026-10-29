@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Service — XindeLabs",
   description:
-    "Empat lini jasa XindeLabs: Instalasi AI untuk Bisnis, Automation Bisnis, Vibe Marketing, Pembuatan Aplikasi Bisnis. Work with me.",
+    "Enam lini jasa XindeLabs: pelatihan AI, event speaker, instalasi AI, automation bisnis, vibe marketing, dan aplikasi bisnis. Work with me.",
 };
 
 const SERVICES = SERVICE_LINES.map((s) => ({

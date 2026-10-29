@@ -1,11 +1,41 @@
 /**
- * Satu sumber kebenaran 4 lini jasa — dipakai Main Hub dan /service.
+ * Satu sumber kebenaran lini jasa — dipakai Main Hub dan /service.
  * ponytail: hardcoded di sini dulu; kalau admin perlu edit harga/lini, pindah ke tabel `settings`.
  */
 export const SERVICE_LINES = [
   {
-    slug: "instalasi-ai",
+    slug: "pelatihan-ai-bisnis",
     number: "01",
+    title: "Pelatihan AI for Business/Company",
+    short: "Tim lo langsung bisa pakai AI untuk kerjaan nyata.",
+    description:
+      "Pelatihan in-house untuk tim perusahaan: dari dasar AI agent sampai praktik langsung di alur kerja sendiri. Materi dipotong sesuai divisi — sales, operasional, marketing, atau admin.",
+    points: [
+      "Kelas in-house atau online, satu sampai tiga hari",
+      "Praktik langsung di studi kasus perusahaan lo",
+      "Materi, template prompt, dan skill siap pakai",
+      "Pendampingan pasca-pelatihan dan rekap hasil belajar",
+    ],
+    price: "mulai Rp 8jt/hari (grup)",
+  },
+  {
+    slug: "ai-event-speaker",
+    number: "02",
+    title: "AI Event Speaker",
+    short: "Isi event, seminar, atau webinar soal AI.",
+    description:
+      "Sesi 45–90 menit berisi demo agent hidup, bukan slide teori: apa yang benar-benar bisa dikerjakan AI hari ini, dan di mana batasnya. Cocok untuk seminar kampus, gathering komunitas, atau event perusahaan.",
+    points: [
+      "Sesi 45–90 menit + tanya jawab",
+      "Demo live (agent, otomasi, konten)",
+      "Topik disesuaikan audiens: pemula sampai teknis",
+      "Rekaman, materi, dan foto publikasi untuk penyelenggara",
+    ],
+    price: "mulai Rp 5jt/sesi",
+  },
+  {
+    slug: "instalasi-ai",
+    number: "03",
     title: "Instalasi AI untuk Bisnis",
     short: "Agent AI dipasang di operasional lo, jalan 24/7.",
     description:
@@ -20,7 +50,7 @@ export const SERVICE_LINES = [
   },
   {
     slug: "automation-bisnis",
-    number: "02",
+    number: "04",
     title: "Automation Bisnis",
     short: "Funnel, checkout, akses produk, laporan — semua otomatis.",
     description:
@@ -35,7 +65,7 @@ export const SERVICE_LINES = [
   },
   {
     slug: "vibe-marketing",
-    number: "03",
+    number: "05",
     title: "Vibe Marketing",
     short: "Konten dan iklan jalan sendiri, per brand.",
     description:
@@ -50,7 +80,7 @@ export const SERVICE_LINES = [
   },
   {
     slug: "pembuatan-aplikasi",
-    number: "04",
+    number: "06",
     title: "Pembuatan Aplikasi Bisnis",
     short: "Aplikasi, LMS, dan member area yang dipakai tiap hari.",
     description:
