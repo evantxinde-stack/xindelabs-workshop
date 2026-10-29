@@ -50,7 +50,9 @@ export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
   if (allAccess(member) || member.is_vip === true) return true;
   const slugs = classProductSlugs(cls);
   if (!slugs.length) return false;
-  if (memberProducts(member).some((p) => slugs.includes(p))) return true;
+  const products = memberProducts(member);
+  if (products.includes(String(cls?.id ?? "").toLowerCase())) return true;
+  if (products.some((p) => slugs.includes(p))) return true;
   return orders.some(
     (o) =>
       o?.status === "paid" &&
