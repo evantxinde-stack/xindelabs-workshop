@@ -24,7 +24,7 @@ type ClassRow = {
   title: string;
   description: string | null;
   price: number | null;
-  type: string | null;
+  product_type: string | null;
 };
 
 type WorkRow = {
@@ -95,7 +95,7 @@ export default async function Home() {
       .limit(6),
     admin
       .from("classes")
-      .select("slug,title,description,price,type")
+      .select("slug,title,description,price,product_type")
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
       .limit(3),
@@ -351,7 +351,7 @@ export default async function Home() {
                   className="rounded-xl border border-white/10 bg-[#0c0c0f] p-5 transition hover:border-[#00ff88]/50"
                 >
                   <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-white/45">
-                    {c.type || "kelas"}
+                    {c.product_type || "kelas"}
                   </span>
                   <h3 className={`${display} mt-3 text-[15.5px] font-bold leading-snug`}>{c.title}</h3>
                   <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-white/50">
