@@ -18,3 +18,12 @@ test("locked member pages show member pricing before checkout", () => {
   assert.match(course, /Beli harga member/);
   assert.match(workshop, /harga member/);
 });
+
+test("existing members can recover a password from the login page", () => {
+  const login = readFileSync(new URL("../src/app/learn/login/page.tsx", import.meta.url), "utf8");
+  const reset = readFileSync(new URL("../src/app/learn/reset-password/page.tsx", import.meta.url), "utf8");
+  assert.match(login, /resetPasswordForEmail/);
+  assert.match(login, /\/learn\/reset-password/);
+  assert.match(reset, /exchangeCodeForSession/);
+  assert.match(reset, /updateUser\(\{\s*password/);
+});
