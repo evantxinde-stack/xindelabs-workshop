@@ -52,10 +52,7 @@ function isVipClass(cls: any): boolean {
 export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
   const freeClass = ["workshop", "course"].includes(String(cls?.product_type)) && Number(cls?.price) === 0;
   const access = billingAccess(member);
-  if (freeClass) {
-    const ids = [String(cls?.id ?? "").toLowerCase(), ...classProductSlugs(cls)];
-    return memberProducts(member).some((p) => ids.includes(p));
-  }
+  if (freeClass) return Boolean(member); // gratis: cukup punya akun member, tak perlu entri produk
   if (access === "none") return false;
   if (isVipClass(cls)) return member.is_vip === true;
   if (allAccess(member) || member.is_vip === true || member.payment_option === "lifetime") return true;
