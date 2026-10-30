@@ -2,7 +2,7 @@ import Link from "next/link";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
 import FreeAccessButton from "./free-access-button";
 
-export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; early_bird_price?: number | null; sales_page_slug?: string | null; cover_image?: string | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
+export type ClassRow = { id: string; slug: string; title: string; description?: string; price?: string | number; annual_price?: number | null; lifetime_price?: number | null; early_bird_price?: number | null; sales_page_slug?: string | null; cover_image?: string | null; product_type?: string; type?: string; trailer_youtube_id?: string; member_cross_sell_price?: number; is_published?: boolean };
 
 const LEARN_LINKS = [
   { href: "/learn/kelas", label: "kelas" },
