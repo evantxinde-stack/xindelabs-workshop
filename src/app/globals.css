@@ -265,3 +265,21 @@ body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* LMS article content */
+.prose-invert h3 { color: #fff; font-weight: 700; font-size: 1.05rem; margin-top: 1.4rem; }
+.prose-invert p { margin-top: 0.6rem; color: rgba(255,255,255,0.72); }
+.prose-invert ul { margin-top: 0.6rem; list-style: disc; padding-left: 1.2rem; color: rgba(255,255,255,0.72); }
+.prose-invert li { margin-top: 0.3rem; }
+.prose-invert code { background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.25); border-radius: 6px; padding: 0.1rem 0.35rem; font-size: 0.85em; color: #7dffb8; }
+.prose-invert pre { background: #06130C; border: 1px solid rgba(0,255,136,0.2); border-radius: 12px; padding: 0.9rem 1rem; overflow-x: auto; margin-top: 0.8rem; max-width: 100%; }
+.prose-invert pre code { white-space: pre; display: block; }
+.prose-invert pre code { background: none; border: none; padding: 0; color: #d6ffe8; }
+.prose-invert table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; font-size: 0.9em; }
+.prose-invert th, .prose-invert td { border: 1px solid rgba(255,255,255,0.12); padding: 0.45rem 0.6rem; text-align: left; color: rgba(255,255,255,0.75); }
+.prose-invert th { background: rgba(0,255,136,0.06); color: #fff; }
+.prose-invert blockquote { border-left: 3px solid #00ff88; padding: 0.4rem 0.9rem; margin-top: 0.8rem; background: rgba(0,255,136,0.05); color: rgba(255,255,255,0.75); border-radius: 0 10px 10px 0; }
+.prose-invert figure { margin-top: 1rem; }
+.prose-invert img { width: 100%; border-radius: 12px; border: 1px solid rgba(0,255,136,0.2); }
+.prose-invert figcaption { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-top: 0.4rem; }
+.prose-invert a { color: #00ff88; text-decoration: underline; text-underline-offset: 3px; }
