@@ -11,7 +11,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
   const { data: cls } = await admin.from("classes").select("*").eq("slug", slug).maybeSingle();
   if (!cls) return <LearnShell><h1>Kelas tidak ditemukan</h1></LearnShell>;
   const [{ data: lessons }, { data: orders }] = await Promise.all([admin.from("lessons").select("*").eq("class_id", cls.id).order("sort_order"), admin.from("orders").select("class_id,product,status").eq("email", user.email ?? "")]);
-  const allowed = (billingAccess(member) !== "none" && ownsClass(member, cls, orders ?? [])) || (ownsClass(member, cls, orders ?? []) && cls.product_type === "workshop" && Number(cls.price) === 0) || await isAdminMember();
+  const allowed = (billingAccess(member) !== "none" && ownsClass(member, cls, orders ?? [])) || (Number(cls.price) === 0 && (cls.product_type === "workshop" || cls.product_type === "course")) || await isAdminMember();
   if (!allowed) return <LearnShell><LockedDetail cls={cls} lessons={lessons ?? []} /></LearnShell>;
   const email = user.email!.toLowerCase(); const lessonRows = lessons ?? [];
   const [{ data: progress }, { data: certificate }] = await Promise.all([
