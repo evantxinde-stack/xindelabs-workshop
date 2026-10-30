@@ -7,8 +7,8 @@ const button = readFileSync(new URL("../src/app/learn/free-access-button.tsx", i
 const catalog = readFileSync(new URL("../src/app/learn/catalog.tsx", import.meta.url), "utf8");
 const gate = readFileSync(new URL("../src/lib/membership-access.ts", import.meta.url), "utf8");
 
-test("free workshop claim requires a published zero-price workshop", () => {
-  assert.match(route, /product_type !== "workshop"/);
+test("free class claim requires a published zero-price course or workshop", () => {
+  assert.match(route, /\["course", "workshop"\]/);
   assert.match(route, /Number\(cls\.price\) !== 0/);
   assert.match(route, /!cls\.is_published/);
 });
@@ -28,7 +28,7 @@ test("catalog uses the free-access action instead of checkout for zero-price wor
 });
 
 test("free workshop entitlement bypasses paid billing status but paid classes do not", () => {
-  assert.match(gate, /const freeWorkshop = cls\?\.product_type === "workshop" && Number\(cls\?\.price\) === 0/);
-  assert.match(gate, /if \(freeWorkshop\)/);
+  assert.match(gate, /const freeClass = \["workshop", "course"\]\.includes\(String\(cls\?\.product_type\)\) && Number\(cls\?\.price\) === 0/);
+  assert.match(gate, /if \(freeClass\)/);
   assert.match(gate, /if \(access === "none"\) return false/);
 });

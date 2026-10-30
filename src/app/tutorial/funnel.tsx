@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SiteFooter, SiteHeader } from "@/components/SiteHeader";
+import { DiscordIdHelp } from "@/components/DiscordIdHelp";
 
 const neon = "text-[#00ff88]";
 const card = "rounded-2xl border border-white/10 bg-[#0B1F16] p-8";
@@ -15,8 +16,20 @@ const EVENTS: Record<number, string> = { 0: "lead_capture", 1: "vip_offer_viewed
 export default function TutorialFunnel({ vip, course, free }: { vip: any; course: any; free?: { href: string; learn: string } }) {
   const [step, setStep] = useState(0);
   const [lead, setLead] = useState<any>(null);
-  const [form, setForm] = useState({ name: "", email: "", whatsapp: "" });
+  const [form, setForm] = useState({ name: "", email: "", whatsapp: "", password: "", discord_id: "" });
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [freeAccess, setFreeAccess] = useState<"idle" | "busy" | "done" | "login">("idle");
+
+  async function grantFreeTutorial() {
+    setFreeAccess("busy");
+    const r = await fetch("/api/member/free-access", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: "tutorial-bangun-hermes" }),
+    });
+    setFreeAccess(r.status === 401 ? "login" : r.ok ? "done" : "idle");
+  }
 
   async function advance(next: number) {
     if (lead?.leadId)
@@ -35,6 +48,9 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
   async function capture(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
+    setError("");
+    if (form.password.length < 6) { setError("Password minimal 6 karakter."); setBusy(false); return; }
+    if (form.discord_id && !/^\d{17,20}$/.test(form.discord_id)) { setError("Discord User ID harus 17–20 digit, atau kosongkan jika belum punya Discord."); setBusy(false); return; }
     const r = await fetch("/api/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -44,7 +60,7 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
     if (r.ok) {
       setLead(j);
       await advance(1);
-    }
+    } else setError(j.error || "Registrasi gagal. Coba lagi.");
     setBusy(false);
   }
 
@@ -74,6 +90,9 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
                     className={input}
                   />
                 ))}
+                <input type="password" required minLength={6} placeholder="Password (min. 6 karakter)" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className={input} />
+                <input inputMode="numeric" placeholder="Discord User ID (opsional)" value={form.discord_id} onChange={(e) => setForm({ ...form, discord_id: e.target.value.replace(/\D/g, "") })} className={input} />
+                <DiscordIdHelp />
                 <button disabled={busy} className={`${btn} w-full`}>
                   {busy ? "Memproses…" : "Lihat penawaran"}
                 </button>
@@ -85,10 +104,10 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
             <Offer
               title={vip?.title || "Bimbingan VIP 1-on-1"}
               video={vip?.vsl_youtube_id}
-              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} tersisa.${vip?.price_label ? ` Investasi ${vip.price_label}.` : ""}`}
-              primary="Ambil Slot VIP Sekarang"
-              href={`${vip?.checkout_href || "/checkout/vip"}?lead=${lead?.leadId || ""}`}
-              secondary="Belum butuh bimbingan VIP, lihat opsi belajar mandiri"
+              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} slot tersisa. Bimbingan privat bareng Evant untuk brand, agent, dan growth kamu — dibahas dulu, cocok atau tidak.`}
+              primary="Konsultasi Bimbingan"
+              href={vip?.whatsapp_booking_url || "https://wa.me/62895335137700?text=Halo%2C%20saya%20mau%20tanya%20soal%20Bimbingan%20VIP"}
+              secondary="Belum berminat, lanjut lihat opsi lain"
               onSecondary={() => advance(2)}
             />
           )}
@@ -100,8 +119,8 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
               description={`Bangun agent Hermes dari nol dengan materi terstruktur dan praktik langsung.${course?.price_label ? ` Mulai ${course.price_label}${course?.regular_label ? ` (normal ${course.regular_label})` : ""}.` : ""}`}
               primary="Daftar Kelas Sekarang"
               href={`${course?.checkout_href || "/checkout/fast_track"}${lead?.leadId ? `?lead=${lead.leadId}` : ""}`}
-              secondary="Lewati penawaran, lanjut ke Tutorial Gratis"
-              onSecondary={() => advance(3)}
+              secondary="Belum sekarang, saya mulai dari tutorial gratis"
+              onSecondary={() => { grantFreeTutorial(); advance(3); }}
               countdown
             />
           )}
@@ -109,16 +128,25 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
           {step === 3 && (
             <section className={`${card} mx-auto max-w-2xl text-center`}>
               <p className={`${mono} ${neon}`}>free hermes tutorial</p>
-              <h2 className="mt-3 text-3xl font-bold">Mulai bangun agent pertamamu</h2>
+              <h2 className="mt-3 text-3xl font-bold">Akun kamu aktif. Tutorial gratis sudah terbuka.</h2>
               <p className="mt-4 text-white/55">
-                Tutorial gratis, materi dasar, dan komunitas untuk lanjut praktik bersama.
+                Kelas “Bangun Hermes Agent dari Nol” — instalasi, konfigurasi, cron, sampai workspace — bisa langsung kamu buka. Gabung komunitas Discord untuk tanya jawab harian.
               </p>
-              <a href={free?.href || "/join-group"} className={`${btn} mt-7 inline-block`}>
-                Gabung Komunitas Discord
+              <a href={freeAccess === "done" || freeAccess === "busy" ? free?.learn || "/learn" : "/learn/login"} className={`${btn} mt-7 inline-block`}>
+                {freeAccess === "busy" ? "Membuka akses…" : "Buka Tutorial Gratis"}
               </a>
-              <a href={free?.learn || "/learn"} className="mt-4 block text-[13px] text-white/40 underline hover:text-white/70">
-                Buka akses tutorial + area member
+              <a href={free?.href || "/join-group"} className="mt-4 block text-[13px] text-white/50 underline hover:text-white/80">
+                Gabung Komunitas Discord Gratis
               </a>
+              {freeAccess === "login" && (
+                <p className="mt-4 text-[13px] text-amber-300">Login dulu untuk membuka kelas gratis — pakai email &amp; password yang baru kamu daftarkan.</p>
+              )}
+              {!form.discord_id && freeAccess === "done" && (
+                <div className="mt-7 rounded-xl border border-white/10 bg-black/30 p-5 text-left">
+                  <p className="text-sm text-white/70">Punya Discord? Tambahkan User ID sekarang biar otomatis dapat role <b className="text-white">Connect Circle</b>. Bisa juga menyusul dari area member.</p>
+                  <DiscordIdHelp className="mt-2" />
+                </div>
+              )}
             </section>
           )}
         </div>

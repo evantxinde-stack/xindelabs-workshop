@@ -7,8 +7,8 @@ export async function POST(req: Request) {
   const slug = typeof body?.slug === "string" ? body.slug.trim().toLowerCase() : "";
   if (!slug) return Response.json({ error: "Slug wajib diisi" }, { status: 400 });
   const { data: cls } = await admin.from("classes").select("id,slug,price,product_type,is_published").eq("slug", slug).maybeSingle();
-  if (!cls || !cls.is_published || cls.product_type !== "workshop" || Number(cls.price) !== 0) {
-    return Response.json({ error: "Workshop gratis tidak tersedia" }, { status: 404 });
+  if (!cls || !cls.is_published || Number(cls.price) !== 0 || !["course", "workshop"].includes(cls.product_type)) {
+    return Response.json({ error: "Kelas gratis tidak tersedia" }, { status: 404 });
   }
   const token = (await cookies()).get("member_access_token")?.value;
   if (!token) return Response.json({ error: "Login diperlukan", login: true }, { status: 401 });
@@ -21,5 +21,5 @@ export async function POST(req: Request) {
   const next = [...new Set([...owned, cls.id, cls.slug])];
   const { error } = await admin.from("members").update({ owned_classes: next }).eq("id", member.id);
   if (error) return Response.json({ error: "Akses gratis gagal disimpan" }, { status: 500 });
-  return Response.json({ ok: true, redirect: `/learn/workshop/${cls.slug}` });
+  return Response.json({ ok: true, redirect: cls.product_type === "workshop" ? `/learn/workshop/${cls.slug}` : `/learn/course/${cls.slug}` });
 }
