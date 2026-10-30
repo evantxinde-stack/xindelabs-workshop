@@ -49,7 +49,7 @@ export default function LockedDetail({ cls, lessons = [], kind = "course", backH
         <p className="mt-4 text-3xl font-bold text-white">{free ? "Gratis" : price ? rupiah(price) : "Hubungi kami"}</p>
         {Number.isFinite(memberPrice) && memberPrice > 0 && Number.isFinite(basePrice) && memberPrice < basePrice ? <p className="mt-1 text-xs text-white/55">harga khusus member · normal <s>{rupiah(basePrice)}</s></p> : null}
         {free
-          ? <Link href={`/learn/workshop/${cls.slug}`} className="mt-5 block rounded-full bg-[#00ff88] px-5 py-3 text-center font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Buka akses gratis</Link>
+          ? <Link href={`/learn/${cls.product_type === "workshop" ? "workshop" : "course"}/${cls.slug}`} className="mt-5 block rounded-full bg-[#00ff88] px-5 py-3 text-center font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Buka akses gratis</Link>
           : <a href={`/checkout/${cls.slug}`} className="mt-5 block rounded-full bg-[#00ff88] px-5 py-3 text-center font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">Beli akses{price ? ` · ${rupiah(price)}` : ""}</a>}
         <a href={wa} target="_blank" rel="noopener noreferrer" className="mt-3 block rounded-full border border-white/30 px-5 py-3 text-center text-sm font-semibold text-white/85 transition hover:border-[#00ff88] hover:text-[#00ff88]">Tanya dulu via WhatsApp</a>
         <ul className="mt-5 space-y-2 text-sm text-white/60">
