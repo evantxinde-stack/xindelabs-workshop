@@ -16,6 +16,8 @@ export async function POST(req: Request) {
       email,
       name: typeof body?.name === "string" ? body.name : undefined,
       tier: typeof body?.tier === "string" ? body.tier : undefined,
+      payment_option: body?.payment_option === "annual" ? "annual" : body?.tier === "lifetime" ? "lifetime" : undefined,
+      product: typeof body?.product === "string" && body.product.trim() ? body.product.trim().toLowerCase() : undefined,
     });
     return Response.json(result);
   } catch (e) {

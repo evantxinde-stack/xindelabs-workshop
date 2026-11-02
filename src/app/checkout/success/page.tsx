@@ -17,7 +17,10 @@ export default async function SuccessPage({ params, searchParams }: Props) {
   const leadId = search.lead;
   const item = PRODUCTS[product as keyof typeof PRODUCTS] ?? PRODUCTS.vip;
 
-  const { paid } = leadId ? await ensurePaidByLead(leadId, product) : { paid: false };
+  const lookupProduct = product === "video-workshop" ? "fast_track" : product;
+  const { paid } = leadId ? await ensurePaidByLead(leadId, lookupProduct) : { paid: false };
+  const itemName = product === "video-workshop" ? "Video Workshop" : item.name;
+  const isWorkshop = product === "fast_track" || product === "video-workshop";
 
   return (
     <div className="grid-bg relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-16 font-sans text-white">
@@ -32,9 +35,9 @@ export default async function SuccessPage({ params, searchParams }: Props) {
           <>
             <h1 className="text-2xl font-bold">Pembayaran Berhasil</h1>
             <p className="mt-4 text-white/60">
-              {product === "fast_track" ? (
+              {isWorkshop ? (
                 <>
-                  Akses <span className="font-semibold text-white">{item.name}</span>{" "}
+                  Akses <span className="font-semibold text-white">{itemName}</span>{" "}
                   sudah aktif. Cek email kamu — kredensial login LMS{" "}
                   <span className="text-white/80">{process.env.NEXT_PUBLIC_LMS_URL ?? "xindelabs-workshop.vercel.app"}</span>{" "}
                   ada di sana.
@@ -47,7 +50,7 @@ export default async function SuccessPage({ params, searchParams }: Props) {
                 </>
               )}
             </p>
-            {product === "fast_track" && (
+            {isWorkshop && (
               <a
                 href={process.env.NEXT_PUBLIC_LMS_URL ?? "https://xindelabs-workshop.vercel.app"}
                 target="_blank"

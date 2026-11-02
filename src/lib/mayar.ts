@@ -61,6 +61,7 @@ export const PRODUCTS = {
     name: "Video Workshop",
     price: FAST_TRACK_TIERS.yearly,
     priceLabel: "Rp599.000",
+    classSlug: "video-workshop",
   },
 } as const;
 

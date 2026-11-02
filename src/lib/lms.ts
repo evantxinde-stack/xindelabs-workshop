@@ -6,6 +6,8 @@ export const LMS_URL =
   process.env.NEXT_PUBLIC_LMS_URL ?? "https://xindelabs-workshop.vercel.app";
 
 export const WORKSHOP_PRODUCT = "build-your-own-personalized-agent";
+
+export const LIFETIME_PACKAGES = new Set(["video-workshop"]);
 export type LmsTier = "yearly" | "lifetime";
 
 function randomPassword() {
@@ -94,7 +96,9 @@ export async function provisionLmsAccess(input: {
   );
   const productList = Array.from(owned).join(",");
 
-  const finalTier: LmsTier = existing?.tier === "lifetime" ? "lifetime" : tier;
+  // Lifetime paket (mis. Video Workshop lifetime) = setara Inner Circle: pegang lifetime, jangan nimpa annual yang sudah ada.
+  const isLifetimePackage = LIFETIME_PACKAGES.has(product) && tier === "lifetime";
+  const finalTier: LmsTier = existing?.tier === "lifetime" || isLifetimePackage ? "lifetime" : tier;
   const option: PaymentOption =
     finalTier === "lifetime" ? "lifetime" : input.payment_option ?? "annual";
   const paidUntil = nextPaidUntil(option, existing?.paid_until);
