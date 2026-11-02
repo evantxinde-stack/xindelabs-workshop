@@ -215,9 +215,9 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         <Stat label="Total Omzet (Mayar)" value={rupiah(s.revenue)} tone="ok" />
         <Stat label="Total Leads" value={s.leadsTotal.toLocaleString("id-ID")} />
-        <a href="/admin/unified-leads?filter=Tutorial" className="block transition hover:ring-1 hover:ring-[#00FF88]/50 rounded-xl"><Stat label="Tutorial Leads" value={s.tutorialLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
-        <a href="/admin/unified-leads?filter=Workshop" className="block transition hover:ring-1 hover:ring-[#00FF88]/50 rounded-xl"><Stat label="Workshop Leads" value={s.workshopLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
-        <a href="/admin/unified-leads?filter=Komunitas" className="block transition hover:ring-1 hover:ring-[#00FF88]/50 rounded-xl"><Stat label="Komunitas Leads" value={s.komunitasLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
+        <a href="/admin/unified-leads?filter=Tutorial"><Stat label="Tutorial Leads" value={s.tutorialLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
+        <a href="/admin/unified-leads?filter=Workshop"><Stat label="Workshop Leads" value={s.workshopLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
+        <a href="/admin/unified-leads?filter=Komunitas"><Stat label="Komunitas Leads" value={s.komunitasLeads.toLocaleString("id-ID")} note="Klik untuk lihat daftar →" /></a>
         <Stat label="Paid Customers" value={s.paidCustomers.toLocaleString("id-ID")} tone="ok" />
         <Stat label="Workshop Members" value={s.workshopMembers.toLocaleString("id-ID")} />
         <Stat label="Orders Pending" value={s.ordersPending.toLocaleString("id-ID")} tone={s.ordersPending > 0 ? "warn" : undefined} />

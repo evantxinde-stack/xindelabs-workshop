@@ -52,7 +52,18 @@ export function LeadsManagerUnified({ leads, initialFilter }: { leads: UnifiedLe
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"saved" | "error" | null>(null);
-  const [filter, setFilter] = useState<string>(initialFilter === "Tutorial" || initialFilter === "Workshop" || initialFilter === "Komunitas" ? initialFilter : "All");
+  const [filter, setFilter] = useState<string>(() => {
+    if (initialFilter === "Tutorial" || initialFilter === "Workshop" || initialFilter === "Komunitas" || initialFilter === "Paid" || initialFilter === "Follow-up") return initialFilter;
+    if (typeof window !== "undefined") {
+      const saved = window.localStorage.getItem("unified-leads-filter");
+      if (saved === "Tutorial" || saved === "Workshop" || saved === "Komunitas" || saved === "Paid" || saved === "Follow-up" || saved === "All") return saved;
+    }
+    return "All";
+  });
+  function changeFilter(v: string) {
+    setFilter(v);
+    try { window.localStorage.setItem("unified-leads-filter", v); } catch {}
+  }
   const [search, setSearch] = useState<string>("");
 
   async function load() {
@@ -156,7 +167,7 @@ export function LeadsManagerUnified({ leads, initialFilter }: { leads: UnifiedLe
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => changeFilter(e.target.value)}
             className={`${inputCls} w-auto`}
           >
             <option>All</option>
