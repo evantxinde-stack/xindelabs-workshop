@@ -7,7 +7,7 @@ test("revoked membership has no LMS access, including old lifetime records", () 
   assert.equal(billingAccess({ payment_option: "annual", billing_status: "grace" }), "read_only");
   assert.equal(billingAccess({ payment_option: "annual", billing_status: "active", paid_until: "2099-01-01" }), "active");
   assert.equal(billingAccess({ payment_option: "annual", billing_status: "active", paid_until: "2020-01-01" }), "none");
-  assert.equal(billingAccess({ payment_option: "annual", billing_status: "active", paid_until: "2026-10-25" }), "read_only");
+  assert.equal(billingAccess({ payment_option: "annual", billing_status: "active", paid_until: new Date(Date.now() - 3 * 864e5).toISOString().slice(0, 10) }), "read_only");
 });
 
 test("owned_classes array and legacy product string both grant class access", () => {

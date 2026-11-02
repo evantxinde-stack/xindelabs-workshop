@@ -76,7 +76,7 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
         <div className="mt-10">
           {step === 0 && (
             <section className={`${card} mx-auto max-w-lg`}>
-              <p className={`${mono} ${neon}`}>lead capture</p>
+              <p className={`${mono} ${neon}`}>daftar gratis</p>
               <h2 className="mt-3 text-2xl font-bold">Mulai belajar AI Agent</h2>
               <form onSubmit={capture} className="mt-6 space-y-3">
                 {([["name", "Nama"], ["email", "Email"], ["whatsapp", "No. WhatsApp"]] as const).map(([k, l]) => (
@@ -94,7 +94,7 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
                 <input inputMode="numeric" placeholder="Discord User ID (opsional)" value={form.discord_id} onChange={(e) => setForm({ ...form, discord_id: e.target.value.replace(/\D/g, "") })} className={input} />
                 <DiscordIdHelp />
                 <button disabled={busy} className={`${btn} w-full`}>
-                  {busy ? "Memproses…" : "Lihat penawaran"}
+                  {busy ? "Memproses…" : "Daftar Gratis"}
                 </button>
               </form>
             </section>
