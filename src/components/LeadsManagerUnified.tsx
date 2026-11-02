@@ -43,7 +43,7 @@ function sourceBadge(source: string, sourceGroup: string) {
   return <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{label}</span>;
 }
 
-export function LeadsManagerUnified({ leads }: { leads: UnifiedLeadRow[] }) {
+export function LeadsManagerUnified({ leads, initialFilter }: { leads: UnifiedLeadRow[]; initialFilter?: string }) {
   const [templates, setTemplates] = useState<WaTemplate[]>([]);
   const [sel, setSel] = useState("");
   const [form, setForm] = useState<"closed" | "list" | "form">("closed");
@@ -52,7 +52,7 @@ export function LeadsManagerUnified({ leads }: { leads: UnifiedLeadRow[] }) {
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<"saved" | "error" | null>(null);
-  const [filter, setFilter] = useState<string>("All");
+  const [filter, setFilter] = useState<string>(initialFilter === "Tutorial" || initialFilter === "Workshop" || initialFilter === "Komunitas" ? initialFilter : "All");
   const [search, setSearch] = useState<string>("");
 
   async function load() {

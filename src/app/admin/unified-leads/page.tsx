@@ -25,8 +25,9 @@ async function getData() {
   return { unified, totalLeads: leads.length };
 }
 
-export default async function UnifiedLeadsPage() {
+export default async function UnifiedLeadsPage({ searchParams }: { searchParams?: Promise<{ filter?: string }> }) {
   const { unified } = await getData();
+  const initialFilter = (await searchParams)?.filter;
   return (
     <>
       <header className="scroll-mt-20">
@@ -34,7 +35,7 @@ export default async function UnifiedLeadsPage() {
         <p className="mt-0.5 text-sm text-white/45">Tampilan terpusat untuk semua funnel.</p>
       </header>
       <Section title="Daftar Leads">
-        <LeadsManagerUnified leads={unified as any} />
+        <LeadsManagerUnified leads={unified as any} initialFilter={initialFilter} />
       </Section>
     </>
   );
