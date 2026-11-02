@@ -61,7 +61,8 @@ export function memberPrice(item: ClassRow): number {
   return Number(item.price) || 0;
 }
 
-export function LearnHeader() {
+export function LearnHeader({ memberEmail }: { memberEmail?: string | null }) {
+  const loggedIn = Boolean(memberEmail);
   return <header className="sticky top-0 z-40 border-b border-white/10 bg-[#09090b]/85 backdrop-blur">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
       <div className="flex items-baseline gap-2">
@@ -78,9 +79,15 @@ export function LearnHeader() {
         ))}
       </nav>
       <div className="flex items-center gap-3">
-        <Link href="/learn/login" className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">
-          login member
-        </Link>
+        {loggedIn ? (
+          <Link href="/learn/dashboard" className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">
+            member area
+          </Link>
+        ) : (
+          <Link href="/learn/login" className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]">
+            login member
+          </Link>
+        )}
         <details className="relative sm:hidden">
           <summary aria-label="Menu" className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-white/15 text-white/70 [&::-webkit-details-marker]:hidden">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
@@ -88,7 +95,7 @@ export function LearnHeader() {
             </svg>
           </summary>
           <nav className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-white/10 bg-[#0c0c0f] p-2 font-mono text-[12px] lowercase tracking-[0.12em] text-white/70 shadow-2xl">
-            {[...LEARN_LINKS, { href: "/learn/login", label: "login member" }].map((l) => (
+            {[...LEARN_LINKS, loggedIn ? { href: "/learn/dashboard", label: "member area" } : { href: "/learn/login", label: "login member" }].map((l) => (
               <Link key={l.href} href={l.href} className="block rounded-lg px-3 py-2.5 hover:bg-white/5 hover:text-[#00ff88]">
                 {l.label}
               </Link>
@@ -100,6 +107,6 @@ export function LearnHeader() {
   </header>;
 }
 
-export function LearnShell({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-[#04110D] text-white"><LearnHeader/><main className="mx-auto max-w-6xl px-5 py-12">{children}</main></div>;
+export function LearnShell({ children, memberEmail }: { children: React.ReactNode; memberEmail?: string | null }) {
+  return <div className="min-h-screen bg-[#04110D] text-white"><LearnHeader memberEmail={memberEmail}/><main className="mx-auto max-w-6xl px-5 py-12">{children}</main></div>;
 }
