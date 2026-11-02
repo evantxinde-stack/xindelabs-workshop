@@ -6,7 +6,6 @@ const nextConfig: NextConfig = {
       { source: "/karyawan", destination: "/service", permanent: true },
       { source: "/karyawan.html", destination: "/service", permanent: true },
       { source: "/admin/leads", destination: "/admin", permanent: true },
-      { source: "/admin/unified-leads", destination: "/admin", permanent: true },
       { source: "/admin/pipeline", destination: "/admin", permanent: true },
       { source: "/admin/leaks", destination: "/admin", permanent: true },
     ];
