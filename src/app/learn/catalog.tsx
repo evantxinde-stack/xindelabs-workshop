@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
 import FreeAccessButton from "./free-access-button";
@@ -62,7 +64,19 @@ export function memberPrice(item: ClassRow): number {
 }
 
 export function LearnHeader({ memberEmail }: { memberEmail?: string | null }) {
-  const loggedIn = Boolean(memberEmail);
+  const [autoEmail, setAutoEmail] = useState<string | null>(null);
+  useEffect(() => {
+    // ponytail: pages that don't know the session (course, workshop, katalog) pass
+    // nothing; the header resolves the login state itself. Drop once all learn
+    // pages are server components passing memberEmail.
+    if (memberEmail === undefined) {
+      fetch("/api/member/session", { credentials: "same-origin" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((j) => j?.email && setAutoEmail(j.email))
+        .catch(() => {});
+    }
+  }, [memberEmail]);
+  const loggedIn = memberEmail !== undefined ? Boolean(memberEmail) : Boolean(autoEmail);
   return <header className="sticky top-0 z-40 border-b border-white/10 bg-[#09090b]/85 backdrop-blur">
     <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
       <div className="flex items-baseline gap-2">
