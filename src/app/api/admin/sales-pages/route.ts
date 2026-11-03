@@ -3,7 +3,7 @@ import { admin } from "@/lib/supabase/server";
 import { isAdminRequest } from "@/lib/admin-session";
 
 const SLUG = /^[a-z0-9][a-z0-9-]{1,80}$/;
-const COLUMNS = "id,slug,class_id,headline,subheadline,vsl_youtube_id,hero_badge,problem_blocks,stats,benefits,testimonials,cta_label,final_headline,final_subheadline,countdown_type,countdown_ends_at,countdown_duration_minutes,sales_notification_enabled,sales_notification_config,faq_items,is_default,is_published,updated_at";
+const COLUMNS = "id,slug,class_id,headline,subheadline,vsl_youtube_id,hero_badge,problem_blocks,stats,benefits,testimonials,cta_label,final_headline,final_subheadline,countdown_type,countdown_ends_at,countdown_duration_minutes,sales_notification_enabled,sales_notification_config,faq_items,is_default,is_published,custom_html,custom_html_position,updated_at";
 
 function jsonArray(value: unknown, field: string): { error: string } | { value: unknown[] } {
   let parsed: unknown = value ?? [];
@@ -44,6 +44,8 @@ function parse(body: any): { error: string } | { data: Record<string, unknown> }
     sales_notification_enabled: Boolean(body.sales_notification_enabled),
     sales_notification_config: notice,
     faq_items: faq,
+    custom_html: typeof body.custom_html === "string" ? body.custom_html.slice(0, 100000) : null,
+    custom_html_position: ["hero", "mid", "last"].includes(body.custom_html_position) ? body.custom_html_position : "mid",
     is_default: Boolean(body.is_default),
     is_published: body.is_published === undefined ? true : Boolean(body.is_published),
   } };
