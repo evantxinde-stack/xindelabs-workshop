@@ -13,7 +13,7 @@ test("annual members only own Hermes and never VIP", () => {
 });
 
 test("lifetime members own regular classes but VIP stays gated", () => {
-  const member = { payment_option: "lifetime", billing_status: "active", owned_classes: [] };
+  const member = { tier: "lifetime", payment_option: "lifetime", billing_status: "active", owned_classes: [] };
   assert.equal(ownsClass(member, cls("kelas-lain")), true);
   assert.equal(ownsClass(member, cls("mentoring-vip-bulanan")), false);
 });

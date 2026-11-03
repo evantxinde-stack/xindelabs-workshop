@@ -10,7 +10,7 @@ type State = "active" | "due" | "grace" | "expired" | "revoked" | "lifetime";
 
 function stateOf(member: any): State {
   if (member.billing_status === "revoked") return "revoked";
-  if (member.tier === "lifetime" || member.payment_option === "lifetime") return "lifetime";
+  if (member.tier === "lifetime") return "lifetime";
   const access = billingAccess(member);
   if (access === "none") return "expired";
   const window = renewalWindow(member.paid_until);

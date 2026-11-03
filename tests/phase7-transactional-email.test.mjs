@@ -8,7 +8,7 @@ const read = (p) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 test("renewal is detected for owned annual products, not lifetime", () => {
   assert.equal(isRenewal({ payment_option: "annual", product: "hermes-workshop" }, "hermes-workshop"), true);
   assert.equal(isRenewal({ payment_option: "annual", product: "other,hermes-workshop" }, "hermes-workshop"), true);
-  assert.equal(isRenewal({ payment_option: "lifetime", product: "hermes-workshop" }, "hermes-workshop"), false);
+  assert.equal(isRenewal({ tier: "lifetime", payment_option: "lifetime", product: "hermes-workshop" }, "hermes-workshop"), false);
   assert.equal(isRenewal({ payment_option: "annual", product: "other" }, "hermes-workshop"), false);
 });
 

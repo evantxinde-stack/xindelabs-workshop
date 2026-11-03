@@ -33,7 +33,7 @@ export function billingAccess(member: any): Access {
   if (!member) return "none";
   const status = String(member.billing_status ?? "").toLowerCase();
   if (status === "revoked") return "none";
-  if (allAccess(member) || member.is_vip === true || member.payment_option === "lifetime") return "active";
+  if (allAccess(member) || member.is_vip === true || member.tier === "lifetime") return "active";
   if (member.payment_option === "annual" && member.paid_until) {
     const window = renewalWindow(member.paid_until);
     if (window.state === "expired") return "none";
@@ -55,7 +55,7 @@ export function ownsClass(member: any, cls: any, orders: any[] = []): boolean {
   if (freeClass) return Boolean(member); // gratis: cukup punya akun member, tak perlu entri produk
   if (access === "none") return false;
   if (isVipClass(cls)) return member.is_vip === true;
-  if (allAccess(member) || member.is_vip === true || member.payment_option === "lifetime") return true;
+  if (allAccess(member) || member.is_vip === true || member.tier === "lifetime") return true;
   if (member.payment_option === "annual" || member.payment_option === "yearly") {
     return classProductSlugs(cls).includes("kelas-bangun-hermes-agent") || classProductSlugs(cls).includes("build-your-own-personalized-agent");
   }

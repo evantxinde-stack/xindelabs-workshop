@@ -30,6 +30,21 @@ async function supabaseAdmin(path: string, init: RequestInit) {
   return { ok: res.ok, status: res.status, json };
 }
 
+async function findAuthUser(email: string) {
+  // `users?filter=email&keyword=` returns [] on this Supabase version — scan pages instead.
+  for (let page = 1; page <= 10; page++) {
+    const list = await supabaseAdmin(`users?page=${page}&per_page=200`, { method: "GET" });
+    const users: { id?: string; email?: string }[] = list.json?.users ?? [];
+    if (!users.length) return null;
+    const hit = users.find(
+      (u) => String(u.email ?? "").toLowerCase() === email
+    );
+    if (hit?.id) return hit;
+    if (users.length < 200) return null;
+  }
+  return null;
+}
+
 async function createAuthUser(email: string, password: string) {
   const created = await supabaseAdmin("users", {
     method: "POST",
@@ -37,13 +52,7 @@ async function createAuthUser(email: string, password: string) {
   });
   if (created.ok) return true;
 
-  const list = await supabaseAdmin(
-    `users?filter=email&keyword=${encodeURIComponent(email)}`,
-    { method: "GET" }
-  );
-  const user = (list.json?.users ?? []).find(
-    (u: { email?: string }) => String(u.email ?? "").toLowerCase() === email
-  );
+  const user = await findAuthUser(email);
   if (user?.id) {
     await supabaseAdmin(`users/${user.id}`, {
       method: "PUT",

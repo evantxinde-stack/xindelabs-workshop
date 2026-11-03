@@ -60,7 +60,7 @@ export function graceUntil(paidUntil: string, graceDays = GRACE_DAYS): string {
  */
 export function isRenewal(member: any, product?: string | null): boolean {
   if (!member) return false;
-  if (member.tier === "lifetime" || member.payment_option === "lifetime") return false;
+  if (member.tier === "lifetime") return false;
   if (!product) return false;
   const owned = String(member.product ?? "")
     .split(",")
