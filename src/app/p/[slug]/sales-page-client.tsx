@@ -23,6 +23,8 @@ function Countdown({ config }: { config: any }) {
 }
 function Price({ product }: { product: any }) { const regular = Number(product?.price); if (!regular) return null; const current = classPrice(product, "lifetime"), sale = earlyBirdOpen(product) && current < regular, quota = Number(product?.early_bird_quota), left = Number.isFinite(quota) ? Math.max(0, quota - Number(product?.early_bird_used || 0)) : null; return <div><div className="flex flex-wrap items-baseline gap-3"><b className="text-5xl text-[#00ff88]">Rp{current.toLocaleString("id-ID")}</b>{sale && <span className="text-xl text-white/35 line-through">Rp{regular.toLocaleString("id-ID")}</span>}</div>{sale && <p className="mt-3 text-sm text-white/60">{left === null ? "Harga early bird, selama periode masih terbuka" : `Harga early bird — sisa ${left} slot`}</p>}</div>; }
 function Section({ label, children }: { label: string; children: React.ReactNode }) { return <section className={`${rule} py-16`}><div className="mx-auto max-w-5xl px-6"><p className={tag}>{label}</p>{children}</div></section>; }
+// Raw HTML embed. Admin-authored only — the sales page is a trusted surface.
+function Embed({ config, at }: { config: any; at: string }) { const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : ""; if (!html || (config?.custom_html_position || "mid") !== at) return null; return <section className={`${rule} py-16`}><div className="mx-auto max-w-5xl px-6"><div className="prose-invert" dangerouslySetInnerHTML={{ __html: html }} /></div></section>; }
 
 export function SalesPageClient({ config, product, lessons }: { config: any; product: any; lessons: any[] }) {
   const [faq, setFaq] = useState<number | null>(null); const [toast, setToast] = useState(false);
