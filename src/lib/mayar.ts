@@ -143,8 +143,8 @@ export async function createInvoice(input: {
       extraData: {
         leadId: String(input.leadId),
         product: String(input.product),
-        tier: input.tier ? String(input.tier) : "",
-        classId: input.classId ? String(input.classId) : "",
+        ...(input.tier ? { tier: String(input.tier) } : {}),
+        ...(input.classId ? { classId: String(input.classId) } : {}),
       },
     }),
   });
