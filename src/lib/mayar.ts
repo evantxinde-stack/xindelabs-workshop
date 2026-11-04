@@ -139,7 +139,13 @@ export async function createInvoice(input: {
       expiredAt: new Date(Date.now() + 72 * 3600 * 1000).toISOString(),
       items: [{ quantity: 1, rate, description }],
       redirectUrl: `${process.env.APP_URL}/checkout/success?product=${input.product}&lead=${input.leadId}`,
-      extraData: { leadId: input.leadId, product: input.product, tier: input.tier ?? null, classId: input.classId ?? null },
+      // Mayar: setiap value extraData WAJIB string (null -> "extraData Validation Error").
+      extraData: {
+        leadId: String(input.leadId),
+        product: String(input.product),
+        tier: input.tier ? String(input.tier) : "",
+        classId: input.classId ? String(input.classId) : "",
+      },
     }),
   });
   return {
