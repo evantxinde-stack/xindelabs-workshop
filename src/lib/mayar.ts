@@ -72,10 +72,11 @@ export function productPrice(product: Product, tier?: LmsTier): number {
   return PRODUCTS[product as keyof typeof PRODUCTS]?.price ?? 0;
 }
 
+// api.mayar.io sudah mati (ECONNRESET) — default ke host produksi, sandbox harus eksplisit.
 const BASE =
-  process.env.MAYAR_ENV === "production"
-    ? "https://api.mayar.id/hl/v2"
-    : "https://api.mayar.io/hl/v2";
+  process.env.MAYAR_ENV === "sandbox"
+    ? "https://api.mayar.io/hl/v2"
+    : "https://api.mayar.id/hl/v2";
 
 export type Invoice = {
   link: string;
