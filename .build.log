@@ -1,0 +1,111 @@
+
+> tutorial@0.1.0 build
+> next build
+
+▲ Next.js 16.3.4 (Turbopack)
+- Environments: .env.local
+✓ Running next.config.ts took 226ms
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead.
+
+  To migrate automatically, run:
+  npx @next/codemod@canary middleware-to-proxy .
+
+  Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.5s
+  Running TypeScript ...
+  Finished TypeScript in 6.3s ...
+  Collecting page data using 1 worker ...
+  Generating static pages using 1 worker (0/37) ...
+  Generating static pages using 1 worker (9/37) 
+  Generating static pages using 1 worker (18/37) 
+  Generating static pages using 1 worker (27/37) 
+✓ Generating static pages using 1 worker (37/37) in 1157ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/content
+├ ƒ /admin/editor
+├ ƒ /admin/emails
+├ ƒ /admin/followups
+├ ƒ /admin/landing-pages
+├ ƒ /admin/leads
+├ ƒ /admin/leaks
+├ ƒ /admin/lms
+├ ƒ /admin/lms/courses
+├ ƒ /admin/login
+├ ƒ /admin/members
+├ ƒ /admin/membership
+├ ƒ /admin/orders
+├ ƒ /admin/pipeline
+├ ƒ /admin/pixels
+├ ƒ /admin/sales-pages
+├ ƒ /admin/unified-leads
+├ ƒ /admin/vip
+├ ƒ /admin/vouchers
+├ ƒ /admin/workshop-members
+├ ƒ /admin/workshops
+├ ƒ /api/admin/blocks
+├ ƒ /api/admin/classes
+├ ƒ /api/admin/email-templates
+├ ƒ /api/admin/lessons
+├ ƒ /api/admin/login
+├ ƒ /api/admin/logout
+├ ƒ /api/admin/pixels
+├ ƒ /api/admin/sales-pages
+├ ƒ /api/admin/wa-templates
+├ ƒ /api/checkout
+├ ƒ /api/cron/send-email
+├ ƒ /api/lead
+├ ƒ /api/mayar/webhook
+├ ƒ /api/member/callback
+├ ƒ /api/member/certificate
+├ ƒ /api/member/free-access
+├ ƒ /api/member/logout
+├ ƒ /api/member/password
+├ ƒ /api/member/progress
+├ ƒ /api/member/session
+├ ƒ /api/member/workshop-progress
+├ ƒ /api/partnership
+├ ƒ /api/provision-lms
+├ ƒ /api/resend/webhook
+├ ƒ /api/tutorial/event
+├ ƒ /api/v1/blog
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /certificate/[number]
+├ ƒ /checkout/[product]
+├ ○ /checkout/failed
+├ ○ /checkout/pending
+├ ƒ /checkout/success
+├ ƒ /fast-track
+├ ƒ /join-group
+├ ƒ /learn
+├ ○ /learn/auth/callback
+├ ƒ /learn/course/[slug]
+├ ƒ /learn/dashboard
+├ ƒ /learn/kelas
+├ ○ /learn/login
+├ ○ /learn/reset-password
+├ ƒ /learn/vip
+├ ƒ /learn/workshop/[slug]
+├ ƒ /p/[slug]
+├ ƒ /portofolio
+├ ○ /privacy
+├ ƒ /sales/[slug]
+├ ƒ /service
+├ ○ /terms
+├ ƒ /tutorial
+├ ƒ /unsubscribe
+└ ƒ /vip-coaching
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
