@@ -15,6 +15,8 @@ type OrderRow = {
   paid_at: string | null;
   created_at: string;
   whatsapp: string | null;
+  class_id?: string | null;
+  lead_id?: string | null;
 };
 
 const inputCls = "input-dark";
@@ -37,7 +39,15 @@ export function OrderWaFollowup({ orders }: { orders: OrderRow[] }) {
   const selTpl = templates.find((t) => t.id === sel);
 
   const pending = orders.filter((o) => o.status === "pending");
-  const paid = orders.filter((o) => o.status === "paid");
+
+  function orderVars(o: OrderRow) {
+    const subdomain = "xindelabs.web.id";
+    const slug = o.product || "";
+    const paymentUrl = slug
+      ? `https://${subdomain}/checkout/${slug}${o.lead_id ? `?lead=${o.lead_id}` : ""}`
+      : "";
+    return { name: o.lead_name, subdomain, payment_url: paymentUrl };
+  }
 
   return (
     <>
@@ -83,7 +93,7 @@ export function OrderWaFollowup({ orders }: { orders: OrderRow[] }) {
               const phone = sanitizePhone(r.whatsapp ?? "");
               const href =
                 selTpl && phone
-                  ? waLink(phone, fillTemplate(selTpl.content, r.lead_name))
+                  ? waLink(phone, fillTemplate(selTpl.content, orderVars(r)))
                   : "";
               const isPending = r.status === "pending";
               return (

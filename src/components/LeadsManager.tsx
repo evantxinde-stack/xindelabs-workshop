@@ -129,7 +129,7 @@ export function LeadsManager({ leads }: { leads: LeadRow[] }) {
           <tbody>
             {leads.map((l) => {
               const phone = sanitizePhone(l.whatsapp ?? "");
-              const href = selTpl && phone ? waLink(phone, fillTemplate(selTpl.content, l.name)) : "";
+              const href = selTpl && phone ? waLink(phone, fillTemplate(selTpl.content, { name: l.name })) : "";
               return (
                 <tr key={l.id}>
                   <td>{l.name}</td>

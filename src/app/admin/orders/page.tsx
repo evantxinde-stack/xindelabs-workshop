@@ -24,11 +24,13 @@ async function getData() {
     const sm = mapSource(l?.source);
     return {
       id: o.id,
+      lead_id: o.lead_id ?? null,
       lead_name: l?.name || "—",
       lead_email: l?.email || "—",
       whatsapp: l?.whatsapp ?? null,
       source: sm.label,
       product: o.product,
+      class_id: o.class_id ?? null,
       amount: o.amount,
       status: o.status,
       paid_at: o.paid_at,

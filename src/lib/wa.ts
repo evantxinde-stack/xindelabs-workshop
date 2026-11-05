@@ -5,8 +5,8 @@ export function sanitizePhone(n: string): string {
   return d.startsWith("0") ? "62" + d.slice(1) : d;
 }
 
-export function fillTemplate(content: string, name: string): string {
-  return content.replace(/\{\{name\}\}/g, name);
+export function fillTemplate(content: string, vars: Record<string, string | undefined>): string {
+  return content.replace(/\{\{(\w+)\}\}/g, (_m, k) => vars[k] ?? _m);
 }
 
 export function waLink(number: string, text: string): string {
