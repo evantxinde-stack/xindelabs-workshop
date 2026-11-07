@@ -34,10 +34,10 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
   const faqs = arr(config.faq_items), problems = arr(config.problem_blocks), stats = arr(config.stats), benefits = arr(config.benefits), testimonials = arr(config.testimonials), notices = arr(config.sales_notification_config?.items);
   useEffect(() => { if (!config.sales_notification_enabled || !notices.length) return; const id = window.setInterval(() => setToast(true), 12000); return () => clearInterval(id); }, [config.sales_notification_enabled, notices.length]);
   useEffect(() => { window.fbq?.("track", "ViewContent", { content_name: product?.title || config.slug, content_type: "product", content_ids: product?.id ? [product.id] : undefined }); }, [config.slug, product?.id, product?.title]);
-  // Semua klik tombol/link di halaman ini = AddToCart (permintaan user).
+  // Tombol CTA saja. Link navigasi biasa tidak dihitung sebagai AddToCart.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement | null)?.closest("a,button");
+      const el = (e.target as HTMLElement | null)?.closest("button");
       if (!el) return;
       window.fbq?.("track", "AddToCart", {
         content_name: product?.title || config.slug,
