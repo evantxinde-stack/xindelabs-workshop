@@ -34,11 +34,13 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
   const faqs = arr(config.faq_items), problems = arr(config.problem_blocks), stats = arr(config.stats), benefits = arr(config.benefits), testimonials = arr(config.testimonials), notices = arr(config.sales_notification_config?.items);
   useEffect(() => { if (!config.sales_notification_enabled || !notices.length) return; const id = window.setInterval(() => setToast(true), 12000); return () => clearInterval(id); }, [config.sales_notification_enabled, notices.length]);
   useEffect(() => { window.fbq?.("track", "ViewContent", { content_name: product?.title || config.slug, content_type: "product", content_ids: product?.id ? [product.id] : undefined }); }, [config.slug, product?.id, product?.title]);
-  // Tombol CTA saja. Link navigasi biasa tidak dihitung sebagai AddToCart.
+  // CTA checkout saja: link yang menuju checkout + button.
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const el = (e.target as HTMLElement | null)?.closest("button");
+      const el = (e.target as HTMLElement | null)?.closest("a,button") as HTMLAnchorElement | HTMLButtonElement | null;
       if (!el) return;
+      const isCheckoutLink = el.tagName === "A" && ((el as HTMLAnchorElement).href.includes("/checkout/") || el.getAttribute("href")?.includes("/checkout/"));
+      if (el.tagName !== "BUTTON" && !isCheckoutLink) return;
       window.fbq?.("track", "AddToCart", {
         content_name: product?.title || config.slug,
         content_type: "product",
