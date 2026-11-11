@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
-
 const arr = (v: any) => Array.isArray(v) ? v : [];
 const tag = "font-mono text-[11px] uppercase tracking-[.22em] text-[#00ff88]";
 const rule = "border-t border-white/10";
@@ -28,6 +27,17 @@ function Embed({ config, at }: { config: any; at: string }) { const html = typeo
 // Mode "custom": dokumen HTML penuh dari admin. Dirender di iframe srcDoc supaya
 // <style> dan <script> asli jalan tanpa bentrok dengan Tailwind.
 // Klik ke /checkout/ diteruskan ke parent untuk pixel AddToCart.
+function SalesToast({ config }: { config: any }) {
+  const items = arr(config?.sales_notification_config?.items);
+  const [msg, setMsg] = useState<string | null>(null);
+  useEffect(() => {
+    if (!config?.sales_notification_enabled || !items.length) return;
+    const id = window.setInterval(() => setMsg(String(items[Math.floor(Math.random() * items.length)])), 12000);
+    return () => clearInterval(id);
+  }, [config?.sales_notification_enabled, items.length]);
+  if (!msg) return null;
+  return <button onClick={() => setMsg(null)} className="fixed bottom-5 left-5 z-[9999] max-w-xs rounded-xl border border-[#00ff88]/40 bg-[#0B1F16] px-4 py-3 text-left text-sm text-white shadow-2xl">{msg} <span className="text-white/40">×</span></button>;
+}
 function CustomOnly({ config }: { config: any }) {
   const [h, setH] = useState(0);
   const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : "";
@@ -41,16 +51,16 @@ function CustomOnly({ config }: { config: any }) {
     return () => window.removeEventListener("message", onMsg);
   }, [config.slug]);
   if (!html) return null;
-  const bridge = `<script>function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")}document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href*="/checkout/"]');if(a)parent.postMessage({xindeCheckout:1},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
+  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")}document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href*="/checkout/"]');if(a)parent.postMessage({xindeCheckout:1},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
   const doc = html.includes("</body>") ? html.replace("</body>", bridge + "</body>") : html + bridge;
   return <iframe title={config.slug || "Sales page"} srcDoc={doc} style={{ height: h ? `${h}px` : "100dvh" }} className="w-full border-0" scrolling="no" />;
 }
+function CustomPage({ config }: { config: any }) { return <><CustomOnly config={config} /><SalesToast config={config} /></>; }
 
 export function SalesPageClient({ config, product, lessons }: { config: any; product: any; lessons: any[] }) {
-  const [faq, setFaq] = useState<number | null>(null); const [toast, setToast] = useState(false);
+  const [faq, setFaq] = useState<number | null>(null);
   const checkout = `https://xindelabs.web.id/checkout/${product?.slug || config.slug}`, cta = config.cta_label || "Daftar sekarang";
-  const faqs = arr(config.faq_items), problems = arr(config.problem_blocks), stats = arr(config.stats), benefits = arr(config.benefits), testimonials = arr(config.testimonials), notices = arr(config.sales_notification_config?.items);
-  useEffect(() => { if (!config.sales_notification_enabled || !notices.length) return; const id = window.setInterval(() => setToast(true), 12000); return () => clearInterval(id); }, [config.sales_notification_enabled, notices.length]);
+  const faqs = arr(config.faq_items), problems = arr(config.problem_blocks), stats = arr(config.stats), benefits = arr(config.benefits), testimonials = arr(config.testimonials);
   useEffect(() => { window.fbq?.("track", "ViewContent", { content_name: product?.title || config.slug, content_type: "product", content_ids: product?.id ? [product.id] : undefined }); }, [config.slug, product?.id, product?.title]);
   // CTA checkout saja: link yang menuju checkout + button.
   useEffect(() => {
@@ -70,7 +80,7 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [config.slug, product]);
-  if (config.render_mode === "custom" && typeof config.custom_html === "string" && config.custom_html.trim()) return <CustomOnly config={config} />;
+  if (config.render_mode === "custom" && typeof config.custom_html === "string" && config.custom_html.trim()) return <CustomPage config={config} />;
   return <main className="min-h-screen bg-[#04110D] text-white"><header className="sticky top-0 z-40 border-b border-white/10 bg-[#04110D]/85 backdrop-blur"><div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4"><a href="https://xindelabs.web.id" className="text-lg font-bold">xindelabs<span className="text-[#00ff88]">.</span></a><Link href={checkout} className="rounded-full border border-[#00ff88]/40 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-[#00ff88]">{cta}</Link></div></header>
     <section className="mx-auto max-w-5xl px-6 pb-20 pt-20 md:pt-28">{config.hero_badge && <p className={tag}>{config.hero_badge}</p>}<h1 className="mt-6 max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">{config.headline || product?.title}</h1>{(config.subheadline || product?.description) && <p className="mt-7 max-w-2xl text-lg leading-8 text-white/60">{config.subheadline || product?.description}</p>}<div className="mt-9 flex flex-wrap gap-4"><Link href={checkout} className="rounded-full bg-[#00ff88] px-6 py-3.5 font-bold text-[#04110D]">{cta}</Link>{config.vsl_youtube_id && <a href="#video" className="py-3 font-mono text-[11px] uppercase tracking-wider text-white/50">lihat cara kerjanya</a>}</div></section>
     {config.vsl_youtube_id && <section id="video" className="mx-auto max-w-5xl px-6 pb-16"><div className="aspect-video overflow-hidden rounded-2xl border border-white/10"><iframe className="h-full w-full" src={`https://www.youtube.com/embed/${encodeURIComponent(config.vsl_youtube_id)}`} title="Video sales letter" allowFullScreen /></div></section>}
@@ -84,6 +94,6 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
     <Section label="Pricing"><h2 className="mt-4 text-3xl font-bold md:text-4xl">{product?.title}</h2><div className="mt-8 max-w-xl rounded-2xl border border-white/12 bg-[#0B1F16] p-7"><Price product={product}/><Countdown config={config}/><Link href={checkout} className="mt-7 block rounded-full bg-[#00ff88] px-6 py-4 text-center font-bold text-[#04110D]">{cta}</Link><p className="mt-3 text-center text-xs text-white/40">Pembayaran via Mayar · akses setelah pembayaran masuk</p></div></Section>
     {faqs.length > 0 && <Section label="FAQ"><div className="mt-8 max-w-3xl">{faqs.map((x: any, i: number) => <div key={i} className={rule}><button onClick={() => setFaq(faq === i ? null : i)} className="flex w-full justify-between py-5 text-left text-lg font-bold">{x.question || x.q}<span className="font-mono text-[#00ff88]">{faq === i ? "−" : "+"}</span></button>{faq === i && <p className="pb-5 leading-7 text-white/55">{x.answer || x.a}</p>}</div>)}</div></Section>}
     <Embed config={config} at="last" />
-    <section className={`${rule} py-20`}><div className="mx-auto max-w-5xl px-6"><p className={tag}>Mulai</p><h2 className="mt-4 max-w-3xl text-3xl font-bold md:text-5xl">{config.final_headline || "Berhenti kerjain semuanya sendiri."}</h2><p className="mt-5 max-w-2xl leading-8 text-white/55">{config.final_subheadline || "Bangun sistem yang jalan buat kamu, bukan sebaliknya."}</p><Link href={checkout} className="mt-8 inline-block rounded-full bg-[#00ff88] px-7 py-4 font-bold text-[#04110D]">{cta}</Link></div></section><footer className="border-t border-white/10 py-8"><div className="mx-auto max-w-5xl px-6 font-mono text-[11px] text-white/30">xindelabs.web.id · AI agent · automation · digital systems</div></footer>{toast && <button onClick={() => setToast(false)} className="fixed bottom-5 left-5 z-50 rounded-xl border border-[#00ff88]/30 bg-[#0B1F16] px-4 py-3 text-sm">{notices[Math.floor(Math.random() * notices.length)]} ×</button>}
+    <section className={`${rule} py-20`}><div className="mx-auto max-w-5xl px-6"><p className={tag}>Mulai</p><h2 className="mt-4 max-w-3xl text-3xl font-bold md:text-5xl">{config.final_headline || "Berhenti kerjain semuanya sendiri."}</h2><p className="mt-5 max-w-2xl leading-8 text-white/55">{config.final_subheadline || "Bangun sistem yang jalan buat kamu, bukan sebaliknya."}</p><Link href={checkout} className="mt-8 inline-block rounded-full bg-[#00ff88] px-7 py-4 font-bold text-[#04110D]">{cta}</Link></div></section><footer className="border-t border-white/10 py-8"><div className="mx-auto max-w-5xl px-6 font-mono text-[11px] text-white/30">xindelabs.web.id · AI agent · automation · digital systems</div></footer>
   </main>;
 }
