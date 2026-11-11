@@ -182,14 +182,14 @@ export default async function Home() {
             <div className="overflow-hidden rounded-2xl border border-white/10">
               <img
                 src="/founder.jpg"
-                alt="Evant Danamaya — founder XindeLabs"
+                alt="Xinde — founder XindeLabs"
                 className="aspect-[4/5] w-full object-cover"
                 width={1080}
                 height={1350}
               />
             </div>
             <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
-              evant danamaya · founder
+              xinde · founder
             </p>
           </div>
         </section>
@@ -400,8 +400,8 @@ export default async function Home() {
             <h2
               className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
             >
-              Berhenti jadi bottleneck operasional.{" "}
-              <span className={`${hand} font-bold text-[#00ff88]`}>Bikin sistemnya yang jaga.</span>
+              Berhenti pakai AI malah nambah kerjaan.{" "}
+              <span className={`${hand} font-bold text-[#00ff88]`}>Bikin sistem yang real kerja 24/7 No Baper.</span>
             </h2>
             <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
               Terbuka untuk project automation, infrastruktur agent, sampai build end-to-end — dari

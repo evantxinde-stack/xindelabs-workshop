@@ -104,7 +104,7 @@ export default function TutorialFunnel({ vip, course, free }: { vip: any; course
             <Offer
               title={vip?.title || "Bimbingan VIP 1-on-1"}
               video={vip?.vsl_youtube_id}
-              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} slot tersisa. Bimbingan privat bareng Evant untuk brand, agent, dan growth kamu — dibahas dulu, cocok atau tidak.`}
+              description={`Slot ${vip?.month_label || "bulan ini"}: ${vip?.remaining_slots ?? "—"} dari ${vip?.total_slots ?? "—"} slot tersisa. Bimbingan privat bareng Xinde untuk brand, agent, dan growth kamu — dibahas dulu, cocok atau tidak.`}
               primary="Konsultasi Bimbingan"
               href={vip?.whatsapp_booking_url || "https://wa.me/62895335137700?text=Halo%2C%20saya%20mau%20tanya%20soal%20Bimbingan%20VIP"}
               secondary="Belum berminat, lanjut lihat opsi lain"
