@@ -34,19 +34,19 @@ export const SERVICE_LINES = [
     price: "mulai Rp 5jt/sesi",
   },
   {
-    slug: "instalasi-ai",
+    slug: "bangun-website-bisnis",
     number: "03",
-    title: "Instalasi AI untuk Bisnis",
-    short: "Agent AI dipasang di operasional lo, jalan 24/7.",
+    title: "Bangun Website untuk Bisnis",
+    short: "Website dan landing page yang siap konversi, bukan cuma pajangan.",
     description:
-      "AI dipasang di operasional yang sudah jalan: agent yang follow-up leads, rekap, lapor, dan jawab — tanpa lo suruh tiap hari. Sistem lama tetap dipakai, cuma ditambah lapisan otomatis di atasnya.",
+      "Website dan sales funnel yang dibangun untuk jualan: cepat, mobile-friendly, terintegrasi payment gateway, WhatsApp, dan sistem tracking konversi. Siap pakai buat terima order dan leads.",
     points: [
-      "Agent Hermes jalan di server sendiri (VPS)",
-      "Integrasi WhatsApp, email, dan Sheets yang sudah dipakai",
-      "Setup, migrasi data, dan pendampingan tim",
-      "Jadwal, rekap, dan laporan otomatis",
+      "Landing page / sales page conversion-focused",
+      "Integrasi WhatsApp, form lead, dan payment gateway",
+      "Setup domain, hosting, dan Meta Pixel tracking",
+      "Desain modern, cepat, dan mobile-first",
     ],
-    price: "mulai Rp 3,5jt setup + Rp 750rb/bln",
+    price: "mulai Rp 3,5jt",
   },
   {
     slug: "automation-bisnis",

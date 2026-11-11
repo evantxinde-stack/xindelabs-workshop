@@ -67,7 +67,7 @@ export default async function ServicePage() {
         </div>
 
         <div id="konsultasi" className="mt-14 scroll-mt-24 rounded-2xl border border-[#00ff88]/30 bg-[#07130d] p-8 md:p-10">
-          <p className="font-mono text-[11px] lowercase tracking-[0.18em] text-[#00ff88]">lead capture / konsultasi</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#00ff88]">work with me</p>
           <h2 className={`${display} mt-3 text-[clamp(1.5rem,3vw,2rem)] font-bold leading-tight`}>Konsultasikan sekarang.</h2>
           <p className="mt-3 max-w-xl text-[14.5px] leading-relaxed text-white/60">
             Pilih kebutuhan lo, isi kontak. Gw balas langsung buat bahas scope, format, dan langkah paling masuk akal.

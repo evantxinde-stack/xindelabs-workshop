@@ -9,7 +9,7 @@ const service = await readFile(new URL('../src/app/service/page.tsx', import.met
 const SLUGS = [
   'pelatihan-ai-bisnis',
   'ai-event-speaker',
-  'instalasi-ai',
+  'bangun-website-bisnis',
   'automation-bisnis',
   'vibe-marketing',
   'pembuatan-aplikasi',
@@ -24,8 +24,8 @@ test('service lines live in one shared source of truth', () => {
 
 test('training and speaker lines sit on top', () => {
   const order = SLUGS.map((s) => lines.indexOf(`"${s}"`));
-  assert.ok(order[0] < order[2], 'pelatihan should precede instalasi-ai');
-  assert.ok(order[1] < order[2], 'speaker should precede instalasi-ai');
+  assert.ok(order[0] < order[2], 'pelatihan should precede bangun-website-bisnis');
+  assert.ok(order[1] < order[2], 'speaker should precede bangun-website-bisnis');
   assert.ok(order[0] < order[1], 'pelatihan should precede speaker');
 });
 
