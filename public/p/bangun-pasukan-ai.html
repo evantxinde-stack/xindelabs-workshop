@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Workshop Bangun Pasukan Super 24/7 — xindelabs (2P+P+S)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,800;1,800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050b07;--surf:#0b1610;--line:#1c3a28;--tx:#e8f5ec;--mut:#8fa99a;--ac:#39ff7a;--acd:#052b14;--warn:#ff4d4d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f3faf5;--surf:#fff;--line:#bfe0cb;--tx:#0b1f13;--mut:#4d6a58;--ac:#0a9b45;--acd:#e3f8ea}}
+:root[data-theme="dark"]{--bg:#050b07;--surf:#0b1610;--line:#1c3a28;--tx:#e8f5ec;--mut:#8fa99a;--ac:#39ff7a;--acd:#052b14}
+:root[data-theme="light"]{--bg:#f3faf5;--surf:#fff;--line:#bfe0cb;--tx:#0b1f13;--mut:#4d6a58;--ac:#0a9b45;--acd:#e3f8ea}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 17px/1.6 Archivo,system-ui,sans-serif;overflow-x:hidden}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+a{color:inherit}
+nav{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font:800 20px Archivo;text-decoration:none}.logo b{color:var(--ac)}
+.pill{font:500 13px "JetBrains Mono",monospace;border:1px solid var(--line);padding:6px 12px;border-radius:99px;color:var(--mut)}
+.hero{padding:40px 0 56px;background:radial-gradient(60% 50% at 80% 0,color-mix(in srgb,var(--ac) 18%,transparent),transparent)}
+.tag{font:400 14px "JetBrains Mono",monospace;color:var(--ac);margin:0 0 14px}
+h1{font:italic 800 clamp(40px,8.5vw,88px)/.98 Archivo;letter-spacing:-.02em;margin:0 0 20px}
+h1 em{color:var(--ac);font-style:italic}
+.lead{max-width:560px;color:var(--mut);font-size:19px;margin:0 0 28px}
+.btn{display:inline-block;background:var(--ac);color:#04140a;font:800 17px Archivo;padding:15px 26px;border-radius:10px;text-decoration:none;border:0;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--ac);outline-offset:3px}
+.btn.ghost{background:none;color:var(--tx);border:1px solid var(--line);margin-left:8px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border:1px solid var(--line);border-radius:12px;margin-top:44px;background:var(--surf)}
+.facts div{padding:18px 20px;border-right:1px solid var(--line)}.facts div:last-child{border:0}
+.facts small{display:block;font:400 13px "JetBrains Mono",monospace;color:var(--mut)}
+.facts strong{font-size:19px}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font:800 clamp(28px,4.5vw,42px)/1.1 Archivo;letter-spacing:-.015em;margin:0 0 28px;max-width:640px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:22px}
+.card h3{margin:0 0 6px;font-size:19px}.card p{margin:0;color:var(--mut);font-size:16px}
+.card .k{font:500 13px "JetBrains Mono",monospace;color:var(--ac);margin-bottom:10px;display:block}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start}
+@media(max-width:760px){.split{grid-template-columns:1fr}.facts div{border-right:0;border-bottom:1px solid var(--line)}.btn.ghost{margin:10px 0 0}}
+.poster{width:100%;border-radius:12px;border:1px solid var(--line);display:block}
+.term{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:20px;font:400 15px/1.9 "JetBrains Mono",monospace}
+.term li{list-style:none}.term li::before{content:"› ";color:var(--ac)}.term ul{margin:0;padding:0}
+.eb{background:var(--acd);border:1px solid var(--ac);border-radius:14px;padding:28px}
+.eb h2{margin-bottom:6px}
+.bar{height:16px;background:var(--bg);border:1px solid var(--line);border-radius:99px;overflow:hidden;margin:18px 0 10px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--ac),#b6ffd0);border-radius:99px;transition:width 1.4s cubic-bezier(.2,.8,.2,1)}
+.row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 14px "JetBrains Mono",monospace}
+.row .left{color:var(--ac)}
+#cd{display:flex;gap:10px;margin-top:20px}
+#cd div{min-width:68px;text-align:center;background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:10px 6px}
+#cd b{display:block;font:500 26px "JetBrains Mono",monospace}#cd small{font:400 12px "JetBrains Mono",monospace;color:var(--mut)}
+form{display:grid;gap:14px;max-width:460px}
+label{font:400 13px "JetBrains Mono",monospace;color:var(--mut);display:grid;gap:6px}
+input,select{font:400 17px Archivo;padding:13px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--tx);width:100%}
+footer{padding:36px 0;border-top:1px solid var(--line);color:var(--mut);font:400 14px "JetBrains Mono",monospace}
+#toast{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;max-width:320px;display:flex;gap:12px;align-items:center;background:var(--surf);border:1px solid var(--ac);border-radius:12px;padding:12px 16px;font-size:15px;line-height:1.35;box-shadow:0 8px 30px #0006;transform:translateY(140%);transition:transform .45s}
+#toast.on{transform:none}
+#toast i{width:10px;height:10px;border-radius:50%;background:var(--ac);flex:none;animation:p 1.6s infinite}
+#toast small{display:block;color:var(--mut);font:400 12px "JetBrains Mono",monospace}
+@keyframes p{50%{opacity:.3}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+
+.chk{list-style:none;padding:0;margin:0;display:grid;gap:14px}.chk li{padding-left:36px;position:relative}
+.chk li::before{content:"✓";position:absolute;left:0;top:2px;width:24px;height:24px;border-radius:50%;background:var(--acd);border:1px solid var(--ac);color:var(--ac);font:600 14px/22px "JetBrains Mono",monospace;text-align:center}
+.ag{border-left:3px solid var(--warn);padding:4px 0 4px 18px;margin:26px 0;color:var(--mut);max-width:560px}.ag b{color:var(--tx)}
+.ph{border:1px dashed var(--mut);border-radius:12px;padding:22px;color:var(--mut);font:400 14px/1.5 "JetBrains Mono",monospace}
+.stack{list-style:none;padding:0;margin:0 0 22px}.stack li{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.old{text-decoration:line-through;color:var(--mut)}.big{font:800 clamp(38px,8vw,60px)/1 Archivo;color:var(--ac);display:block;margin:6px 0 18px}
+.obj{max-width:640px;margin:0 auto;display:grid;gap:18px;font-size:19px}.obj b{color:var(--ac)}
+.on{color:var(--ac)}
+
+.pill{background:none;cursor:pointer;color:var(--mut)}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:8px 0 26px}
+.tier{border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--surf)}
+.tier.hot{border-color:var(--ac);background:var(--acd)}
+.tier h3{margin:0 0 6px;font:500 14px "JetBrains Mono",monospace;color:var(--ac)}
+.tier .p{font:800 34px/1.1 Archivo;display:block}.tier.off{opacity:.42;filter:grayscale(1);border-style:dashed;background:transparent}.tier small{color:var(--mut);font:400 13px/1.5 "JetBrains Mono",monospace}
+.flow{display:grid;gap:8px;margin-top:14px;font:400 14px "JetBrains Mono",monospace}
+.flow div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}.flow span{color:var(--ac);padding-left:12px}
+.cta{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.cta .btn.ghost{margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav><a class="logo" href="#">xindelabs<b>.</b></a><button class="pill" id="tm" type="button" aria-label="Ganti tema terang atau gelap">◐ tema</button></nav>
+
+<!-- BAGIAN 1: 2P = PROBLEM + PROMISE -->
+<header class="hero">
+<p class="tag">// ai agent · pasukan ai 24/7</p>
+<div class="split">
+<div>
+<h1>Bisnis udah jalan, tapi kerjaan berulang bikin lo <em>nggak pernah selesai?</em></h1>
+<p class="lead"><b style="color:var(--tx)">Janji kami:</b> di workshop live 2 jam ini, lo bangun pasukan agent AI yang ambil alih follow-up, rekap, dan posting, supaya bisnis lo tetap jalan 24/7 tanpa nambah karyawan.</p>
+<a class="btn" href="https://xindelabs.web.id/checkout/kelas-bangun-hermes-agent" target="_blank" rel="noopener">Aku mau pasukan agent</a>
+</div>
+<img class="poster" alt="Poster workshop Bangun Pasukan Super 24/7" src="/p/workshop-pasukan-poster.jpg">
+</div>
+<div class="facts">
+<div><small>tanggal</small><strong>Selasa, 24 November 2026</strong></div>
+<div><small>jam</small><strong>20:00 – 22:00 WIB</strong></div>
+<div><small>tempat</small><strong>Online meeting</strong></div>
+</div>
+</header>
+</div>
+
+<!-- BAGIAN 2: P = PROOF -->
+<section><div class="wrap">
+<p class="tag">// bukti nyata</p>
+<h2>Sistem ini bukan teori. Udah jalan tiap hari.</h2>
+<div class="grid">
+<div class="card">
+<span class="k">proof #1 · jalan di bisnis kami sendiri</span>
+<ul class="chk" style="margin-top:14px">
+<li><b>24/7</b> agent aktif di VPS</li>
+<li><b>&lt; 1 menit</b> dari payment masuk ke akses LMS</li>
+<li><b>3 brand</b> konten Instagram terbit otomatis</li>
+<li><b>5 niche</b> campaign Meta Ads dievaluasi berkala</li>
+</ul>
+</div>
+<div class="card"><span class="k">proof #2 · alur nyata yang jalan sekarang</span>
+<div class="flow"><div>1 · payment masuk</div><span>↓ agent memproses otomatis</span><div>2 · akses LMS terbuka</div><span>↓ dalam &lt; 1 menit, tanpa admin</span><div>3 · pelanggan langsung belajar</div></div>
+<p style="color:var(--mut);font-size:15px;margin:14px 0 0">Alur yang sama dengan yang lo bangun di workshop.</p></div>
+</div>
+<p style="margin-top:24px"><a class="btn" href="https://xindelabs.web.id/checkout/kelas-bangun-hermes-agent" target="_blank" rel="noopener">Aku mau hasil yang sama</a></p>
+</div></section>
+
+<!-- BAGIAN 3: S = SOLUTION -->
+<section id="daftar"><div class="wrap">
+<p class="tag">// yang lo dapat</p>
+<h2>Yang lo dapat, cara kerjanya, dan harganya.</h2>
+<div class="grid">
+<div class="card"><span class="k">A</span><h3>LIVE Workshop 2 jam</h3><p>Praktik langsung bangun tim agent buat bisnis lo lewat online meeting.</p></div>
+<div class="card"><span class="k">B</span><h3>Life-hack AI Agents</h3><p>Trik praktis memakai agent buat kerjaan harian, bisa dipakai besoknya.</p></div>
+<div class="card"><span class="k">C</span><h3>Membership AI Connect Circle</h3><p>Komunitas buat tanya, sharing, dan belajar bareng.</p></div>
+<div class="card"><span class="k">D</span><h3>Akses Member Area + Rekaman</h3><p>Ketinggalan atau mau ulang? Materi dan rekaman bisa lo tonton kapan saja.</p></div>
+</div>
+<p class="lead" style="margin:28px 0"><b style="color:var(--tx)">Itu semua akan membuat lo bisa</b> punya pasukan agent yang kerja 24/7, sementara lo fokus ke growth.</p>
+<p class="tag">// cara kerja: selasa, 24 november 2026 · 20:00–22:00 wib · online meeting</p>
+<div class="tiers">
+<div class="tier hot"><h3>EARLYBIRD · AKTIF</h3><span class="p">Rp298.000</span><small><s>Rp498.000</s> · <b id="left"></b></small></div>
+<div class="tier off"><h3>REGULER · 30 slot · belum aktif</h3><span class="p">Rp398.000</span><small>berlaku setelah earlybird habis</small></div>
+<div class="tier off"><h3>NORMAL · belum aktif</h3><span class="p">Rp498.000</span><small>setelah slot reguler habis</small></div>
+</div>
+<div class="eb">
+<p class="tag">// earlybird · 50 orang pertama</p>
+<div class="bar" role="progressbar" aria-label="Sisa slot earlybird" aria-valuemin="0" aria-valuemax="50" aria-valuenow="0" id="pb"><div class="fill" id="fill"></div></div>
+<div class="row"><span id="sold">0 / 50 kursi terisi</span><span class="left" id="left2"></span></div>
+<div id="cd" aria-label="Hitung mundur workshop"></div>
+<p style="margin:20px 0 14px;color:var(--mut);font-size:15px">Ingat, harga Rp298.000 hanya berlaku sampai 50 slot earlybird habis.</p>
+<div class="cta"><a class="btn" href="https://xindelabs.web.id/checkout/kelas-bangun-hermes-agent" target="_blank" rel="noopener">Amankan slot earlybird Rp298.000</a><a class="btn ghost" href="https://wa.me/62895335137700?text=Halo%2C%20saya%20mau%20tanya%20soal%20Workshop%20Bangun%20Pasukan%20Super%2024%2F7" target="_blank" rel="noopener">Tanya via WhatsApp</a></div>
+</div>
+</div></section>
+
+<footer><div class="wrap">© 2026 xindelabs · dibangun, bukan dipresentasikan.</div></footer>
+<div id="toast" role="status" aria-live="polite"><i></i><div><span id="tmsg"></span><small id="tago"></small></div></div>
+
+<script>
+/* ===== CONFIG ===== */
+var CONFIG={
+ quota:50,
+ sold:35,
+ eventISO:"2026-11-24T20:00:00+07:00",
+ notifs:[{name:"Rina",city:"Bandung",ago:"2 menit lalu"},{name:"Dimas",city:"Jakarta",ago:"5 menit lalu"},{name:"Sari",city:"Surabaya",ago:"9 menit lalu"},{name:"Agus",city:"Medan",ago:"14 menit lalu"}] /* DEMO: ganti dengan pendaftar asli dari checkout */
+};
+/* ================== */
+var q=CONFIG.quota,s=Math.min(CONFIG.sold,q),$=function(i){return document.getElementById(i)};
+function renderBar(){$("fill").style.width=((q-s)/q*100)+"%";$("pb").setAttribute("aria-valuenow",q-s);
+ $("sold").textContent=(q-s)+" / "+q+" slot tersisa";var t=s>=q?"earlybird habis":"sisa "+(q-s)+" slot";$("left").textContent=t;$("left2").textContent=t}
+setTimeout(renderBar,300);
+var cd=$("cd"),t0=new Date(CONFIG.eventISO).getTime();
+function tick(){var d=Math.max(0,t0-Date.now()),u=[["hari",864e5],["jam",36e5],["menit",6e4],["detik",1e3]],h="";
+ u.forEach(function(x){var v=Math.floor(d/x[1]);d-=v*x[1];h+="<div><b>"+String(v).padStart(2,"0")+"</b><small>"+x[0]+"</small></div>"});cd.innerHTML=h}
+tick();setInterval(tick,1000);
+var ti=0,tt=$("toast");
+function showToast(){if(!CONFIG.notifs.length)return;var n=CONFIG.notifs[ti++%CONFIG.notifs.length];
+ $("tmsg").innerHTML="<b></b> baru daftar earlybird";tt.querySelector("b").textContent=n.name+(n.city?" dari "+n.city:"");
+ $("tago").textContent=n.ago||"baru saja";tt.classList.add("on");setTimeout(function(){tt.classList.remove("on")},5000)}
+if(CONFIG.notifs.length){setTimeout(function(){showToast();setInterval(showToast,11000)},4000)}
+/* tema terang/gelap */
+var R=document.documentElement;
+try{var sv=localStorage.getItem("th");if(sv)R.setAttribute("data-theme",sv)}catch(e){}
+$("tm").addEventListener("click",function(){
+ var c=R.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark"),n=c==="dark"?"light":"dark";
+ R.setAttribute("data-theme",n);try{localStorage.setItem("th",n)}catch(e){}});
+</script>
+</body>
+</html>

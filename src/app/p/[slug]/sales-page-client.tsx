@@ -25,31 +25,25 @@ function Price({ product }: { product: any }) { const regular = Number(product?.
 function Section({ label, children }: { label: string; children: React.ReactNode }) { return <section className={`${rule} py-16`}><div className="mx-auto max-w-5xl px-6"><p className={tag}>{label}</p>{children}</div></section>; }
 // Raw HTML embed. Admin-authored only — the sales page is a trusted surface.
 function Embed({ config, at }: { config: any; at: string }) { const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : ""; if (!html || (config?.custom_html_position || "mid") !== at) return null; return <section className={`${rule} py-16`}><div className="mx-auto max-w-5xl px-6"><div className="prose-invert" dangerouslySetInnerHTML={{ __html: html }} /></div></section>; }
-// Mode "custom": whole page is the embed. Style bawaan dimatikan biar tidak double.
-// HTML dari admin biasanya dokumen penuh (<!DOCTYPE>, <head>, <style>). Kalau ditempel
-// langsung ke <main>, tag html/head dibuang parser dan layout jadi berantakan —
-// jadi ambil <style> + isi <body> saja, lalu render sebagai fragmen.
-function parseDoc(html: string) {
-  if (typeof window === "undefined" || !/<html|<!doctype/i.test(html)) return { css: "", body: html, links: [] as string[] };
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  return {
-    css: [...doc.head.querySelectorAll("style")].map((s) => s.textContent || "").join("\n"),
-    body: doc.body.innerHTML,
-    links: [...doc.head.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute("href") || "").filter(Boolean),
-  };
-}
+// Mode "custom": dokumen HTML penuh dari admin. Dirender di iframe srcDoc supaya
+// <style> dan <script> asli jalan tanpa bentrok dengan Tailwind.
+// Klik ke /checkout/ diteruskan ke parent untuk pixel AddToCart.
 function CustomOnly({ config }: { config: any }) {
-  const [doc, setDoc] = useState<{ css: string; body: string; links: string[] }>({ css: "", body: "", links: [] });
+  const [h, setH] = useState(0);
   const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : "";
-  useEffect(() => { if (html) setDoc(parseDoc(html)); }, [html]);
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      const n = Number(e.data?.xindeH);
+      if (n > 0) setH(n);
+      if (e.data?.xindeCheckout) window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product" });
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [config.slug]);
   if (!html) return null;
-  return (
-    <main className="min-h-screen bg-[#04110D] text-white">
-      {doc.links.map((href) => <link key={href} rel="stylesheet" href={href} />)}
-      {doc.css && <style dangerouslySetInnerHTML={{ __html: doc.css }} />}
-      <div dangerouslySetInnerHTML={{ __html: doc.body }} />
-    </main>
-  );
+  const bridge = `<script>function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")}document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href*="/checkout/"]');if(a)parent.postMessage({xindeCheckout:1},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
+  const doc = html.includes("</body>") ? html.replace("</body>", bridge + "</body>") : html + bridge;
+  return <iframe title={config.slug || "Sales page"} srcDoc={doc} style={{ height: h ? `${h}px` : "100dvh" }} className="w-full border-0" scrolling="no" />;
 }
 
 export function SalesPageClient({ config, product, lessons }: { config: any; product: any; lessons: any[] }) {

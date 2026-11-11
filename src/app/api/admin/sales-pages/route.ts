@@ -44,7 +44,7 @@ function parse(body: any): { error: string } | { data: Record<string, unknown> }
     sales_notification_enabled: Boolean(body.sales_notification_enabled),
     sales_notification_config: notice,
     faq_items: faq,
-    custom_html: typeof body.custom_html === "string" ? body.custom_html.slice(0, 100000) : null,
+    custom_html: typeof body.custom_html === "string" ? body.custom_html : null,
     custom_html_position: ["hero", "mid", "last"].includes(body.custom_html_position) ? body.custom_html_position : "mid",
     render_mode: body.render_mode === "custom" ? "custom" : "template",
     is_default: Boolean(body.is_default),
