@@ -26,7 +26,31 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 // Raw HTML embed. Admin-authored only — the sales page is a trusted surface.
 function Embed({ config, at }: { config: any; at: string }) { const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : ""; if (!html || (config?.custom_html_position || "mid") !== at) return null; return <section className={`${rule} py-16`}><div className="mx-auto max-w-5xl px-6"><div className="prose-invert" dangerouslySetInnerHTML={{ __html: html }} /></div></section>; }
 // Mode "custom": whole page is the embed. Style bawaan dimatikan biar tidak double.
-function CustomOnly({ config }: { config: any }) { const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : ""; if (!html) return null; return <main className="min-h-screen bg-[#04110D] text-white" dangerouslySetInnerHTML={{ __html: html }} />; }
+// HTML dari admin biasanya dokumen penuh (<!DOCTYPE>, <head>, <style>). Kalau ditempel
+// langsung ke <main>, tag html/head dibuang parser dan layout jadi berantakan —
+// jadi ambil <style> + isi <body> saja, lalu render sebagai fragmen.
+function parseDoc(html: string) {
+  if (typeof window === "undefined" || !/<html|<!doctype/i.test(html)) return { css: "", body: html, links: [] as string[] };
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return {
+    css: [...doc.head.querySelectorAll("style")].map((s) => s.textContent || "").join("\n"),
+    body: doc.body.innerHTML,
+    links: [...doc.head.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute("href") || "").filter(Boolean),
+  };
+}
+function CustomOnly({ config }: { config: any }) {
+  const [doc, setDoc] = useState<{ css: string; body: string; links: string[] }>({ css: "", body: "", links: [] });
+  const html = typeof config?.custom_html === "string" ? config.custom_html.trim() : "";
+  useEffect(() => { if (html) setDoc(parseDoc(html)); }, [html]);
+  if (!html) return null;
+  return (
+    <main className="min-h-screen bg-[#04110D] text-white">
+      {doc.links.map((href) => <link key={href} rel="stylesheet" href={href} />)}
+      {doc.css && <style dangerouslySetInnerHTML={{ __html: doc.css }} />}
+      <div dangerouslySetInnerHTML={{ __html: doc.body }} />
+    </main>
+  );
+}
 
 export function SalesPageClient({ config, product, lessons }: { config: any; product: any; lessons: any[] }) {
   const [faq, setFaq] = useState<number | null>(null); const [toast, setToast] = useState(false);
