@@ -28,15 +28,22 @@ function Embed({ config, at }: { config: any; at: string }) { const html = typeo
 // <style> dan <script> asli jalan tanpa bentrok dengan Tailwind.
 // Klik ke /checkout/ diteruskan ke parent untuk pixel AddToCart.
 function SalesToast({ config }: { config: any }) {
-  const items = arr(config?.sales_notification_config?.items);
+  const items: string[] = arr(config?.sales_notification_config?.items);
   const [msg, setMsg] = useState<string | null>(null);
   useEffect(() => {
     if (!config?.sales_notification_enabled || !items.length) return;
-    const id = window.setInterval(() => setMsg(String(items[Math.floor(Math.random() * items.length)])), 12000);
-    return () => clearInterval(id);
-  }, [config?.sales_notification_enabled, items.length]);
+    let i = 0, hide = 0;
+    const show = () => {
+      setMsg(String(items[i++ % items.length]));
+      window.clearTimeout(hide);
+      hide = window.setTimeout(() => setMsg(null), 5500);
+    };
+    const first = window.setTimeout(show, 4000);
+    const id = window.setInterval(show, 11000);
+    return () => { clearTimeout(first); clearInterval(id); window.clearTimeout(hide); };
+  }, [config?.sales_notification_enabled]);
   if (!msg) return null;
-  return <button onClick={() => setMsg(null)} className="fixed bottom-5 left-5 z-[9999] max-w-xs rounded-xl border border-[#00ff88]/40 bg-[#0B1F16] px-4 py-3 text-left text-sm text-white shadow-2xl">{msg} <span className="text-white/40">×</span></button>;
+  return <button onClick={() => setMsg(null)} className="fixed bottom-5 left-5 z-[9999] flex max-w-xs items-center gap-3 rounded-xl border border-[#00ff88]/40 bg-[#0B1F16] px-4 py-3 text-left text-sm text-white shadow-2xl"><span className="h-2.5 w-2.5 flex-none animate-pulse rounded-full bg-[#00ff88]" />{msg}<span className="ml-auto text-white/40">×</span></button>;
 }
 function CustomOnly({ config }: { config: any }) {
   const [h, setH] = useState(0);
@@ -45,13 +52,19 @@ function CustomOnly({ config }: { config: any }) {
     const onMsg = (e: MessageEvent) => {
       const n = Number(e.data?.xindeH);
       if (n > 0) setH(n);
-      if (e.data?.xindeCheckout) window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product" });
+      const href = e.data?.xindeClick;
+      if (href) window.fbq?.("track", "AddToCart", {
+        content_name: config.slug,
+        content_type: "product",
+        currency: "IDR",
+        value: href.includes("/checkout/") ? 298000 : undefined,
+      });
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [config.slug]);
   if (!html) return null;
-  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")}document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href*="/checkout/"]');if(a)parent.postMessage({xindeCheckout:1},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
+  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")};document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(a)parent.postMessage({xindeClick:a.getAttribute("href")||a.href},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
   const doc = html.includes("</body>") ? html.replace("</body>", bridge + "</body>") : html + bridge;
   return <iframe title={config.slug || "Sales page"} srcDoc={doc} style={{ height: h ? `${h}px` : "100dvh" }} className="w-full border-0" scrolling="no" />;
 }
@@ -67,8 +80,8 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
     const onClick = (e: MouseEvent) => {
       const el = (e.target as HTMLElement | null)?.closest("a,button") as HTMLAnchorElement | HTMLButtonElement | null;
       if (!el) return;
-      const isCheckoutLink = el.tagName === "A" && ((el as HTMLAnchorElement).href.includes("/checkout/") || el.getAttribute("href")?.includes("/checkout/"));
-      if (el.tagName !== "BUTTON" && !isCheckoutLink) return;
+      const href = (el.tagName === "A") ? (el as HTMLAnchorElement).href : undefined;
+      if (el.tagName !== "BUTTON" && (!href || !href.includes("/checkout/"))) return;
       window.fbq?.("track", "AddToCart", {
         content_name: product?.title || config.slug,
         content_type: "product",
