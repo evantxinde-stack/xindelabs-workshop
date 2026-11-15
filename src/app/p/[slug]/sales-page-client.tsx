@@ -53,8 +53,8 @@ function CustomOnly({ config }: { config: any }) {
     const onMsg = (e: MessageEvent) => {
       const n = Number(e.data?.xindeH);
       if (n > 0) setH(n);
-      if (e.data?.xindeCheckout) {
-        window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product", currency: "IDR", value: config.price_idr });
+      if (e.data?.xindeCheckout || e.data?.xindeScroll) {
+        if (e.data?.xindeCheckout) window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product", currency: "IDR", value: config.price_idr });
         document.getElementById("checkout")?.scrollIntoView({ behavior: "smooth", block: "start" });
       }
       const href = e.data?.xindeClick;
@@ -64,7 +64,7 @@ function CustomOnly({ config }: { config: any }) {
     return () => window.removeEventListener("message", onMsg);
   }, [config.slug]);
   if (!html) return null;
-  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")};document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||a.href||"";if(h.indexOf("/checkout/")>-1){e.preventDefault();parent.postMessage({xindeCheckout:1},"*")}else parent.postMessage({xindeClick:h},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
+  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")};document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||a.href||"";if(h.indexOf("/checkout/")>-1){e.preventDefault();parent.postMessage({xindeCheckout:1},"*")}else if(h==="#checkout"){e.preventDefault();parent.postMessage({xindeScroll:1},"*")}else parent.postMessage({xindeClick:h},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
   const doc = html.includes("</body>") ? html.replace("</body>", bridge + "</body>") : html + bridge;
   return <iframe title={config.slug || "Sales page"} srcDoc={doc} style={{ height: h ? `${h}px` : "100dvh" }} className="w-full border-0" scrolling="no" />;
 }
