@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { classPrice, earlyBirdOpen } from "@/lib/mayar";
+import { CheckoutForm } from "@/app/checkout/[product]/checkout-form";
 const arr = (v: any) => Array.isArray(v) ? v : [];
 const tag = "font-mono text-[11px] uppercase tracking-[.22em] text-[#00ff88]";
 const rule = "border-t border-white/10";
@@ -52,23 +53,25 @@ function CustomOnly({ config }: { config: any }) {
     const onMsg = (e: MessageEvent) => {
       const n = Number(e.data?.xindeH);
       if (n > 0) setH(n);
+      if (e.data?.xindeCheckout) {
+        window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product", currency: "IDR", value: config.price_idr });
+        document.getElementById("checkout")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
       const href = e.data?.xindeClick;
-      if (href) window.fbq?.("track", "AddToCart", {
-        content_name: config.slug,
-        content_type: "product",
-        currency: "IDR",
-        value: href.includes("/checkout/") ? 298000 : undefined,
-      });
+      if (href) window.fbq?.("track", "AddToCart", { content_name: config.slug, content_type: "product", currency: "IDR", value: config.price_idr });
     };
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);
   }, [config.slug]);
   if (!html) return null;
-  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")};document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(a)parent.postMessage({xindeClick:a.getAttribute("href")||a.href},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
+  const bridge = `<script>var _t=document.getElementById("toast");if(_t)_t.remove();function H(){parent.postMessage({xindeH:document.documentElement.scrollHeight},"*")};document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||a.href||"";if(h.indexOf("/checkout/")>-1){e.preventDefault();parent.postMessage({xindeCheckout:1},"*")}else parent.postMessage({xindeClick:h},"*")},true);addEventListener("load",H);addEventListener("resize",H);setInterval(H,1500)</script>`;
   const doc = html.includes("</body>") ? html.replace("</body>", bridge + "</body>") : html + bridge;
   return <iframe title={config.slug || "Sales page"} srcDoc={doc} style={{ height: h ? `${h}px` : "100dvh" }} className="w-full border-0" scrolling="no" />;
 }
-function CustomPage({ config }: { config: any }) { return <><CustomOnly config={config} /><SalesToast config={config} /></>; }
+function CustomPage({ config, product }: { config: any; product: any }) {
+  const price = classPrice(product, "lifetime");
+  return <><CustomOnly config={config} /><SalesToast config={config} /><section id="checkout" className="border-t border-white/10 bg-[#04110D] px-6 py-20 text-white"><div className="mx-auto max-w-md"><p className={tag}>// amankan slot</p><h2 className="mt-4 text-3xl font-bold">Mulai bangun karyawan digitalmu.</h2><p className="mt-3 text-white/55">Isi data. Link pembayaran Mayar muncul setelah submit.</p><div className="mt-8 rounded-2xl border border-white/10 bg-[#0B1F16] p-6"><CheckoutForm product={product.slug || config.slug} priceIdr={price} classId={product.id} paymentOptions={product.payment_options || ["lifetime"]} bump={undefined} /></div></div></section></>;
+}
 
 export function SalesPageClient({ config, product, lessons }: { config: any; product: any; lessons: any[] }) {
   const [faq, setFaq] = useState<number | null>(null);
@@ -93,7 +96,7 @@ export function SalesPageClient({ config, product, lessons }: { config: any; pro
     document.addEventListener("click", onClick, true);
     return () => document.removeEventListener("click", onClick, true);
   }, [config.slug, product]);
-  if (config.render_mode === "custom" && typeof config.custom_html === "string" && config.custom_html.trim()) return <CustomPage config={config} />;
+  if (config.render_mode === "custom" && typeof config.custom_html === "string" && config.custom_html.trim()) return <CustomPage config={config} product={product} />;
   return <main className="min-h-screen bg-[#04110D] text-white"><header className="sticky top-0 z-40 border-b border-white/10 bg-[#04110D]/85 backdrop-blur"><div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4"><a href="https://xindelabs.web.id" className="text-lg font-bold">xindelabs<span className="text-[#00ff88]">.</span></a><Link href={checkout} className="rounded-full border border-[#00ff88]/40 px-4 py-2 font-mono text-[11px] uppercase tracking-wider text-[#00ff88]">{cta}</Link></div></header>
     <section className="mx-auto max-w-5xl px-6 pb-20 pt-20 md:pt-28">{config.hero_badge && <p className={tag}>{config.hero_badge}</p>}<h1 className="mt-6 max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight md:text-6xl">{config.headline || product?.title}</h1>{(config.subheadline || product?.description) && <p className="mt-7 max-w-2xl text-lg leading-8 text-white/60">{config.subheadline || product?.description}</p>}<div className="mt-9 flex flex-wrap gap-4"><Link href={checkout} className="rounded-full bg-[#00ff88] px-6 py-3.5 font-bold text-[#04110D]">{cta}</Link>{config.vsl_youtube_id && <a href="#video" className="py-3 font-mono text-[11px] uppercase tracking-wider text-white/50">lihat cara kerjanya</a>}</div></section>
     {config.vsl_youtube_id && <section id="video" className="mx-auto max-w-5xl px-6 pb-16"><div className="aspect-video overflow-hidden rounded-2xl border border-white/10"><iframe className="h-full w-full" src={`https://www.youtube.com/embed/${encodeURIComponent(config.vsl_youtube_id)}`} title="Video sales letter" allowFullScreen /></div></section>}
