@@ -20,11 +20,12 @@ export function ProductCard({ item, locked = false, owned = false, onSelect }: {
   const regular = Number(item.price);
   const now = classPrice(item as any, "lifetime");
   const hasSale = earlyBirdOpen(item as any) && Number.isFinite(regular) && now < regular;
+  const hasStrike = Number.isFinite(regular) && Number.isFinite(now) && now > 0 && now < regular;
   const free = Number(item.price) === 0;
   const compact = (value: number) => `Rp${Math.round(value / 1000)}K`;
   const formatPrice = (value: number) => `Rp${value.toLocaleString("id-ID")}`;
   const cover = typeof item.cover_image === "string" && item.cover_image.trim() ? item.cover_image.trim() : null;
-  const priceNode = free ? "Gratis" : hasSale ? compact(now) : Number.isFinite(regular) && regular > 0 ? compact(regular) : "Lihat detail";
+  const priceNode = free ? "Gratis" : hasStrike ? compact(now) : Number.isFinite(regular) && regular > 0 ? compact(regular) : "Lihat detail";
   const badge = owned ? "Dimiliki" : free ? "Gratis" : locked ? "Terkunci" : hasSale ? "Early bird" : type;
   const ownedHref = type === "workshop" ? `/learn/workshop/${item.slug}` : `/learn/course/${item.slug}`;
   const action = owned
@@ -46,7 +47,7 @@ export function ProductCard({ item, locked = false, owned = false, onSelect }: {
       <h2 className="text-xl font-bold leading-snug text-white">{item.title}</h2>
       <p className="mt-3 text-sm leading-6 text-white/55">{item.description || "Materi praktis XindeLabs untuk membangun sistem digital yang berjalan."}</p>
       <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-6">
-        <strong className="flex items-baseline gap-2"><span className={free ? "text-[#00ff88]" : neon}>{priceNode}</span>{hasSale && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>
+        <strong className="flex items-baseline gap-2"><span className={free ? "text-[#00ff88]" : neon}>{priceNode}</span>{hasStrike && <span className="text-xs font-normal text-white/40 line-through">{formatPrice(regular)}</span>}</strong>
         {action}
       </div>
     </div>

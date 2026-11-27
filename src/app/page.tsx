@@ -4,6 +4,8 @@ import { admin } from "@/lib/supabase/server";
 import { formatIDR, stripTags } from "@/lib/content";
 import { LeadForm } from "@/components/LeadForm";
 import { SERVICE_LINES } from "@/lib/services";
+import { formatWaHref } from "@/lib/site-config";
+import { getSiteConfig } from "@/lib/site-config.server";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +89,7 @@ function NavBurger() {
 
 
 export default async function Home() {
-  const [workRes, classesRes, waRes] = await Promise.all([
+  const [workRes, classesRes, site] = await Promise.all([
     admin
       .from("portfolio")
       .select("id,title,slug,description,category,link_url")
@@ -99,15 +101,16 @@ export default async function Home() {
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
       .limit(3),
-    admin.from("settings").select("value").eq("key", "wa_admin_number").maybeSingle(),
+    getSiteConfig(),
   ]);
 
   const works: WorkRow[] = workRes.data || [];
   const classes: ClassRow[] = classesRes.data || [];
-  const waNumber = String(waRes.data?.value || "").replace(/\D/g, "");
-  const waHref = waNumber
-    ? `https://wa.me/${waNumber.startsWith("0") ? "62" + waNumber.slice(1) : waNumber}`
-    : null;
+  const waHref = formatWaHref(site.global.wa_admin_number);
+  const home = site.home;
+  const stats = home.stats.length ? home.stats : STATS;
+  const trackRecord = home.track_record.length ? home.track_record : TRACK_RECORD;
+  const serviceLines = site.service.lines.length ? site.service.lines : SERVICE_LINES;
 
   return (
     <div className="min-h-screen bg-[#09090b] font-sans text-[#f4f2ee] antialiased">
@@ -126,10 +129,10 @@ export default async function Home() {
           </nav>
           <div className="flex items-center gap-3">
             <a
-              href={SERVICE_URL}
+              href={site.global.header_cta_href || SERVICE_URL}
               className="rounded-full bg-[#00ff88] px-4 py-2 text-[13px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
             >
-              Work with me
+              {site.global.header_cta_label}
             </a>
             <NavBurger />
           </div>
@@ -146,31 +149,30 @@ export default async function Home() {
           />
           <div className="relative">
             <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">
-              // ai automation · digital selling
+              {home.hero_eyebrow}
             </p>
             <h1
               className={`${display} mt-6 text-[clamp(2.5rem,6.5vw,4.3rem)] font-bold leading-[1.03] tracking-tight`}
             >
-              Yang bikin capek bukan jualannya — tapi{" "}
-              <span className="text-[#00ff88]">semua yang lo kerjain ulang tiap hari.</span>
+              {home.hero_title_line1}{" "}
+              <span className="text-[#00ff88]">{home.hero_title_highlight}</span>
             </h1>
             <p className="mt-6 max-w-xl text-[16px] leading-relaxed text-white/60 md:text-lg">
-              XindeLabs bikin agent AI yang ambil alih kerjaan berulang: follow-up leads, funnel
-              yang nutup penjualan, konten yang terbit tiap hari.{" "}
-              <span className={`${hand} text-[1.35rem] leading-[1.15] text-[#00ff88]`}>Biar lo balik ngurus growth.</span>
+              {home.hero_subtitle}{" "}
+              <span className={`${hand} text-[1.35rem] leading-[1.15] text-[#00ff88]`}>{home.hero_subtitle_hand}</span>
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
-                href={SERVICE_URL}
+                href={home.hero_primary_cta_href || SERVICE_URL}
                 className="rounded-full bg-[#00ff88] px-7 py-3 text-[15px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
               >
-                Work with me →
+                {home.hero_primary_cta_label}
               </a>
               <a
-                href={LEARN_URL}
+                href={home.hero_secondary_cta_href || LEARN_URL}
                 className="rounded-full border border-white/25 px-7 py-3 text-[15px] font-semibold transition hover:border-[#00ff88] hover:text-[#00ff88]"
               >
-                Liat kelasnya
+                {home.hero_secondary_cta_label}
               </a>
             </div>
             <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.3em] text-white/30">
@@ -181,7 +183,7 @@ export default async function Home() {
           <div className="relative">
             <div className="overflow-hidden rounded-2xl border border-white/10">
               <img
-                src="/founder.jpg"
+                src={home.founder_image || "/founder.jpg"}
                 alt="Xinde — founder XindeLabs"
                 className="aspect-[4/5] w-full object-cover"
                 width={1080}
@@ -189,7 +191,7 @@ export default async function Home() {
               />
             </div>
             <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-white/45">
-              xinde · founder
+              {home.founder_caption}
             </p>
           </div>
         </section>
@@ -197,8 +199,8 @@ export default async function Home() {
         {/* ============ STATS — angka live ============ */}
         <section className="border-y border-white/10 bg-[#0c0c0f]">
           <div className="mx-auto grid max-w-6xl gap-px px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
-            {STATS.map((s) => (
-              <div key={s.k} className="px-4 py-3">
+            {stats.map((s) => (
+              <div key={`${s.v}-${s.k}`} className="px-4 py-3">
                 <p className={`${display} text-3xl font-bold text-[#00ff88] md:text-4xl`}>{s.v}</p>
                 <p className="mt-2 font-mono text-[11.5px] leading-relaxed text-white/65">{s.k}</p>
               </div>
@@ -208,34 +210,26 @@ export default async function Home() {
 
         {/* ============ 01 — TENTANG ============ */}
         <section id="tentang" className="mx-auto max-w-6xl px-5 py-24">
-          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">tentang</p>
+          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">{home.about_eyebrow}</p>
           <h2
             className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
           >
-            Dari kerja manual, jadi{" "}
-            <span className={`${hand} font-bold text-[#00ff88]`}>sistem yang jalan sendiri.</span>
+            {home.about_title}{" "}
+            <span className={`${hand} font-bold text-[#00ff88]`}>{home.about_title_highlight}</span>
           </h2>
 
           <div className="mt-10 grid gap-10 md:grid-cols-[1.2fr_.8fr]">
             <div className="space-y-4 text-[15px] leading-relaxed text-white/65">
-              <p>
-                Latar belakang saya penjualan, bukan kampus IT. Semua yang saya bangun di sini
-                berawal dari satu masalah yang sama: kerjaan repetitif — follow-up, rekap, posting,
-                hitung — menghabiskan waktu yang seharusnya dipakai untuk tumbuh.
-              </p>
-              <p>
-                Sekarang XindeLabs membangun lapisan itu dengan AI: agent otonom yang mengambil
-                pekerjaan operasional, funnel yang mengurus pembayaran sampai akses produk, dan
-                sistem konten yang menjaga brand tetap hidup.
-              </p>
+              <p>{home.about_p1}</p>
+              <p>{home.about_p2}</p>
               <p className={`${hand} text-2xl leading-snug text-[#00ff88]`}>
-                Semua angka di atas jalan di bisnis saya sendiri, tiap hari.
+                {home.about_quote}
               </p>
             </div>
             <div className="self-start rounded-xl border border-white/10 bg-[#0c0c0f] p-6">
               <p className="font-mono text-[11px] text-white/45">$ whoami</p>
               <ul className="mt-4 space-y-3 text-[13.5px] leading-snug text-white/70">
-                {TRACK_RECORD.map((r) => (
+                {trackRecord.map((r) => (
                   <li key={r} className="flex gap-2.5">
                     <span className="font-mono text-[#00ff88]">›</span>
                     {r}
@@ -246,7 +240,7 @@ export default async function Home() {
           </div>
 
           <div className="mt-12 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2">
-            {SERVICE_LINES.map((s) => (
+            {serviceLines.map((s) => (
               <Link key={s.slug} href={`/service#${s.slug}`} className="group bg-[#0c0c0f] p-6 transition hover:bg-[#0f1b14]">
                 <span className="font-mono text-[11px] text-[#00ff88]">{s.number}</span>
                 <h3 className={`${display} mt-3 text-[16px] font-bold group-hover:text-[#00ff88]`}>{s.title}</h3>
@@ -260,11 +254,11 @@ export default async function Home() {
         {/* ============ 02 — KARYA (WHITE) ============ */}
         <section id="karya" className="border-y border-white/10 bg-white text-[#0a0a0c]">
           <div className="mx-auto max-w-6xl px-5 py-24">
-            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#0a8a55]">karya</p>
+            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#0a8a55]">{home.work_eyebrow}</p>
             <h2
               className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
             >
-              Yang lo liat di sini <span className={`${hand} font-bold text-[#0a8a55]`}>sistem yang kepake, bukan mockup.</span>
+              {home.work_title} <span className={`${hand} font-bold text-[#0a8a55]`}>{home.work_title_highlight}</span>
             </h2>
 
             {works.length ? (
@@ -331,15 +325,14 @@ export default async function Home() {
 
         {/* ============ 03 — BELAJAR ============ */}
         <section id="belajar" className="mx-auto max-w-6xl px-5 py-24">
-          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">belajar</p>
+          <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">{home.learn_eyebrow}</p>
           <h2
             className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
           >
-            Cara bangunnya, <span className="text-[#00ff88]">diajarkan kebuka.</span>
+            {home.learn_title} <span className="text-[#00ff88]">{home.learn_title_highlight}</span>
           </h2>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
-            Semua yang dipakai di project nyata ditulis dan diajarkan di classroom XindeLabs: kelas
-            online, tantangan praktik, dan mentoring.
+            {home.learn_desc}
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
@@ -376,7 +369,7 @@ export default async function Home() {
               href={LEARN_URL}
               className="rounded-full bg-[#00ff88] px-7 py-3 text-[15px] font-bold text-[#0a1f12] transition hover:bg-[#5cffb3]"
             >
-              Masuk classroom →
+              {home.learn_cta_label}
             </a>
             <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-white/45">
               {classes.length > 0
@@ -396,16 +389,15 @@ export default async function Home() {
           }}
         >
           <div className="mx-auto max-w-6xl px-5 py-24">
-            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">kontak</p>
+            <p className="font-mono text-[12px] lowercase tracking-[0.2em] text-[#00ff88]">{home.contact_eyebrow}</p>
             <h2
               className={`${display} mt-5 max-w-3xl text-[clamp(1.9rem,4vw,2.9rem)] font-bold leading-[1.06] tracking-tight`}
             >
-              Berhenti pakai AI malah nambah kerjaan.{" "}
-              <span className={`${hand} font-bold text-[#00ff88]`}>Bikin sistem yang real kerja 24/7 No Baper.</span>
+              {home.contact_title}{" "}
+              <span className={`${hand} font-bold text-[#00ff88]`}>{home.contact_title_highlight}</span>
             </h2>
             <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/60">
-              Terbuka untuk project automation, infrastruktur agent, sampai build end-to-end — dari
-              satu workflow sampai sistem operasional penuh.
+              {home.contact_desc}
             </p>
 
             <div className="mt-10 grid gap-10 md:grid-cols-[1.05fr_.95fr] md:items-start">
@@ -423,7 +415,7 @@ export default async function Home() {
                   </a>
                 ) : null}
                 <a
-                  href="https://instagram.com/xindelabs.id"
+                  href={site.global.instagram_url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group"
@@ -434,18 +426,18 @@ export default async function Home() {
                   <span
                     className={`${display} mt-1 block text-[17px] font-bold group-hover:text-[#00ff88]`}
                   >
-                    @xindelabs.id ↗
+                    {site.global.instagram_handle} ↗
                   </span>
                 </a>
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-[#0B1F16]/70 p-6">
                 <p className="font-mono text-[11px] lowercase tracking-[0.18em] text-[#00ff88]">
-                  // mulai dari sini
+                  {home.contact_form_eyebrow}
                 </p>
-                <h3 className={`${display} mt-3 text-xl font-bold`}>Ceritain bisnisnya</h3>
+                <h3 className={`${display} mt-3 text-xl font-bold`}>{home.contact_form_title}</h3>
                 <p className="mt-2 text-sm text-white/55">
-                  Isi 4 field, gw balas langsung via WhatsApp.
+                  {home.contact_form_desc}
                 </p>
                 <div className="mt-5">
                   <LeadForm
@@ -467,7 +459,7 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-5">
           <div className="pt-8">
             <p className={`${display} text-lg font-bold tracking-tight`}>
-              <span className={`${hand} font-bold text-[#00ff88]`}>Dibangun,</span> bukan dipresentasikan.
+              <span className={`${hand} font-bold text-[#00ff88]`}>{site.global.footer_tagline_highlight}</span> {site.global.footer_tagline_rest}
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] uppercase tracking-[0.14em] text-white/60">
               <span>© {new Date().getFullYear()} xindelabs</span>

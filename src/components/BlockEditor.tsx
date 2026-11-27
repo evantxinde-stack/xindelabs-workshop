@@ -130,7 +130,7 @@ function LivePreview({
 }
 
 export function BlockEditor() {
-  const [page, setPage] = useState<PageKey>("tutorial");
+  const [page, setPage] = useState<PageKey>("vip");
   const [byPage, setByPage] = useState<Record<string, Block[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [adding, setAdding] = useState<BlockType | "">("");
@@ -273,7 +273,7 @@ export function BlockEditor() {
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {PAGES.map((p) => (
+        {PAGES.filter((p) => p.key !== "tutorial").map((p) => (
           <button
             key={p.key}
             onClick={() => setPage(p.key)}

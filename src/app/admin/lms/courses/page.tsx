@@ -1,73 +1,612 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Section } from "../../shared";
+import {
+  detectLessonMode,
+  parseLessonContent,
+  serializeLessonContent,
+  type LessonLink,
+  type LessonMode,
+} from "@/lib/lesson-content";
 
-type ProductType = "course" | "workshop" | "vip";
-type Lesson = { id: string; class_id: string; title: string; youtube_id?: string | null; prompt?: string | null; pdf_url?: string | null; sort_order: number };
-type ClassRow = { id: string; slug: string; title: string; description: string | null; cover_image?: string | null; price: number | null; annual_price?: number | null; lifetime_price?: number | null; payment_options?: string[]; product_type: ProductType | "bundle"; is_published: boolean; sort_order: number; trailer_youtube_id?: string | null; member_cross_sell_price?: number | null; workshop_meet_url?: string | null; workshop_replay_url?: string | null; early_bird_price?: number | null; early_bird_until?: string | null; early_bird_quota?: number | null };
-type FormState = Partial<Omit<ClassRow, "price" | "sort_order" | "member_cross_sell_price" | "annual_price" | "lifetime_price" | "early_bird_price" | "early_bird_quota">> & { price?: number | string | null; sort_order?: number | string; member_cross_sell_price?: number | string | null; annual_price?: number | string | null; lifetime_price?: number | string | null; early_bird_price?: number | string | null; early_bird_until?: string | null; early_bird_quota?: number | string | null };
+type ClassRow = {
+  id: string;
+  slug: string;
+  title: string;
+  product_type: string;
+  is_published: boolean;
+};
 
-const toNumber = (value: unknown) => value === "" || value == null ? null : Number(value);
+type RawLesson = {
+  id: string;
+  class_id: string;
+  title: string;
+  youtube_id?: string | null;
+  content?: string | null;
+  prompt?: string | null;
+  pdf_url?: string | null;
+  sort_order: number;
+};
 
-const normalize = (form: FormState) => ({ ...form, price: toNumber(form.price), annual_price: toNumber(form.annual_price), lifetime_price: toNumber(form.lifetime_price), payment_options: Array.isArray(form.payment_options) && form.payment_options.length ? form.payment_options : ["lifetime"], sort_order: Number(form.sort_order || 0), member_cross_sell_price: toNumber(form.member_cross_sell_price), early_bird_price: toNumber(form.early_bird_price), early_bird_quota: toNumber(form.early_bird_quota) });
+type DraftLesson = {
+  id?: string;
+  class_id: string;
+  title: string;
+  sort_order: number;
+  mode: LessonMode;
+  youtube_id: string;
+  body: string;
+  prompt: string;
+  links: LessonLink[];
+};
 
-const empty: FormState = { title: "", slug: "", description: "", cover_image: "", price: "", annual_price: "", lifetime_price: "", payment_options: ["lifetime"], is_published: false, sort_order: 0, trailer_youtube_id: "", member_cross_sell_price: "", workshop_meet_url: "", workshop_replay_url: "", early_bird_price: "", early_bird_until: "", early_bird_quota: "" };
-
-const TABS: { key: ProductType; label: string; hint: string }[] = [
-  { key: "course", label: "Kelas", hint: "Course dan materi belajar" },
-  { key: "workshop", label: "Workshop", hint: "Workshop live, replay, dan pre-session" },
-  { key: "vip", label: "VIP Lounge", hint: "Program bimbingan dan akses VIP" },
+const MODES: { key: LessonMode; label: string; desc: string }[] = [
+  { key: "video", label: "Video", desc: "Embed video YouTube" },
+  { key: "text", label: "Teks / Artikel", desc: "Materi bacaan & panduan" },
+  { key: "combo", label: "Kombinasi (Video + Teks)", desc: "Video disertai penjelasan teks" },
 ];
-const money = (n: number | null | undefined) => n == null ? "—" : `Rp${Number(n).toLocaleString("id-ID")}`;
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-1 block text-xs text-white/50">{label}</span>{children}</label>; }
+function extractYoutubePreviewId(raw: string): string {
+  const s = raw.trim();
+  if (!s) return "";
+  try {
+    const u = new URL(s);
+    if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+    if (u.hostname.includes("youtube.com")) {
+      return u.searchParams.get("v") || u.pathname.split("/").filter(Boolean).pop() || "";
+    }
+  } catch {}
+  return s.replace(/^.*(?:v=|youtu\.be\/)/, "").split(/[?&#]/)[0] || "";
+}
 
-export default function AdminCoursesPage() {
-  const [tab, setTab] = useState<ProductType>("course");
-  const [rows, setRows] = useState<ClassRow[]>([]);
-  const [selected, setSelected] = useState<ClassRow | null>(null);
-  const [form, setForm] = useState<FormState>(empty);
-  const [loading, setLoading] = useState(true);
+function toDraft(lesson: RawLesson): DraftLesson {
+  const { body, links } = parseLessonContent(lesson.content, lesson.pdf_url);
+  return {
+    id: lesson.id,
+    class_id: lesson.class_id,
+    title: lesson.title,
+    sort_order: lesson.sort_order ?? 0,
+    mode: detectLessonMode({ youtube_id: lesson.youtube_id, body }),
+    youtube_id: lesson.youtube_id || "",
+    body,
+    prompt: lesson.prompt || "",
+    links,
+  };
+}
+
+function emptyDraft(classId: string, order: number): DraftLesson {
+  return {
+    class_id: classId,
+    title: "",
+    sort_order: order,
+    mode: "video",
+    youtube_id: "",
+    body: "",
+    prompt: "",
+    links: [],
+  };
+}
+
+function lessonBadge(lesson: RawLesson): string {
+  const { body, links } = parseLessonContent(lesson.content, lesson.pdf_url);
+  const mode = detectLessonMode({ youtube_id: lesson.youtube_id, body });
+  const base = mode === "combo" ? "Video + Teks" : mode === "text" ? "Teks" : "Video";
+  return links.length ? `${base} · ${links.length} link` : base;
+}
+
+export default function AdminCourseModulesPage() {
+  const [classes, setClasses] = useState<ClassRow[]>([]);
+  const [selectedClass, setSelectedClass] = useState<ClassRow | null>(null);
+  const [lessons, setLessons] = useState<RawLesson[]>([]);
+  const [draft, setDraft] = useState<DraftLesson | null>(null);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [loadingLessons, setLoadingLessons] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [lessonBusy, setLessonBusy] = useState(false);
-  const filtered = useMemo(() => rows.filter((x) => x.product_type === tab || (tab === "course" && x.product_type === "bundle")), [rows, tab]);
+  const [status, setStatus] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
-  async function load() { setLoading(true); const r = await fetch("/api/admin/classes"); const j = await r.json(); setRows(j.data ?? []); setLoading(false); }
-  useEffect(() => { load(); }, []);
-  async function choose(row: ClassRow) { setSelected(row); setForm({ ...row }); setMessage(""); const r = await fetch(`/api/admin/lessons?class_id=${encodeURIComponent(row.id)}`); const j = await r.json(); setLessons(j.data ?? []); }
-  function newItem() { setLessons([]); setSelected(null); setForm({ ...empty, product_type: tab }); setMessage(""); }
-  function set
-(key: keyof ClassRow, value: unknown) { setForm((x) => ({ ...x, [key]: value })); }
-  async function save(e: React.FormEvent) { e.preventDefault(); setSaving(true); setMessage(""); const method = selected ? "PATCH" : "POST"; const body = selected ? { ...normalize(form), id: selected.id } : { ...normalize(form), product_type: tab }; const r = await fetch("/api/admin/classes", { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); const j = await r.json(); if (!r.ok) setMessage(j.error || "Gagal menyimpan"); else { setMessage("Tersimpan"); await load(); if (j.data) choose(j.data); } setSaving(false); }
-  async function remove() { if (!selected || !window.confirm("Hapus produk ini? Produk yang pernah terjual akan otomatis diarsipkan.")) return; const r = await fetch(`/api/admin/classes?id=${encodeURIComponent(selected.id)}`, { method: "DELETE" }); const j = await r.json(); if (!r.ok) { setMessage(j.error || "Gagal menghapus"); return; } setMessage(j.message || "Produk dihapus"); setSelected(null); setForm({ ...empty, product_type: tab }); await load(); }
+  async function loadLessons(cls: ClassRow, keepLessonId?: string) {
+    setLoadingLessons(true);
+    const r = await fetch(`/api/admin/lessons?class_id=${encodeURIComponent(cls.id)}`);
+    const j = await r.json().catch(() => ({}));
+    const list: RawLesson[] = j.data ?? [];
+    setLessons(list);
+    setLoadingLessons(false);
 
-  return <>
-    <header className="mb-6"><p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#00ff88]">// learn catalog</p><h1 className="mt-2 text-2xl font-bold">Katalog LMS</h1><p className="mt-1 max-w-2xl text-sm leading-6 text-white/45">Atur semua isi Learn dari satu tempat. Pilih kategori, edit produk, lalu lihat status tampilnya di katalog.</p></header>
-    <div className="mb-5 flex flex-wrap gap-2">{TABS.map((x) => <button key={x.key} onClick={() => { setTab(x.key); setSelected(null); setForm({ ...empty, product_type: x.key }); }} className={`rounded-full border px-4 py-2 text-sm transition ${tab === x.key ? "border-[#00ff88] bg-[#00ff88] font-bold text-[#04110D]" : "border-white/15 text-white/55 hover:border-[#00ff88] hover:text-white"}`}>{x.label}</button>)}</div>
-    <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
-      <Section title={TABS.find((x) => x.key === tab)?.label || "Katalog"} sub={TABS.find((x) => x.key === tab)?.hint}>
-        {loading ? <p className="text-sm text-white/45">Memuat katalog…</p> : <div className="space-y-2">{filtered.map((row) => <button key={row.id} onClick={() => choose(row)} className={`flex w-full items-center justify-between gap-4 rounded-xl border p-4 text-left transition ${selected?.id === row.id ? "border-[#00ff88] bg-[#00ff88]/[.06]" : "border-white/10 bg-white/[.02] hover:border-white/25"}`}><span><strong className="block text-sm text-white">{row.title}</strong><span className="mt-1 block text-xs text-white/40">/{row.slug} · {money(row.price)}</span></span><span className={`rounded-full border px-2 py-1 text-[10px] uppercase ${row.is_published ? "border-[#00ff88]/30 text-[#00ff88]" : "border-white/15 text-white/40"}`}>{row.is_published ? "tayang" : "draft"}</span></button>)}{!filtered.length && <p className="py-6 text-sm text-white/40">Belum ada produk di kategori ini.</p>}<button onClick={newItem} className="btn-outline mt-2 w-full">+ Tambah {TABS.find((x) => x.key === tab)?.label}</button></div>}
-      </Section>
-      <Section title={selected ? "Edit produk" : `Tambah ${TABS.find((x) => x.key === tab)?.label}`} sub="Perubahan tersimpan ke katalog Learn.">
-        <form onSubmit={save} className="space-y-3">
-          <Field label="Nama yang tampil"><input className="input-dark" value={form.title || ""} onChange={(e) => set("title", e.target.value)} required /></Field>
-          <Field label="Slug URL"><input className="input-dark" value={form.slug || ""} onChange={(e) => set("slug", e.target.value)} placeholder="contoh: hermes-agent-workshop" required /></Field>
-          <Field label="Deskripsi singkat"><textarea className="input-dark min-h-20" value={form.description || ""} onChange={(e) => set("description", e.target.value)} /></Field>
-          <Field label="Cover kelas (URL gambar)"><input className="input-dark" type="url" value={form.cover_image || ""} onChange={(e) => set("cover_image", e.target.value)} placeholder="https://.../cover-kelas.jpg" /><span className="mt-1 block text-xs text-white/35">Tempel URL gambar publik. Disarankan rasio 16:9.</span>{form.cover_image && <img src={String(form.cover_image)} alt="Preview cover" className="mt-3 aspect-video w-full rounded-lg object-cover" />}</Field>
-          <div className="grid grid-cols-2 gap-3"><Field label="Harga dasar (Rp)"><input className="input-dark" type="number" min="0" value={form.price ?? ""} onChange={(e) => set("price", e.target.value)} /></Field><Field label="Urutan"><input className="input-dark" type="number" value={form.sort_order ?? 0} onChange={(e) => set("sort_order", e.target.value)} /></Field></div>
-          <div className="grid grid-cols-2 gap-3"><Field label="Harga annual (Rp/tahun)"><input className="input-dark" type="number" min="0" value={form.annual_price ?? ""} onChange={(e) => set("annual_price", e.target.value)} placeholder="kosong = tidak dijual annual" /></Field><Field label="Harga lifetime (Rp)"><input className="input-dark" type="number" min="0" value={form.lifetime_price ?? ""} onChange={(e) => set("lifetime_price", e.target.value)} placeholder="kosong = pakai harga dasar" /></Field></div>
-          <div><span className="mb-1 block text-xs text-white/50">Pilihan pembayaran di checkout</span><div className="flex gap-4 text-sm text-white/70">{(["annual", "lifetime"] as const).map((opt) => <label key={opt} className="flex items-center gap-2"><input type="checkbox" checked={(form.payment_options || ["lifetime"]).includes(opt)} onChange={(e) => { const cur = form.payment_options || ["lifetime"]; const next = e.target.checked ? [...new Set([...cur, opt])] : cur.filter((x) => x !== opt); set("payment_options", next.length ? next : ["lifetime"]); }} />{opt === "annual" ? "Annual (12 bulan)" : "Lifetime"}</label>)}</div></div>
-          {tab === "course" && <><Field label="Link video pengantar"><input className="input-dark" value={form.trailer_youtube_id || ""} onChange={(e) => set("trailer_youtube_id", e.target.value)} placeholder="YouTube ID (opsional)" /></Field><Field label="Harga khusus member"><input className="input-dark" type="number" min="0" value={form.member_cross_sell_price ?? ""} onChange={(e) => set("member_cross_sell_price", e.target.value)} /></Field><Field label="Harga early bird (kosong = reguler)"><input className="input-dark" type="number" min="0" value={form.early_bird_price ?? ""} onChange={(e) => set("early_bird_price", e.target.value)} /></Field><Field label="Kuota early bird (kosong = tanpa batas)"><input className="input-dark" type="number" min="0" value={form.early_bird_quota ?? ""} onChange={(e) => set("early_bird_quota", e.target.value)} /></Field><Field label="Early bird berakhir"><input className="input-dark" type="datetime-local" value={form.early_bird_until ? String(form.early_bird_until).slice(0, 16) : ""} onChange={(e) => set("early_bird_until", e.target.value ? new Date(e.target.value).toISOString() : "")} /></Field></>}
-          {tab === "workshop" && <><Field label="Link meeting"><input className="input-dark" value={form.workshop_meet_url || ""} onChange={(e) => set("workshop_meet_url", e.target.value)} placeholder="https://…" /></Field><Field label="Link replay"><input className="input-dark" value={form.workshop_replay_url || ""} onChange={(e) => set("workshop_replay_url", e.target.value)} placeholder="https://…" /></Field></>}
-          {selected && <div className="border-t border-white/10 pt-4"><p className="mb-1 text-sm font-semibold text-white">Video & modul</p><p className="mb-3 text-xs text-white/40">Tambahkan link YouTube per modul. Isi ID atau URL YouTube.</p><div className="space-y-2">{lessons.map((lesson) => <div key={lesson.id} className="rounded-lg border border-white/10 bg-white/[.02] p-3"><input className="input-dark" value={lesson.title} onChange={(e) => setLessons((xs) => xs.map((x) => x.id === lesson.id ? { ...x, title: e.target.value } : x))} placeholder="Judul modul" /><input className="input-dark mt-2" value={lesson.youtube_id || ""} onChange={(e) => setLessons((xs) => xs.map((x) => x.id === lesson.id ? { ...x, youtube_id: e.target.value } : x))} placeholder="https://youtube.com/watch?v=..." /><div className="mt-2 flex gap-3"><button type="button" className="text-xs text-[#00ff88]" onClick={async () => { setLessonBusy(true); const r = await fetch("/api/admin/lessons", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(lesson) }); setMessage(r.ok ? "Modul tersimpan" : "Gagal menyimpan modul"); setLessonBusy(false); }}>Simpan modul</button><button type="button" className="text-xs text-red-300" onClick={async () => { if (!window.confirm("Hapus modul ini?")) return; setLessonBusy(true); const r = await fetch(`/api/admin/lessons?id=${encodeURIComponent(lesson.id)}`, { method: "DELETE" }); if (r.ok) setLessons((xs) => xs.filter((x) => x.id !== lesson.id)); setLessonBusy(false); }}>Hapus</button></div></div>)}</div><button type="button" className="btn-outline mt-3 w-full" onClick={async () => { setLessonBusy(true); const r = await fetch("/api/admin/lessons", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ class_id: selected.id, title: `Modul ${lessons.length + 1}`, sort_order: lessons.length }) }); const j = await r.json().catch(() => ({})); if (r.ok && j.data) setLessons((xs) => [...xs, j.data]); else setMessage(j.error || `Gagal menambah modul (${r.status})`); setLessonBusy(false); }}>+ Tambah modul video</button></div>}
-          <label className="flex items-center gap-2 pt-2 text-sm text-white/70"><input type="checkbox" checked={Boolean(form.is_published)} onChange={(e) => set("is_published", e.target.checked)} /> Tampilkan di katalog Learn</label>
-          {message && <p className={`text-sm ${message === "Tersimpan" ? "text-[#00ff88]" : "text-red-300"}`}>{message}</p>}
-          <button disabled={saving} className="btn-primary w-full disabled:opacity-50">{saving ? "Menyimpan…" : "Simpan perubahan"}</button>{selected && <button type="button" onClick={remove} className="w-full rounded-lg border border-red-400/30 px-4 py-2 text-sm text-red-300">Hapus / arsipkan produk</button>}
-        </form>
-      </Section>
-    </div>
-  </>;
+    if (keepLessonId) {
+      const found = list.find((l) => l.id === keepLessonId);
+      if (found) {
+        setDraft(toDraft(found));
+        return;
+      }
+    }
+    setDraft(list[0] ? toDraft(list[0]) : emptyDraft(cls.id, 0));
+  }
+
+  useEffect(() => {
+    async function init() {
+      setLoadingClasses(true);
+      const r = await fetch("/api/admin/classes");
+      const j = await r.json().catch(() => ({}));
+      const list: ClassRow[] = j.data ?? [];
+      setClasses(list);
+      setLoadingClasses(false);
+
+      const paramId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("class_id")
+          : null;
+      const initial = list.find((c) => c.id === paramId) ?? list[0] ?? null;
+      if (initial) {
+        setSelectedClass(initial);
+        void loadLessons(initial);
+      }
+    }
+    void init();
+  }, []);
+
+  function selectClass(cls: ClassRow) {
+    setSelectedClass(cls);
+    setStatus(null);
+    void loadLessons(cls);
+  }
+
+  function startNewLesson() {
+    if (!selectedClass) return;
+    setDraft(emptyDraft(selectedClass.id, lessons.length));
+    setStatus(null);
+  }
+
+  async function saveLesson(e: React.FormEvent) {
+    e.preventDefault();
+    if (!draft || !selectedClass) return;
+    if (!draft.title.trim()) {
+      setStatus({ type: "err", text: "Judul modul wajib diisi." });
+      return;
+    }
+
+    setSaving(true);
+    setStatus(null);
+
+    const youtubeValue = draft.mode === "text" ? null : draft.youtube_id.trim() || null;
+    const bodyValue = draft.mode === "video" ? "" : draft.body;
+    const { content, pdf_url } = serializeLessonContent(bodyValue, draft.links);
+
+    const payload = {
+      id: draft.id,
+      class_id: selectedClass.id,
+      title: draft.title.trim(),
+      sort_order: Number(draft.sort_order || 0),
+      youtube_id: youtubeValue,
+      content,
+      pdf_url,
+      prompt: draft.prompt.trim() || null,
+    };
+
+    const r = await fetch("/api/admin/lessons", {
+      method: draft.id ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      setStatus({ type: "err", text: j.error || "Gagal menyimpan modul." });
+    } else {
+      setStatus({ type: "ok", text: "Modul berhasil disimpan!" });
+      await loadLessons(selectedClass, j.data?.id ?? draft.id);
+    }
+    setSaving(false);
+  }
+
+  async function deleteLesson(lesson: RawLesson) {
+    if (!selectedClass || !window.confirm(`Hapus modul "${lesson.title}"?`)) return;
+    setSaving(true);
+    setStatus(null);
+    const r = await fetch(`/api/admin/lessons?id=${encodeURIComponent(lesson.id)}`, {
+      method: "DELETE",
+    });
+    if (r.ok) {
+      setStatus({ type: "ok", text: "Modul dihapus." });
+      await loadLessons(selectedClass);
+    } else {
+      setStatus({ type: "err", text: "Gagal menghapus modul." });
+    }
+    setSaving(false);
+  }
+
+  async function moveLesson(idx: number, dir: -1 | 1) {
+    if (!selectedClass) return;
+    const target = idx + dir;
+    if (target < 0 || target >= lessons.length) return;
+    const a = lessons[idx];
+    const b = lessons[target];
+    setSaving(true);
+    await Promise.all([
+      fetch("/api/admin/lessons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...a, sort_order: target }),
+      }),
+      fetch("/api/admin/lessons", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...b, sort_order: idx }),
+      }),
+    ]);
+    await loadLessons(selectedClass, draft?.id);
+    setSaving(false);
+  }
+
+  const previewYtId = draft ? extractYoutubePreviewId(draft.youtube_id) : "";
+
+  return (
+    <>
+      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#00ff88]">
+            // course builder
+          </p>
+          <h1 className="mt-2 text-2xl font-bold">Course Management (Modul & Materi)</h1>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-white/45">
+            Fokus atur isi modul per kelas: bisa berupa Video, Teks, Kombinasi Video + Teks, Prompt, dan banyak tautan/link materi.
+          </p>
+        </div>
+        <Link href="/admin/products" className="btn-outline">
+          + Kelola / Tambah Produk →
+        </Link>
+      </header>
+
+      {/* Class Selector */}
+      <div className="panel mb-5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <label className="block text-xs text-white/50">Pilih Kelas / Produk untuk Diatur Modulnya</label>
+            {loadingClasses ? (
+              <p className="mt-1.5 text-sm text-white/45">Memuat daftar kelas…</p>
+            ) : classes.length > 0 ? (
+              <select
+                value={selectedClass?.id || ""}
+                onChange={(e) => {
+                  const found = classes.find((c) => c.id === e.target.value);
+                  if (found) selectClass(found);
+                }}
+                className="input-dark mt-1.5 w-full max-w-xl"
+              >
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title} ({c.product_type} · {c.is_published ? "tayang" : "draft"})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="mt-1.5 text-sm text-white/45">
+                Belum ada produk. Tambahkan dulu di{" "}
+                <Link href="/admin/products" className="text-[#00ff88] underline">
+                  Product Management
+                </Link>
+                .
+              </p>
+            )}
+          </div>
+          {selectedClass ? (
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/learn/course/${selectedClass.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline"
+              >
+                Preview Kelas ↗
+              </a>
+              <button type="button" onClick={startNewLesson} className="btn-glow rounded-lg px-4 py-2 text-xs font-bold">
+                + Tambah Modul Baru
+              </button>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      {selectedClass ? (
+        <div className="grid items-start gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+          {/* Left: Module List */}
+          <Section
+            title={`Daftar Modul (${lessons.length})`}
+            sub="Klik modul untuk edit atau ubah urutannya."
+          >
+            {loadingLessons ? (
+              <p className="text-sm text-white/45">Memuat modul…</p>
+            ) : lessons.length === 0 ? (
+              <p className="py-4 text-sm text-white/45">
+                Belum ada modul di kelas ini. Klik &ldquo;+ Tambah Modul Baru&rdquo; untuk mulai.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {lessons.map((lesson, idx) => {
+                  const active = draft?.id === lesson.id;
+                  return (
+                    <div
+                      key={lesson.id}
+                      className={`rounded-xl border p-3 transition ${
+                        active
+                          ? "border-[#00ff88] bg-[#00ff88]/[.07]"
+                          : "border-white/10 bg-white/[.02] hover:border-white/25"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDraft(toDraft(lesson));
+                          setStatus(null);
+                        }}
+                        className="block w-full text-left"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="mt-0.5 font-mono text-xs text-[#00ff88]">
+                            {String(idx + 1).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-white">
+                              {lesson.title}
+                            </p>
+                            <p className="mt-0.5 font-mono text-[10px] uppercase tracking-wider text-white/45">
+                              {lessonBadge(lesson)}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-white/10 pt-2">
+                        <button
+                          type="button"
+                          disabled={idx === 0 || saving}
+                          onClick={() => moveLesson(idx, -1)}
+                          className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/10 disabled:opacity-30"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          disabled={idx === lessons.length - 1 || saving}
+                          onClick={() => moveLesson(idx, 1)}
+                          className="rounded border border-white/10 px-2 py-0.5 text-xs text-white/60 hover:bg-white/10 disabled:opacity-30"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() => deleteLesson(lesson)}
+                          className="rounded border border-red-400/25 px-2 py-0.5 text-xs text-red-300 hover:bg-red-500/10"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+
+          {/* Right: Module Editor */}
+          <Section
+            title={draft?.id ? `Edit Modul: ${draft.title || "Tanpa judul"}` : "Buat Modul Baru"}
+            sub="Pilih format modul (Video, Teks, atau Kombinasi) dan tambahkan tautan materi jika perlu."
+          >
+            {draft ? (
+              <form onSubmit={saveLesson} className="space-y-5">
+                {status ? (
+                  <div
+                    className={`rounded-xl border px-4 py-2.5 text-sm ${
+                      status.type === "ok"
+                        ? "border-[#00ff88]/30 bg-[#00ff88]/10 text-[#86efac]"
+                        : "border-red-400/30 bg-red-500/10 text-red-200"
+                    }`}
+                  >
+                    {status.text}
+                  </div>
+                ) : null}
+
+                <div className="grid gap-3 md:grid-cols-[1fr_110px]">
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-white/60">Judul Modul</span>
+                    <input
+                      className="input-dark w-full"
+                      value={draft.title}
+                      onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                      placeholder="Mis. Bab 1 — Setup AI Agent di VPS"
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs text-white/60">Urutan</span>
+                    <input
+                      type="number"
+                      className="input-dark w-full"
+                      value={draft.sort_order}
+                      onChange={(e) =>
+                        setDraft({ ...draft, sort_order: Number(e.target.value || 0) })
+                      }
+                    />
+                  </label>
+                </div>
+
+                {/* Format Selector: Video / Teks / Kombinasi */}
+                <div>
+                  <span className="mb-2 block text-xs font-medium text-white/65">
+                    Format Konten Modul
+                  </span>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {MODES.map((m) => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        onClick={() => setDraft({ ...draft, mode: m.key })}
+                        className={`rounded-xl border p-3 text-left transition ${
+                          draft.mode === m.key
+                            ? "border-[#00ff88] bg-[#00ff88]/10 text-white"
+                            : "border-white/10 bg-white/[.02] text-white/60 hover:border-white/25"
+                        }`}
+                      >
+                        <span className="block text-xs font-bold">{m.label}</span>
+                        <span className="mt-0.5 block text-[11px] opacity-70">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Video Section */}
+                {draft.mode === "video" || draft.mode === "combo" ? (
+                  <div className="space-y-3 rounded-xl border border-white/10 bg-black/25 p-4">
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-medium text-white/70">
+                        Link / ID Video YouTube
+                      </span>
+                      <input
+                        className="input-dark w-full"
+                        value={draft.youtube_id}
+                        onChange={(e) => setDraft({ ...draft, youtube_id: e.target.value })}
+                        placeholder="https://youtube.com/watch?v=... atau YouTube ID"
+                      />
+                    </label>
+                    {previewYtId ? (
+                      <div className="aspect-video overflow-hidden rounded-lg border border-white/10 bg-black">
+                        <iframe
+                          className="h-full w-full"
+                          src={`https://www.youtube.com/embed/${encodeURIComponent(previewYtId)}`}
+                          title="Preview video"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {/* Text Section */}
+                {draft.mode === "text" || draft.mode === "combo" ? (
+                  <div className="space-y-2 rounded-xl border border-white/10 bg-black/25 p-4">
+                    <label className="block">
+                      <span className="mb-1 block text-xs font-medium text-white/70">
+                        Materi Teks / Artikel
+                      </span>
+                      <textarea
+                        rows={8}
+                        className="input-dark w-full font-sans text-sm leading-relaxed"
+                        value={draft.body}
+                        onChange={(e) => setDraft({ ...draft, body: e.target.value })}
+                        placeholder={"Tulis materi modul di sini...\n\nTips format:\n## Subjudul\n- Poin daftar\n**teks tebal**\n[Nama Link](https://contoh.com)"}
+                      />
+                    </label>
+                    <p className="text-[11px] text-white/40">
+                      Mendukung paragraf, <code>## Subjudul</code>, daftar <code>- item</code>,{" "}
+                      <code>**tebal**</code>, dan tautan inline <code>[teks](https://...)</code>.
+                    </p>
+                  </div>
+                ) : null}
+
+                {/* Multi-Link Section */}
+                <div className="space-y-3 rounded-xl border border-white/10 bg-black/25 p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-medium text-white/75">
+                        Tautan / Link Materi (PDF, Notion, Repo, Tools, dll.)
+                      </p>
+                      <p className="text-[11px] text-white/40">
+                        Semua link di sini tampil sebagai tombol klik di bawah materi modul.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft({
+                          ...draft,
+                          links: [...draft.links, { label: "", url: "" }],
+                        })
+                      }
+                      className="btn-outline shrink-0"
+                    >
+                      + Tambah Link
+                    </button>
+                  </div>
+
+                  {draft.links.length === 0 ? (
+                    <p className="text-xs text-white/35">Belum ada tautan ditambahkan.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {draft.links.map((link, idx) => (
+                        <div
+                          key={idx}
+                          className="grid gap-2 sm:grid-cols-[1fr_1.4fr_auto]"
+                        >
+                          <input
+                            className="input-dark"
+                            value={link.label}
+                            placeholder="Label (mis. Slide PDF / Template)"
+                            onChange={(e) => {
+                              const next = draft.links.map((l, i) =>
+                                i === idx ? { ...l, label: e.target.value } : l,
+                              );
+                              setDraft({ ...draft, links: next });
+                            }}
+                          />
+                          <input
+                            className="input-dark"
+                            type="url"
+                            value={link.url}
+                            placeholder="https://..."
+                            onChange={(e) => {
+                              const next = draft.links.map((l, i) =>
+                                i === idx ? { ...l, url: e.target.value } : l,
+                              );
+                              setDraft({ ...draft, links: next });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDraft({
+                                ...draft,
+                                links: draft.links.filter((_, i) => i !== idx),
+                              })
+                            }
+                            className="btn-danger"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional Prompt Section */}
+                <label className="block">
+                  <span className="mb-1 block text-xs font-medium text-white/65">
+                    Prompt / Template Siap Copy (Opsional)
+                  </span>
+                  <textarea
+                    rows={4}
+                    className="input-dark w-full font-mono text-xs"
+                    value={draft.prompt}
+                    onChange={(e) => setDraft({ ...draft, prompt: e.target.value })}
+                    placeholder="Isi prompt atau snippet kode yang bisa langsung di-copy member..."
+                  />
+                </label>
+
+                <div className="flex flex-wrap items-center justify-end gap-3 border-t border-white/10 pt-4">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="btn-glow rounded-lg px-5 py-2.5 text-sm font-bold disabled:opacity-50"
+                  >
+                    {saving ? "Menyimpan…" : draft.id ? "Simpan Modul" : "Buat Modul"}
+                  </button>
+                </div>
+              </form>
+            ) : null}
+          </Section>
+        </div>
+      ) : null}
+    </>
+  );
 }
