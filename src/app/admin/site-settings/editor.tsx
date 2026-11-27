@@ -820,44 +820,20 @@ export default function SiteSettingsEditor({
       {tab === "learn" && (
         <div className="space-y-5">
           <section className="panel space-y-4 p-5">
-            <h2 className="panel-title">Hero & Kelas Flagship (/learn)</h2>
+            <h2 className="panel-title">Hero Portal Belajar (/learn)</h2>
+            <p className="text-xs text-white/45">
+              Halaman /learn sekarang menjelaskan portal belajar XindeLabs secara umum dan langsung menampilkan semua produk aktif dari Product Management.
+            </p>
             <div className="grid gap-4 md:grid-cols-2">
-              <Field
-                label="Kelas Flagship Utama"
-                hint="Dipakai untuk tombol checkout & harga utama di halaman /learn"
-              >
-                {classes.length > 0 ? (
-                  <select
-                    value={config.learn.flagship_slug}
-                    onChange={(e) => patchSection("learn", { flagship_slug: e.target.value })}
-                    className="input-dark w-full"
-                  >
-                    {!classes.some((c) => c.slug === config.learn.flagship_slug) ? (
-                      <option value={config.learn.flagship_slug}>
-                        {config.learn.flagship_slug} (custom)
-                      </option>
-                    ) : null}
-                    {classes.map((c) => (
-                      <option key={c.slug} value={c.slug}>
-                        {c.title} ({c.slug})
-                      </option>
-                    ))}
-                  </select>
-                ) : (
+              <div className="md:col-span-2">
+                <Field label="Eyebrow Hero">
                   <input
-                    value={config.learn.flagship_slug}
-                    onChange={(e) => patchSection("learn", { flagship_slug: e.target.value })}
-                    className="input-dark w-full font-mono text-xs"
+                    value={config.learn.hero_eyebrow}
+                    onChange={(e) => patchSection("learn", { hero_eyebrow: e.target.value })}
+                    className="input-dark w-full"
                   />
-                )}
-              </Field>
-              <Field label="Eyebrow Hero">
-                <input
-                  value={config.learn.hero_eyebrow}
-                  onChange={(e) => patchSection("learn", { hero_eyebrow: e.target.value })}
-                  className="input-dark w-full"
-                />
-              </Field>
+                </Field>
+              </div>
               <div className="grid grid-cols-3 gap-2 md:col-span-2">
                 <Field label="Judul Awal">
                   <input
@@ -875,7 +851,7 @@ export default function SiteSettingsEditor({
                     className="input-dark w-full"
                   />
                 </Field>
-                <Field label="Judul Akhir">
+                <Field label="Judul Akhir (Opsional)">
                   <input
                     value={config.learn.hero_title_suffix}
                     onChange={(e) => patchSection("learn", { hero_title_suffix: e.target.value })}
@@ -893,26 +869,21 @@ export default function SiteSettingsEditor({
                   />
                 </Field>
               </div>
-              <Field label="Aksen Tulisan Tangan">
-                <input
-                  value={config.learn.hero_desc_hand}
-                  onChange={(e) => patchSection("learn", { hero_desc_hand: e.target.value })}
-                  className="input-dark w-full"
-                />
-              </Field>
-              <Field label="Catatan di Samping Harga">
-                <input
-                  value={config.learn.hero_price_note}
-                  onChange={(e) => patchSection("learn", { hero_price_note: e.target.value })}
-                  className="input-dark w-full"
-                />
-              </Field>
+              <div className="md:col-span-2">
+                <Field label="Aksen Tulisan Tangan">
+                  <input
+                    value={config.learn.hero_desc_hand}
+                    onChange={(e) => patchSection("learn", { hero_desc_hand: e.target.value })}
+                    className="input-dark w-full"
+                  />
+                </Field>
+              </div>
             </div>
             <div>
               <p className="mb-2 text-xs font-medium text-white/70">Badge Bawah Hero</p>
               <StringListEditor
                 items={config.learn.hero_badges}
-                placeholder="Mis. 10 modul inti"
+                placeholder="Mis. Kelas & modul mandiri"
                 addLabel="Tambah Badge"
                 onChange={(hero_badges) => patchSection("learn", { hero_badges })}
               />
@@ -920,7 +891,7 @@ export default function SiteSettingsEditor({
           </section>
 
           <section className="panel space-y-4 p-5">
-            <h2 className="panel-title">01 / Masalahnya</h2>
+            <h2 className="panel-title">01 / Pendekatan Belajar</h2>
             <Field label="Judul">
               <input
                 value={config.learn.problem_title}
@@ -954,7 +925,7 @@ export default function SiteSettingsEditor({
           </section>
 
           <section className="panel space-y-4 p-5">
-            <h2 className="panel-title">02 / Kurikulum Modul</h2>
+            <h2 className="panel-title">02 / Jalur & Format Belajar</h2>
             <div className="grid gap-4 md:grid-cols-2">
               <Field label="Judul Section">
                 <input
@@ -973,15 +944,15 @@ export default function SiteSettingsEditor({
             </div>
             <StringListEditor
               items={config.learn.curriculum_modules}
-              placeholder="Nama modul"
-              addLabel="Tambah Modul"
+              placeholder="Format belajar (mis. Kelas Online Mandiri — ...)"
+              addLabel="Tambah Jalur Belajar"
               onChange={(curriculum_modules) => patchSection("learn", { curriculum_modules })}
             />
           </section>
 
           <section className="panel space-y-4 p-5">
-            <h2 className="panel-title">03 / Cocok Kalau & Penutup</h2>
-            <Field label="Judul Cocok Kalau">
+            <h2 className="panel-title">03 / Cocok Untuk & Penutup</h2>
+            <Field label="Judul Cocok Untuk">
               <input
                 value={config.learn.fit_title}
                 onChange={(e) => patchSection("learn", { fit_title: e.target.value })}
@@ -995,7 +966,7 @@ export default function SiteSettingsEditor({
               onChange={(fit_points) => patchSection("learn", { fit_points })}
             />
             <div className="grid gap-4 border-t border-white/10 pt-4 md:grid-cols-2">
-              <Field label="Judul Produk Lain">
+              <Field label="Judul Section Katalog">
                 <input
                   value={config.learn.other_title}
                   onChange={(e) => patchSection("learn", { other_title: e.target.value })}
